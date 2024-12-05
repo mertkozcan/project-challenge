@@ -8,11 +8,8 @@ const challengeRoutes = require('./routes/challengeRoutes');
 const app = express();
 
 // CORS Middleware
-app.use(cors({
-  origin: 'http://localhost:5173', // Frontend'in çalıştığı URL
-  methods: 'GET,POST,PUT,DELETE',
-  allowedHeaders: 'Content-Type,Authorization'
-}));
+app.use(cors());
+
 
 // Middleware
 app.use(bodyParser.json());
