@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Grid, Card, Text, Title, Divider } from '@mantine/core';
 import PopularChallengeCard from '../../components/Cards/PopularChallengeCard';
 import NewChallengesCard from '@/components/Cards/NewChallengesCard';
@@ -7,7 +7,26 @@ import SloganSection from '@/components/Dashboard/SloganSection';
 import BuildChallenges from '@/components/Cards/BuildChallenges';
 import BingoChallenges from '@/components/Cards/Bingo Challenges';
 
+import { ChallengesService } from '../../services/challenges/challenges.service';
+import { Challenge } from '@/@types/challenge';
+
 const Dashboard: React.FC = () => {
+  const [latestChallenges, setLatestChallenges] = useState<Challenge[]>([]);
+
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      try {
+        debugger;
+        const data = await ChallengesService.getLatestChallenges();
+        setLatestChallenges(data);
+      } catch (error) {
+        console.error('Error fetching latest challenges:', error);
+      }
+    };
+
+    fetchChallenges();
+  }, []);
+
   const popularChallengeData = {
     gameImage:
       'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg?t=1726158298',
@@ -206,7 +225,7 @@ const Dashboard: React.FC = () => {
           <PopularChallengeCard {...popularChallengeData} />
         </Grid.Col>
         <Grid.Col span={4} style={{ height: '500px' }}>
-          <NewChallengesCard challenges={newChallenges} />
+          <NewChallengesCard challenges={latestChallenges} />
         </Grid.Col>
       </Grid>
 

@@ -1,14 +1,10 @@
 import React from 'react';
 import { Card, Image, Text, Table, Button, Group, Avatar, ScrollArea } from '@mantine/core';
 
-interface ChallengeEntry {
-  gameIcon: string; // Oyun ikonu URL'si
-  gameName: string; // Oyun adı
-  challengeName: string; // Challenge adı
-}
+import { Challenge } from '@/@types/challenge';
 
 interface NewChallengesCardProps {
-  challenges: ChallengeEntry[]; // Yeni challenge listesi
+  challenges: Challenge[]; // Yeni challenge listesi
 }
 
 const NewChallengesCard: React.FC<NewChallengesCardProps> = ({ challenges }) => {
@@ -50,7 +46,7 @@ const NewChallengesCard: React.FC<NewChallengesCardProps> = ({ challenges }) => 
           <tbody>
             {challenges.map((challenge, index) => (
               <tr key={index} style={{ height: 60 }}>
-                <td>{challenge.gameName}</td>
+                <td>{challenge.game_name}</td>
                 <td
                   style={{
                     whiteSpace: 'normal',
@@ -60,7 +56,7 @@ const NewChallengesCard: React.FC<NewChallengesCardProps> = ({ challenges }) => 
                     lineHeight: '1.5',
                   }}
                 >
-                  {challenge.challengeName}
+                  {challenge.challenge_name}
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <Button variant="outline" color="yellow" size="xs" mr={5}>
