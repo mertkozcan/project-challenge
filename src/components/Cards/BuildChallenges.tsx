@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Text, Badge, Button, Group, Image, Grid } from '@mantine/core';
+import { Card, Text, Badge, Button, Group, Image, Grid, Skeleton } from '@mantine/core';
 
 interface BuildChallenge {
   gameImage: string; // Oyun resmi
@@ -10,11 +10,20 @@ interface BuildChallenge {
 
 interface BuildChallengeListProps {
   builds: BuildChallenge[]; // Build listesi
+  loading:boolean
 }
 
-const BuildChallengeList: React.FC<BuildChallengeListProps> = ({ builds }) => {
+const BuildChallengeList: React.FC<BuildChallengeListProps> = ({ builds, loading }) => {
   return (
-    <Grid>
+    <>
+    { loading ? (
+        <div>
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} />
+        </div>
+      ) : 
+        <Grid>
       {builds.map((build, index) => (
         <Grid.Col span={4} key={index}>
           <Card
@@ -63,6 +72,8 @@ const BuildChallengeList: React.FC<BuildChallengeListProps> = ({ builds }) => {
         </Grid.Col>
       ))}
     </Grid>
+}
+    </>
   );
 };
 

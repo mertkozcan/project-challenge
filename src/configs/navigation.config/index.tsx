@@ -1,5 +1,12 @@
-import type {NavigationTree} from '@/@types/navigation';
-import {IconDashboard, IconUser} from '@tabler/icons-react';
+import type { NavigationTree } from '@/@types/navigation';
+import {
+  IconDashboard,
+  IconTrophy,
+  IconTarget,
+  IconDice5,
+  IconListCheck,
+  IconChartBar,
+} from '@tabler/icons-react';
 
 const navigationConfig: NavigationTree[] = [
   {
@@ -9,16 +16,43 @@ const navigationConfig: NavigationTree[] = [
     translateKey: '',
     icon: IconDashboard,
     authority: [],
-    subMenu: []
+    subMenu: [],
   },
   {
-    key: 'users',
-    path: '/users',
-    title: 'Users',
+    key: 'challenges',
+    path: '/challenges',
+    title: 'Challenges',
     translateKey: '',
-    icon: IconUser,
+    icon: IconTarget,
     authority: [],
-    subMenu: []
+    subMenu: [],
+  },
+  {
+    key: 'build-challenges',
+    path: '/build-challenges',
+    title: 'Build Challenges',
+    translateKey: '',
+    icon: IconListCheck,
+    authority: [],
+    subMenu: [],
+  },
+  {
+    key: 'bingo-challenges',
+    path: '/bingo-challenges',
+    title: 'Bingo Challenges',
+    translateKey: '',
+    icon: IconDice5,
+    authority: [],
+    subMenu: [],
+  },
+  {
+    key: 'leaderboard',
+    path: '/leaderboard',
+    title: 'Leaderboard',
+    translateKey: '',
+    icon: IconChartBar,
+    authority: [],
+    subMenu: [],
   },
 ];
 

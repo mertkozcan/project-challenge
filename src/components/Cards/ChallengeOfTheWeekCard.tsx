@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Text, Table, Button, Group, Badge } from '@mantine/core';
+import { Card, Text, Table, Button, Group, Badge, Skeleton } from '@mantine/core';
 import { IconTrophy } from '@tabler/icons-react';
 
 interface LeaderboardEntry {
@@ -13,6 +13,7 @@ interface ChallengeOfTheWeekProps {
   description: string; // Challenge açıklaması
   reward: string; // Ödül
   leaderboard: LeaderboardEntry[]; // Liderlik tablosu
+  loading: boolean;
 }
 
 const formatTime = (seconds: number): string => {
@@ -27,6 +28,7 @@ const ChallengeOfTheWeek: React.FC<ChallengeOfTheWeekProps> = ({
   description,
   reward,
   leaderboard,
+  loading,
 }) => {
   return (
     <Card
@@ -42,75 +44,80 @@ const ChallengeOfTheWeek: React.FC<ChallengeOfTheWeekProps> = ({
         boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.5)',
       }}
     >
-      {/* Oyun Adı Badge */}
-      <Group justify="space-between" mb="md" align="center">
-        <Badge color="green" size="lg">
-          Reward: {reward}
-        </Badge>
-        <Badge color="grape" variant="filled" size="lg" radius="sm">
-          {gameName}
-        </Badge>
-      </Group>
+      {loading ? (
+        <div>
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} />
+        </div>
+      ) : (
+        <>
+          <Group justify="space-between" mb="md" align="center">
+            <Badge color="green" size="lg">
+              Reward: {reward}
+            </Badge>
+            <Badge color="grape" variant="filled" size="lg" radius="sm">
+              {gameName}
+            </Badge>
+          </Group>
 
-      {/* Kart Başlığı */}
-      <Text
-        size="lg"
-        ta="center"
-        mb={10}
-        style={{
-          textDecoration: 'underline',
-          textUnderlineOffset: 4,
-        }}
-      >
-        Challenge of the Week
-      </Text>
+          <Text
+            size="lg"
+            ta="center"
+            mb={10}
+            style={{
+              textDecoration: 'underline',
+              textUnderlineOffset: 4,
+            }}
+          >
+            Challenge of the Week
+          </Text>
 
-      {/* Challenge Detayları */}
-      <Text fw={700} size="md" mt="md">
-        {challengeName}
-      </Text>
-      <Text size="sm" color="gray.4" mt="xs">
-        {description}
-      </Text>
+          <Text fw={700} size="md" mt="md">
+            {challengeName}
+          </Text>
+          <Text size="sm" color="gray.4" mt="xs">
+            {description}
+          </Text>
 
-      {/* Liderlik Tablosu */}
-      <Text fw={700} size="md" mt="lg" mb={5} ta="center">
-        Leaderboard
-      </Text>
-      <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-        <Table highlightOnHover striped>
-          <thead>
-            <tr>
-              <th style={{ textAlign: 'left' }}>#</th>
-              <th style={{ textAlign: 'left' }}>User</th>
-              <th style={{ textAlign: 'center' }}>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboard.map((player, index) => (
-              <tr key={index}>
-                <td>
-                  {index < 3 ? (
-                    <IconTrophy
-                      size={16}
-                      color={index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32'}
-                    />
-                  ) : (
-                    index + 1
-                  )}
-                </td>
-                <td>{player.name}</td>
-                <td style={{ textAlign: 'center' }}>{formatTime(player.time)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </div>
+          <Text fw={700} size="md" mt="lg" mb={5} ta="center">
+            Leaderboard
+          </Text>
+          <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+            <Table highlightOnHover striped>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>#</th>
+                  <th style={{ textAlign: 'left' }}>User</th>
+                  <th style={{ textAlign: 'center' }}>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map((player, index) => (
+                  <tr key={index}>
+                    <td>
+                      {index < 3 ? (
+                        <IconTrophy
+                          size={16}
+                          color={index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32'}
+                        />
+                      ) : (
+                        index + 1
+                      )}
+                    </td>
+                    <td>{player.name}</td>
+                    <td style={{ textAlign: 'center' }}>{formatTime(player.time)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
 
-      {/* Challenge'a Katıl Butonu */}
-      <Button variant="outline" color="yellow" fullWidth mt="60">
-        Join
-      </Button>
+          <Button variant="outline" color="yellow" fullWidth mt="60">
+            Join
+          </Button>
+        </>
+      )}
     </Card>
   );
 };

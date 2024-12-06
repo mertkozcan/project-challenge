@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Text, Badge, Button, Group, Grid } from '@mantine/core';
+import { Card, Text, Badge, Button, Group, Grid, Skeleton } from '@mantine/core';
 
 interface BingoChallenge {
   gameName: string; // Oyun adı
@@ -9,10 +9,19 @@ interface BingoChallenge {
 
 interface BingoChallengesProps {
   challenges: BingoChallenge[]; // Bingo challenge listesi
+  loading:boolean
 }
 
-const BingoChallenges: React.FC<BingoChallengesProps> = ({ challenges }) => {
+const BingoChallenges: React.FC<BingoChallengesProps> = ({ challenges ,loading}) => {
   return (
+    <>
+    { loading ? (
+        <div>
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} />
+        </div>
+      ) : 
     <Grid>
       {challenges.map((challenge, index) => (
         <Grid.Col span={4} key={index}>
@@ -54,6 +63,8 @@ const BingoChallenges: React.FC<BingoChallengesProps> = ({ challenges }) => {
         </Grid.Col>
       ))}
     </Grid>
+}
+    </>
   );
 };
 
