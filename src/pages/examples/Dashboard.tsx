@@ -5,7 +5,7 @@ import NewChallengesCard from '@/components/Cards/NewChallengesCard';
 import ChallengeOfTheWeek from '@/components/Cards/ChallengeOfTheWeekCard';
 import SloganSection from '@/components/Dashboard/SloganSection';
 import BuildChallenges from '@/components/Cards/BuildChallenges';
-import BingoChallenges from '@/components/Cards/Bingo Challenges';
+import BingoChallenges from '@/components/Cards/BingoChallenges';
 
 import { ChallengesService } from '../../services/challenges/challenges.service';
 import { Challenge } from '@/@types/challenge';
