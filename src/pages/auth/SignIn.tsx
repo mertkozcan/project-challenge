@@ -5,6 +5,7 @@ import {
   PasswordInput,
   Button,
   Title, Text,
+  Anchor,
 } from '@mantine/core';
 import classes from './SignIn.module.css';
 import * as yup from 'yup';
@@ -62,12 +63,12 @@ export default function SignIn() {
             <Button loading={loading} type={'submit'} fullWidth mt="xl" size="md">
               Login
             </Button>
-            {/*<Text ta="center" mt="md">*/}
-            {/*  Don&apos;t have an account?{' '}*/}
-            {/*  <Anchor<'a'> href="#" fw={700} onClick={(event) => event.preventDefault()}>*/}
-            {/*    Register*/}
-            {/*  </Anchor>*/}
-            {/*</Text>*/}
+            <Text ta="center" mt="md">
+              Don&apos;t have an account?{' '}
+              <Anchor<'a'> href="/sign-up" fw={700}>
+                Register
+              </Anchor>
+            </Text>
           </Paper>
         </div>
       </form>

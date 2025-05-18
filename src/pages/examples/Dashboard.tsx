@@ -12,6 +12,11 @@ import { Challenge } from '@/@types/challenge';
 
 const Dashboard: React.FC = () => {
   const [latestChallenges, setLatestChallenges] = useState<Challenge[]>([]);
+  const [newChallengesloading, setNewChallengesloading] = useState(true);
+  const [PopularChallengeloading, setPopularChallengeloading] = useState(true);
+  const [chalOfTheWeekloading, setChalOfTheWeekloading] = useState(true);
+  const [bingoChallengesloading, setBingoChallengesloading] = useState(true);
+  const [buildChallengesloading, setBuildChallengesloading] = useState(true);
 
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -21,6 +26,13 @@ const Dashboard: React.FC = () => {
         setLatestChallenges(data);
       } catch (error) {
         console.error('Error fetching latest challenges:', error);
+      }
+      finally {
+        setNewChallengesloading(false);
+        setPopularChallengeloading(false);
+        setChalOfTheWeekloading(false);
+        setBingoChallengesloading(false);
+        setBuildChallengesloading(false);
       }
     };
 
@@ -219,13 +231,14 @@ const Dashboard: React.FC = () => {
             description="Bu haftanın zorluğu: Malenia'yı hiç hasar almadan yenin!"
             reward="Altın Kılıç"
             leaderboard={cotwLeaderboard}
+            loading={chalOfTheWeekloading}
           />
         </Grid.Col>
         <Grid.Col span={4} style={{ height: '500px' }}>
-          <PopularChallengeCard {...popularChallengeData} />
+          <PopularChallengeCard {...popularChallengeData} loading={PopularChallengeloading} />
         </Grid.Col>
         <Grid.Col span={4} style={{ height: '500px' }}>
-          <NewChallengesCard challenges={latestChallenges} />
+          <NewChallengesCard challenges={latestChallenges} loading={newChallengesloading}/>
         </Grid.Col>
       </Grid>
 
@@ -235,7 +248,7 @@ const Dashboard: React.FC = () => {
       </Title>
       <Divider size="sm" style={{ marginBottom: '20px' }} />
 
-      <BuildChallenges builds={buildChallenges} />
+      <BuildChallenges builds={buildChallenges} loading={buildChallengesloading}/>
 
       {/* Bingo Başlık */}
       <Title order={3} style={{ marginTop: '40px', marginBottom: '10px', textAlign: 'center' }}>
@@ -243,7 +256,7 @@ const Dashboard: React.FC = () => {
       </Title>
       <Divider size="sm" style={{ marginBottom: '20px' }} />
 
-      <BingoChallenges challenges={bingoChallenges} />
+      <BingoChallenges challenges={bingoChallenges} loading={bingoChallengesloading}/>
     </div>
   );
 };

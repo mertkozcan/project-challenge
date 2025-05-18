@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Image, Text, Badge, Table, Button, Group } from '@mantine/core';
+import { Card, Image, Text, Badge, Table, Button, Group, Skeleton } from '@mantine/core';
 import { IconTrophy } from '@tabler/icons-react';
 
 interface LeaderboardEntry {
@@ -13,6 +13,7 @@ interface PopularChallengeCardProps {
   challengeName: string; // Challenge adı
   description: string; // Challenge açıklaması
   leaderboard: LeaderboardEntry[]; // İlk 3 kişinin bilgileri
+  loading: boolean;
 }
 
 // Süre formatlama fonksiyonu
@@ -32,6 +33,7 @@ const PopularChallengeCard: React.FC<PopularChallengeCardProps> = ({
   challengeName,
   description,
   leaderboard,
+  loading,
 }) => {
   return (
     <Card
@@ -45,65 +47,75 @@ const PopularChallengeCard: React.FC<PopularChallengeCardProps> = ({
         color: 'white',
       }}
     >
-      {/* Oyun Görseli */}
-      <Card.Section>
-        <Image src={gameImage} alt={gameName} height={160} w="100%" fit="contain" />
-      </Card.Section>
+      {loading ? (
+        <div>
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} />
+        </div>
+      ) : (
+        <>
+          {/* Oyun Görseli */}
+          <Card.Section>
+            <Image src={gameImage} alt={gameName} height={160} w="100%" fit="contain" />
+          </Card.Section>
 
-      {/* Oyun Bilgileri */}
-      <Group mt="md" mb="xs" justify="space-between">
-        <Text size="lg">{gameName}</Text>
-        <Badge color="yellow" variant="filled">
-          Popular
-        </Badge>
-      </Group>
+          {/* Oyun Bilgileri */}
+          <Group mt="md" mb="xs" justify="space-between">
+            <Text size="lg">{gameName}</Text>
+            <Badge color="yellow" variant="filled">
+              Popular
+            </Badge>
+          </Group>
 
-      <Text size="sm" color="gray.4">
-        {challengeName}
-      </Text>
-      <Text size="xs" color="gray.5" mt="xs">
-        {description}
-      </Text>
+          <Text size="sm" color="gray.4">
+            {challengeName}
+          </Text>
+          <Text size="xs" color="gray.5" mt="xs">
+            {description}
+          </Text>
 
-      {/* Liderler Tablosu */}
-      <Text
-        size="lg"
-        ta="center"
-        mt="lg"
-        style={{
-          textDecoration: 'underline',
-          textUnderlineOffset: 4,
-        }}
-      >
-        Leaderboard
-      </Text>
+          {/* Liderler Tablosu */}
+          <Text
+            size="lg"
+            ta="center"
+            mt="lg"
+            style={{
+              textDecoration: 'underline',
+              textUnderlineOffset: 4,
+            }}
+          >
+            Leaderboard
+          </Text>
 
-      {/* Tablo */}
-      <Table highlightOnHover striped mt="sm">
-        <thead>
-          <tr>
-            <th style={{ textAlign: 'left' }}>#</th>
-            <th style={{ textAlign: 'left' }}>User</th>
-            <th style={{ textAlign: 'left' }}>Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leaderboard.map((player, index) => (
-            <tr key={index}>
-              <td>
-                <IconTrophy size={16} color={trophyColors[index]} />
-              </td>
-              <td>{player.name}</td>
-              <td>{formatTime(player.time)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+          {/* Tablo */}
+          <Table highlightOnHover striped mt="sm">
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left' }}>#</th>
+                <th style={{ textAlign: 'left' }}>User</th>
+                <th style={{ textAlign: 'left' }}>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaderboard.map((player, index) => (
+                <tr key={index}>
+                  <td>
+                    <IconTrophy size={16} color={trophyColors[index]} />
+                  </td>
+                  <td>{player.name}</td>
+                  <td>{formatTime(player.time)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
 
-      {/* Challenge Katıl Butonu */}
-      <Button variant="outline" color="yellow" fullWidth mt="15">
-        Join
-      </Button>
+          {/* Challenge Katıl Butonu */}
+          <Button variant="outline" color="yellow" fullWidth mt="15">
+            Join
+          </Button>
+        </>
+      )}
     </Card>
   );
 };

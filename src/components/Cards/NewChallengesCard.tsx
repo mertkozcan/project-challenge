@@ -1,13 +1,24 @@
-import React from 'react';
-import { Card, Image, Text, Table, Button, Group, Avatar, ScrollArea } from '@mantine/core';
+import React, { useState } from 'react';
+import {
+  Card,
+  Image,
+  Text,
+  Table,
+  Button,
+  Group,
+  Avatar,
+  ScrollArea,
+  Skeleton,
+} from '@mantine/core';
 
 import { Challenge } from '@/@types/challenge';
 
 interface NewChallengesCardProps {
   challenges: Challenge[]; // Yeni challenge listesi
+  loading: boolean;
 }
 
-const NewChallengesCard: React.FC<NewChallengesCardProps> = ({ challenges }) => {
+const NewChallengesCard: React.FC<NewChallengesCardProps> = ({ challenges, loading }) => {
   return (
     <Card
       shadow="md"
@@ -20,54 +31,63 @@ const NewChallengesCard: React.FC<NewChallengesCardProps> = ({ challenges }) => 
         color: 'white',
       }}
     >
-      {/* Kart Başlığı */}
-      <Text
-        size="lg"
-        ta="center"
-        mb={5}
-        style={{
-          textDecoration: 'underline',
-          textUnderlineOffset: 4,
-        }}
-      >
-        New Challenges
-      </Text>
+      {loading ? (
+        <div>
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} mb="sm" />
+          <Skeleton height={20} />
+        </div>
+      ) : (
+        <>
+          {/* Kart Başlığı */}
+          <Text
+            size="lg"
+            ta="center"
+            mb={5}
+            style={{
+              textDecoration: 'underline',
+              textUnderlineOffset: 4,
+            }}
+          >
+            New Challenges
+          </Text>
 
-      {/* Tablo */}
-      <div style={{ maxHeight: 400, overflowY: 'auto' }}>
-        <Table highlightOnHover striped>
-          <thead>
-            <tr>
-              <th style={{ textAlign: 'left' }}>Game</th>
-              <th style={{ textAlign: 'left' }}>Challenge</th>
-              <th style={{ textAlign: 'center' }}>More</th>
-            </tr>
-          </thead>
-          <tbody>
-            {challenges.map((challenge, index) => (
-              <tr key={index} style={{ height: 60 }}>
-                <td>{challenge.game_name}</td>
-                <td
-                  style={{
-                    whiteSpace: 'normal',
-                    wordWrap: 'break-word',
-                    marginTop: 0,
-                    marginBottom: 0,
-                    lineHeight: '1.5',
-                  }}
-                >
-                  {challenge.challenge_name}
-                </td>
-                <td style={{ textAlign: 'center' }}>
-                  <Button variant="outline" color="yellow" size="xs" mr={5}>
-                    More
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </div>
+          <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+            <Table highlightOnHover striped>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>Game</th>
+                  <th style={{ textAlign: 'left' }}>Challenge</th>
+                  <th style={{ textAlign: 'center' }}>More</th>
+                </tr>
+              </thead>
+              <tbody>
+                {challenges.map((challenge, index) => (
+                  <tr key={index} style={{ height: 60 }}>
+                    <td>{challenge.game_name}</td>
+                    <td
+                      style={{
+                        whiteSpace: 'normal',
+                        wordWrap: 'break-word',
+                        marginTop: 0,
+                        marginBottom: 0,
+                        lineHeight: '1.5',
+                      }}
+                    >
+                      {challenge.challenge_name}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <Button variant="outline" color="yellow" size="xs" mr={5}>
+                        More
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        </>
+      )}
     </Card>
   );
 };

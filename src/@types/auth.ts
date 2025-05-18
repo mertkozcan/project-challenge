@@ -25,8 +25,9 @@ export interface ResponseInfoObject {
 export type SignUpResponse = SignInResponse
 
 export type SignUpCredential = {
-  name: string
   username: string
   password: string
+  email:string
+  avatar_url?: string
 }
 

@@ -13,7 +13,7 @@ const createChallenge = async (gameName, challengeName, description, reward) => 
   return result.rows[0];
 };
 
-const getLatestChallenges = async (limit = 5) => {
+const getLatestChallenges = async (limit = 10) => {
   try {
     const result = await pool.query(
       'SELECT * FROM challenges ORDER BY created_at DESC LIMIT $1',
