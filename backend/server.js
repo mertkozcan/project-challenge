@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const challengeRoutes = require('./routes/challengeRoutes');
+const loginRoutes = require('./routes/loginRoutes');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(bodyParser.json());
 
 // API Routes
 app.use('/api/challenges', challengeRoutes);
+app.use('/api/auth', loginRoutes);
 
 // Server Başlat
 const PORT = process.env.PORT || 5000;

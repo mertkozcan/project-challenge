@@ -15,7 +15,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Dashboard',
     translateKey: '',
     icon: IconDashboard,
-    authority: [],
+    authority: ['user'],
     subMenu: [],
   },
   {
@@ -24,7 +24,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Challenges',
     translateKey: '',
     icon: IconTarget,
-    authority: [],
+    authority: ['user'],
     subMenu: [],
   },
   {
@@ -33,7 +33,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Build Challenges',
     translateKey: '',
     icon: IconListCheck,
-    authority: [],
+    authority: ['user'],
     subMenu: [],
   },
   {
@@ -42,7 +42,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Bingo Challenges',
     translateKey: '',
     icon: IconDice5,
-    authority: [],
+    authority: ['user'],
     subMenu: [],
   },
   {
@@ -51,7 +51,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Leaderboard',
     translateKey: '',
     icon: IconChartBar,
-    authority: [],
+    authority: ['user'],
     subMenu: [],
   },
 ];

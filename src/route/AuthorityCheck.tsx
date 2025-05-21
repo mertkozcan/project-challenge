@@ -10,12 +10,12 @@ export interface CommonProps {
 }
 
 interface AuthorityCheckProps extends CommonProps {
-  userAuthority: string[]
+  userAuthority: string
   authority: string[]
 }
 
 const AuthorityCheck = (props: AuthorityCheckProps) => {
-  const { userAuthority = [], authority = [], children } = props
+  const { userAuthority = '', authority = [], children } = props
 
   const roleMatched = useAuthority(userAuthority, authority)
 

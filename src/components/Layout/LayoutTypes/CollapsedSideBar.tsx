@@ -40,7 +40,7 @@ function CollapsedSideBarContent() {
   }, [location.pathname]);
 
   const links = navigationConfig.map((item) => (
-    <AuthorityCheck userAuthority={userAuthority ? userAuthority : []} authority={item.authority}>
+    <AuthorityCheck userAuthority={userAuthority ? userAuthority : ''} authority={item.authority}>
       <Link
         className={classes.link}
         data-active={item.path.split('/')[1] === active ? 'true' : undefined}

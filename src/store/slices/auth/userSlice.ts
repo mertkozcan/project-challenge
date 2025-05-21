@@ -2,16 +2,17 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { SLICE_BASE_NAME } from './constants'
 
 export interface UserState {
-  fullName?: string
-  phoneNumber?: string
+  username?: string
   email?: string
-  role?: string[]
+  role?: string
+  avatar_url?: string
 }
 
 const initialState: UserState = {
-  fullName: '',
+  username: '',
   email: '',
-  role: [],
+  role: '',
+  avatar_url: '',
 }
 
 const userSlice = createSlice({
@@ -20,16 +21,19 @@ const userSlice = createSlice({
   reducers: {
     setUser(state, action: PayloadAction<UserState>) {
       state.email = action.payload?.email
-      state.fullName = action.payload?.fullName
+      state.username = action.payload?.username
       state.role = action.payload?.role
-      state.phoneNumber = action.payload?.phoneNumber
+      state.avatar_url = action.payload?.avatar_url
     },
     setUserRole(state,action){
       state.role = action.payload.role
     },
     setUserName(state,action) {
-      state.fullName = action.payload
-    }
+      state.username = action.payload
+    },
+    setUserAvatar(state, action) {
+      state.avatar_url = action.payload
+    },
   },
 })
 

@@ -17,6 +17,7 @@ import * as yup from 'yup';
 import { useForm, yupResolver } from '@mantine/form';
 import useAuth from '@/utils/hooks/useAuth';
 import { SignUpCredential } from '@/@types/auth';
+import { useNavigate } from 'react-router-dom';
 
 // Hazır avatarların URL'leri
 const avatarList = Array.from({ length: 5 }, (_, i) => `/avatars/avatar${i + 1}.png`);
@@ -25,6 +26,8 @@ export default function SignUp() {
   const [loading, setLoading] = useState<boolean>(false);
   const { signUp } = useAuth();
   const [selectedAvatar, setSelectedAvatar] = useState<string>(avatarList[0]);
+
+const navigate = useNavigate();
 
   // Yup şema tanımı
   const schema = yup.object().shape({
@@ -55,7 +58,8 @@ export default function SignUp() {
     setLoading(true);
     try {
       await signUp({ ...values, avatar_url: selectedAvatar });
-      alert('Registration successful!');
+       navigate('/sign-in');
+      //alert('Registration successful!');
     } catch (e) {
       console.error('Registration failed:', e);
     } finally {

@@ -3,21 +3,20 @@ import classes from './PopOverTargetContent.module.css'
 import {useAppSelector} from "@/store";
 
 export default function PopOverTargetContent(){
-  const {fullName,email} = useAppSelector((state) => state.auth.user);
-  const firstNameInitial = fullName!.split(' ')[0][0]
-  const lastNameInitial = fullName!.split(' ')[1][0]
+  const {username,email,avatar_url} = useAppSelector((state) => state.auth.user);
+  const userNameInitial = username!.split(' ')[0][0]
 
   return(
     <>
       <div className={classes.contentWrapper}>
-        <Avatar color={'blue'} radius={'lg'}>{firstNameInitial + lastNameInitial}</Avatar>
+        <Avatar src={avatar_url} radius={'lg'} size={100}></Avatar>
         <div>
           <Text style={{fontWeight:'bold'}} size="md">
-            {fullName}
+            {username}
           </Text>
-          <Text size="xs">
+          {/* <Text size="xs">
             {email}
-          </Text>
+          </Text> */}
         </div>
       </div>
     </>

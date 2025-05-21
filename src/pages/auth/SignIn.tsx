@@ -16,10 +16,9 @@ export default function SignIn() {
   const [loading, setLoading] = useState<boolean>(false)
   const {signIn} = useAuth()
   const schema = yup.object().shape({
-    email: yup
+    username: yup
       .string()
-      .required('Please enter a email')
-      .email('Invalid email'),
+      .required('Please enter a username'),
     password: yup
       .string()
       .required('Please enter a password')
@@ -27,13 +26,13 @@ export default function SignIn() {
 
   const form = useForm({
     initialValues: {
-      email: 'admin@test.com',
-      password: '12345qwerty',
+      username: '',
+      password: '',
     },
     validate: yupResolver(schema),
   });
 
-  async function handleSubmit(values: { email: string, password: string }) {
+  async function handleSubmit(values: { username: string, password: string }) {
     setLoading(true)
     try {
       const res = await signIn(values)
@@ -56,8 +55,8 @@ export default function SignIn() {
               To get more information about the template please check the <a
               href={'https://github.com/auronvila/mantine-template/wiki'}>documentation</a>
             </Text>
-            <TextInput {...form.getInputProps('email')} name={'email'} label="Email address" withAsterisk
-                       placeholder="hello@gmail.com" size="md"/>
+            <TextInput {...form.getInputProps('username')} name={'username'} label="Username" withAsterisk
+                       placeholder="username" size="md"/>
             <PasswordInput {...form.getInputProps('password')} name={'password'} label="Password"
                            placeholder="Your password" mt="md" size="md"/>
             <Button loading={loading} type={'submit'} fullWidth mt="xl" size="md">
