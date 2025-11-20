@@ -24,6 +24,12 @@ export const protectedRoutes = [
     authority: [],
   },
   {
+    key: 'create-challenge',
+    path: '/challenges/create',
+    component: lazy(() => import('@/pages/challenges/CreateChallenge')),
+    authority: [],
+  },
+  {
     key: 'build-challenges',
     path: '/build-challenges',
     component: lazy(() => import('@/pages/challenges/BuildChallenges')),
@@ -33,6 +39,42 @@ export const protectedRoutes = [
     key: 'bingo-challenges',
     path: '/bingo-challenges',
     component: lazy(() => import('@/pages/challenges/BingoChallenges')),
+    authority: [],
+  },
+  {
+    key: 'builds',
+    path: '/builds',
+    component: lazy(() => import('@/pages/builds/Builds')),
+    authority: [],
+  },
+  {
+    key: 'create-build',
+    path: '/builds/create',
+    component: lazy(() => import('@/pages/builds/CreateBuild')),
+    authority: [],
+  },
+  {
+    key: 'builds.detail',
+    path: '/builds/:id',
+    component: lazy(() => import('@/pages/builds/BuildDetail')),
+    authority: [],
+  },
+  {
+    key: 'bingo-board',
+    path: '/bingo/:id',
+    component: lazy(() => import('@/pages/challenges/BingoBoard')),
+    authority: [],
+  },
+  {
+    key: 'profile',
+    path: '/profile/:id',
+    component: lazy(() => import('@/pages/profile/UserProfile')),
+    authority: [],
+  },
+  {
+    key: 'admin',
+    path: '/admin',
+    component: lazy(() => import('@/pages/admin/AdminPanel')),
     authority: [],
   },
   {

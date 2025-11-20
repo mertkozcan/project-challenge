@@ -1,125 +1,169 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Text, Badge, Button, Table, Progress, Group } from '@mantine/core';
-import { IconTrophy } from '@tabler/icons-react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Title, Text, Paper, Button, FileInput, Group, LoadingOverlay, Badge, Notification } from '@mantine/core';
+import { ChallengesService } from '@/services/challenges/challenges.service';
+import { Challenge } from '@/@types/challenge';
+import { IconUpload, IconArrowLeft, IconCheck, IconX } from '@tabler/icons-react';
+import ApiService from '@/services/ApiService';
+import { LeaderboardService } from '@/services/leaderboard/leaderboard.service';
+import { Table } from '@mantine/core';
 
-const ChallengePage = () => {
-  const [challenge, setChallenge] = useState<any>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [joined, setJoined] = useState<boolean>(false);
+const ChallengeDetail: React.FC = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<'success' | 'error' | null>(null);
 
   useEffect(() => {
-    // Örnek API çağrısı
+    if (!id) return;
     const fetchChallenge = async () => {
-      setLoading(true);
       try {
-        const data = {
-          id: 1,
-          name: "Ultimate Survivor",
-          description: "Tamamla ve kazan! Bu görevde hayatta kalma yeteneklerini test edeceksin.",
-          reward: "Golden Badge",
-          startDate: "2024-01-01",
-          endDate: "2024-01-10",
-          leaderboard: [
-            { name: "Player1", score: 95 },
-            { name: "Player2", score: 85 },
-            { name: "Player3", score: 80 },
-          ],
-        };
+        const data = await ChallengesService.getChallengeById(id);
         setChallenge(data);
       } catch (error) {
-        console.error("Error fetching challenge:", error);
+        console.error('Failed to fetch challenge', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchChallenge();
-  }, []);
+  }, [id]);
 
-  const handleJoin = () => {
-    setJoined(true);
-    alert("Challenge'a katıldınız!");
+  const handleUpload = async () => {
+    if (!file || !id) return;
+    setUploading(true);
+    setUploadStatus(null);
+
+    const formData = new FormData();
+    formData.append('media', file);
+    formData.append('user_id', '1'); // Hardcoded user ID
+    formData.append('challenge_id', id);
+    formData.append('media_type', file.type.startsWith('video') ? 'video' : 'image');
+
+    try {
+      await ApiService.fetchData({
+        url: '/proofs',
+        method: 'POST',
+        data: formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setUploadStatus('success');
+      setFile(null);
+    } catch (error) {
+      console.error('Upload failed', error);
+      setUploadStatus('error');
+    } finally {
+      setUploading(false);
+    }
   };
 
-  if (loading) {
-    return <Text>Loading...</Text>;
-  }
+  if (loading) return <LoadingOverlay visible={true} />;
+  if (!challenge) return <Text>Challenge not found</Text>;
 
   return (
-    <Card shadow="md" padding="lg" radius="md">
-      {/* Başlık ve Ödül */}
-      <Group justify="space-between">
-        <Text size="xl" fw={700}>
-          {challenge.name}
-        </Text>
-        <Badge color="yellow" size="lg">
-          Reward: {challenge.reward}
-        </Badge>
-      </Group>
+    <Container size="md" py="xl">
+      <Button variant="subtle" leftSection={<IconArrowLeft />} onClick={() => navigate('/challenges')} mb="md">
+        Back to Challenges
+      </Button>
 
-      {/* Açıklama ve Tarihler */}
-      <Text size="sm" mt="md">
-        {challenge.description}
-      </Text>
-      <Group mt="md">
-        <Text size="xs" color="dimmed">
-          Start Date: {challenge.startDate}
-        </Text>
-        <Text size="xs" color="dimmed">
-          End Date: {challenge.endDate}
-        </Text>
-      </Group>
+      <Paper shadow="xs" p="xl" withBorder>
+        <Group justify="space-between" mb="md">
+          <Title order={2}>{challenge.challenge_name}</Title>
+          <Badge color={challenge.type === 'daily' ? 'green' : challenge.type === 'weekly' ? 'blue' : 'gray'}>
+            {challenge.type.toUpperCase()}
+          </Badge>
+        </Group>
+        
+        <Text c="dimmed" size="lg" mb="md">{challenge.game_name}</Text>
+        <Text mb="lg">{challenge.description}</Text>
+        
+        <Text fw={700} c="yellow">Reward: {challenge.reward}</Text>
 
-      {/* Katılım Durumu */}
-      <Group mt="lg" justify="space-between">
-        {!joined ? (
-          <Button onClick={handleJoin} variant="outline" color="green">
-            Join Challenge
-          </Button>
-        ) : (
-          <div>
-            <Text size="sm">Progress:</Text>
-            <Progress value={50} size="sm" color="blue" />
-          </div>
-        )}
-      </Group>
+        <Paper withBorder p="md" mt="xl" bg="dark.8">
+          <Title order={4} mb="md">Submit Proof</Title>
+          
+          {uploadStatus === 'success' && (
+            <Notification icon={<IconCheck size="1.1rem" />} color="teal" title="Success" mb="md" onClose={() => setUploadStatus(null)}>
+              Proof uploaded successfully!
+            </Notification>
+          )}
+           {uploadStatus === 'error' && (
+            <Notification icon={<IconX size="1.1rem" />} color="red" title="Error" mb="md" onClose={() => setUploadStatus(null)}>
+              Failed to upload proof.
+            </Notification>
+          )}
 
-      {/* Lider Tablosu */}
-      <Text size="lg" mt="xl" fw={600} style={{
-              textDecoration: 'underline',
-              textUnderlineOffset: 4,
-            }}>
-        Leaderboard
-      </Text>
-      <Table mt="md" highlightOnHover>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Player</th>
-            <th>Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          {challenge.leaderboard.map((player: any, index: number) => (
-            <tr key={index}>
-              <td>
-                {index < 3 ? (
-                  <IconTrophy
-                    size={16}
-                    color={index === 0 ? "gold" : index === 1 ? "silver" : "bronze"}
-                  />
-                ) : (
-                  index + 1
-                )}
-              </td>
-              <td>{player.name}</td>
-              <td>{player.score}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </Card>
+          <Group align="flex-end">
+            <FileInput
+              placeholder="Upload image or video"
+              label="Proof Media"
+              value={file}
+              onChange={setFile}
+              accept="image/*,video/*"
+              leftSection={<IconUpload size={14} />}
+              style={{ flex: 1 }}
+            />
+            <Button onClick={handleUpload} loading={uploading} disabled={!file}>
+              Submit
+            </Button>
+          </Group>
+        </Paper>
+
+        <Paper withBorder p="md" mt="xl">
+            <Title order={4} mb="md">Leaderboard</Title>
+            <ChallengeLeaderboard challengeId={id!} />
+        </Paper>
+      </Paper>
+    </Container>
   );
 };
 
-export default ChallengePage;
+const ChallengeLeaderboard: React.FC<{ challengeId: string }> = ({ challengeId }) => {
+    const [rankings, setRankings] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchRankings = async () => {
+            try {
+                const data = await LeaderboardService.getChallengeRankings(challengeId);
+                setRankings(data);
+            } catch (error) {
+                console.error('Failed to fetch rankings', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRankings();
+    }, [challengeId]);
+
+    if (loading) return <Text>Loading rankings...</Text>;
+    if (rankings.length === 0) return <Text c="dimmed">No completions yet. Be the first!</Text>;
+
+    return (
+        <Table>
+            <Table.Thead>
+                <Table.Tr>
+                    <Table.Th>Rank</Table.Th>
+                    <Table.Th>User</Table.Th>
+                    <Table.Th>Score</Table.Th>
+                    <Table.Th>Date</Table.Th>
+                </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+                {rankings.map((entry, index) => (
+                    <Table.Tr key={index}>
+                        <Table.Td>{index + 1}</Table.Td>
+                        <Table.Td>{entry.username}</Table.Td>
+                        <Table.Td>{entry.score}</Table.Td>
+                        <Table.Td>{new Date(entry.created_at).toLocaleDateString()}</Table.Td>
+                    </Table.Tr>
+                ))}
+            </Table.Tbody>
+        </Table>
+    );
+};
+
+export default ChallengeDetail;

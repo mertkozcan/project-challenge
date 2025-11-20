@@ -1,77 +1,99 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
+  Container,
   Paper,
+  Title,
   TextInput,
   PasswordInput,
   Button,
-  Title, Text,
+  Text,
   Anchor,
+  Stack,
+  Alert,
 } from '@mantine/core';
-import classes from './SignIn.module.css';
-import * as yup from 'yup';
-import {useForm, yupResolver} from "@mantine/form";
-import useAuth from "@/utils/hooks/useAuth";
+import { useForm } from '@mantine/form';
+import useAuth from '@/utils/hooks/useAuth';
+import { IconAlertCircle } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
 
-export default function SignIn() {
-  const [loading, setLoading] = useState<boolean>(false)
-  const {signIn} = useAuth()
-  const schema = yup.object().shape({
-    email: yup
-      .string()
-      .required('Please enter a email')
-      .email('Invalid email'),
-    password: yup
-      .string()
-      .required('Please enter a password')
-  });
+const SignIn: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { signIn } = useAuth();
 
   const form = useForm({
     initialValues: {
-      email: 'admin@test.com',
-      password: '12345qwerty',
+      email: '',
+      password: '',
     },
-    validate: yupResolver(schema),
+    validate: {
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      password: (value) => (value.length >= 6 ? null : 'Password must be at least 6 characters'),
+    },
   });
 
-  async function handleSubmit(values: { email: string, password: string }) {
-    setLoading(true)
+  const handleSubmit = async (values: typeof form.values) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      const res = await signIn(values)
-    } catch (e) {
-      console.log(e)
+      const result = await signIn(values);
+      
+      if (result?.status === 'failed') {
+        setError(result.message || 'Login failed');
+      }
+      // If success, useAuth hook will handle navigation
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div>
-      <form onSubmit={form.onSubmit(handleSubmit)}>
-        <div className={classes.wrapper}>
-          <Paper className={classes.form} radius={0} p={30}>
-            <Title order={2} className={classes.title} ta="center" mt="md" mb={50}>
-              Welcome to Mantine Template
-            </Title>
-            <Text ta="center" mt="md" mb={50}>
-              To get more information about the template please check the <a
-              href={'https://github.com/auronvila/mantine-template/wiki'}>documentation</a>
-            </Text>
-            <TextInput {...form.getInputProps('email')} name={'email'} label="Email address" withAsterisk
-                       placeholder="hello@gmail.com" size="md"/>
-            <PasswordInput {...form.getInputProps('password')} name={'password'} label="Password"
-                           placeholder="Your password" mt="md" size="md"/>
-            <Button loading={loading} type={'submit'} fullWidth mt="xl" size="md">
-              Login
+    <Container size={420} my={40}>
+      <Title ta="center" mb="xl">
+        Welcome Back!
+      </Title>
+
+      <Paper withBorder shadow="md" p={30} radius="md">
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+          <Stack>
+            {error && (
+              <Alert icon={<IconAlertCircle size={16} />} color="red">
+                {error}
+              </Alert>
+            )}
+
+            <TextInput
+              label="Email"
+              placeholder="your@email.com"
+              required
+              {...form.getInputProps('email')}
+            />
+
+            <PasswordInput
+              label="Password"
+              placeholder="Your password"
+              required
+              {...form.getInputProps('password')}
+            />
+
+            <Button type="submit" fullWidth loading={loading}>
+              Sign In
             </Button>
-            <Text ta="center" mt="md">
-              Don&apos;t have an account?{' '}
-              <Anchor<'a'> href="/sign-up" fw={700}>
-                Register
+
+            <Text ta="center" size="sm">
+              Don't have an account?{' '}
+              <Anchor component={Link} to="/sign-up" fw={700}>
+                Sign Up
               </Anchor>
             </Text>
-          </Paper>
-        </div>
-      </form>
-    </div>
+          </Stack>
+        </form>
+      </Paper>
+    </Container>
   );
-}
+};
+
+export default SignIn;

@@ -1,161 +1,125 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import {
+  Container,
   Paper,
+  Title,
   TextInput,
   PasswordInput,
   Button,
-  Title,
   Text,
   Anchor,
-  Avatar,
-  Group,
+  Stack,
+  Alert,
 } from '@mantine/core';
-import { Carousel } from '@mantine/carousel';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import classes from './SignUp.module.css';
-import * as yup from 'yup';
-import { useForm, yupResolver } from '@mantine/form';
-import useAuth from '@/utils/hooks/useAuth';
-import { SignUpCredential } from '@/@types/auth';
+import { useForm } from '@mantine/form';
+import { AuthService } from '@/services/auth/auth.service';
+import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
 
-// Hazır avatarların URL'leri
-const avatarList = Array.from({ length: 5 }, (_, i) => `/avatars/avatar${i + 1}.png`);
+const SignUp: React.FC = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-export default function SignUp() {
-  const [loading, setLoading] = useState<boolean>(false);
-  const { signUp } = useAuth();
-  const [selectedAvatar, setSelectedAvatar] = useState<string>(avatarList[0]);
-
-  // Yup şema tanımı
-  const schema = yup.object().shape({
-    username: yup
-      .string()
-      .required('Please enter a username')
-      .min(3, 'Username must be at least 3 characters'),
-    email: yup.string().required('Please enter an email').email('Invalid email address'),
-    password: yup
-      .string()
-      .required('Please enter a password')
-      .min(6, 'Password must be at least 6 characters'),
-  });
-
-  // Mantine form yapısı
-  const form = useForm<SignUpCredential>({
+  const form = useForm({
     initialValues: {
       username: '',
       email: '',
       password: '',
-      avatar_url: selectedAvatar,
+      confirmPassword: '',
     },
-    validate: yupResolver(schema),
+    validate: {
+      username: (value) => (value.length >= 3 ? null : 'Username must be at least 3 characters'),
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      password: (value) => (value.length >= 6 ? null : 'Password must be at least 6 characters'),
+      confirmPassword: (value, values) =>
+        value === values.password ? null : 'Passwords do not match',
+    },
   });
 
-  // Form gönderme işlemi
-  async function handleSubmit(values: SignUpCredential) {
+  const handleSubmit = async (values: typeof form.values) => {
     setLoading(true);
+    setError(null);
+
     try {
-      await signUp({ ...values, avatar_url: selectedAvatar });
-      alert('Registration successful!');
-    } catch (e) {
-      console.error('Registration failed:', e);
+      await AuthService.signUp(values.email, values.password, values.username);
+      setSuccess(true);
+      
+      setTimeout(() => {
+        navigate('/sign-in');
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || 'Signup failed');
     } finally {
       setLoading(false);
     }
-  }
-
-  // Avatar seçme işlemi
-  const handleAvatarSelect = (url: string) => {
-    setSelectedAvatar(url);
   };
 
   return (
-    <div>
-      <form onSubmit={form.onSubmit(handleSubmit)}>
-        <div className={classes.wrapper}>
-          <Paper className={classes.form} radius={0} p={30}>
-            <Title order={2} className={classes.title} ta="center" mt="md" mb={20}>
-              Create Your Account
-            </Title>
-            <Text ta="center" mt="md" mb={20}>
-              Choose your avatar and join the community!
-            </Text>
+    <Container size={420} my={40}>
+      <Title ta="center" mb="xl">
+        Create Account
+      </Title>
 
-            <Group justify="center" mb={20}>
-              <Avatar src={selectedAvatar} size={100} radius="xl" />
-            </Group>
+      <Paper withBorder shadow="md" p={30} radius="md">
+        <form onSubmit={form.onSubmit(handleSubmit)}>
+          <Stack>
+            {error && (
+              <Alert icon={<IconAlertCircle size={16} />} color="red">
+                {error}
+              </Alert>
+            )}
 
-            {/* Avatar Carousel */}
-            <Carousel
-              slideSize="20%"
-              slideGap="md"
-              ta="center"
-              height={150}
-              withIndicators
-              controlSize={32}
-              nextControlIcon={<IconChevronRight size={24} />}
-              previousControlIcon={<IconChevronLeft size={24} />}
-              emblaOptions={{
-                loop: true,
-                dragFree: false,
-                align: 'center',
-              }}
-              styles={{
-                control: { '&[data-inactive]': { opacity: 1 } },
-              }}
-            >
-              {avatarList.map((url, index) => (
-                <Carousel.Slide key={index} style={{ display: 'flex', justifyContent: 'center' }}>
-                  <Avatar
-                    src={url}
-                    size={100}
-                    radius="xl"
-                    style={{
-                      cursor: 'pointer',
-                      border: selectedAvatar === url ? '3px solid #228be6' : '1px solid #ccc',
-                      transition: '0.3s',
-                    }}
-                    onClick={() => handleAvatarSelect(url)}
-                  />
-                </Carousel.Slide>
-              ))}
-            </Carousel>
+            {success && (
+              <Alert icon={<IconCheck size={16} />} color="green">
+                Account created! Redirecting to login...
+              </Alert>
+            )}
 
             <TextInput
-              {...form.getInputProps('username')}
               label="Username"
-              withAsterisk
-              placeholder="geraltofrivia"
-              size="md"
-              mt="md"
+              placeholder="johndoe"
+              required
+              {...form.getInputProps('username')}
             />
+
             <TextInput
+              label="Email"
+              placeholder="your@email.com"
+              required
               {...form.getInputProps('email')}
-              label="Email Address"
-              withAsterisk
-              placeholder="gamer@gmail.com"
-              size="md"
-              mt="md"
             />
+
             <PasswordInput
-              {...form.getInputProps('password')}
               label="Password"
-              withAsterisk
               placeholder="Your password"
-              size="md"
-              mt="md"
+              required
+              {...form.getInputProps('password')}
             />
-            <Button loading={loading} type="submit" fullWidth mt="xl" size="md">
-              Register
+
+            <PasswordInput
+              label="Confirm Password"
+              placeholder="Confirm your password"
+              required
+              {...form.getInputProps('confirmPassword')}
+            />
+
+            <Button type="submit" fullWidth loading={loading} disabled={success}>
+              Sign Up
             </Button>
-            <Text ta="center" mt="md">
+
+            <Text ta="center" size="sm">
               Already have an account?{' '}
-              <Anchor<'a'> href="/sign-in" fw={700} onClick={(event) => event.preventDefault()}>
-                Login
+              <Anchor component={Link} to="/sign-in" fw={700}>
+                Sign In
               </Anchor>
             </Text>
-          </Paper>
-        </div>
-      </form>
-    </div>
+          </Stack>
+        </form>
+      </Paper>
+    </Container>
   );
-}
+};
+
+export default SignUp;

@@ -9,4 +9,25 @@ export const ChallengesService = {
     });
     return res.data;
   },
+
+  async getChallenges(type?: string, contentType?: string): Promise<Challenge[]> {
+    const params: any = {};
+    if (type) params.type = type;
+    if (contentType) params.contentType = contentType;
+
+    const res = await ApiService.fetchData<void, Challenge[]>({
+      url: '/challenges',
+      method: 'GET',
+      params: Object.keys(params).length > 0 ? params : undefined,
+    });
+    return res.data;
+  },
+
+  async getChallengeById(id: string): Promise<Challenge> {
+    const res = await ApiService.fetchData<void, Challenge>({
+      url: `/challenges/${id}`,
+      method: 'GET',
+    });
+    return res.data;
+  },
 };
