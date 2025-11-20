@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Image, Text, Badge, Table, Button, Group, Skeleton } from '@mantine/core';
 import { IconTrophy } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 
 interface LeaderboardEntry {
   name: string; // Kullanıcının adı
@@ -8,6 +9,7 @@ interface LeaderboardEntry {
 }
 
 interface PopularChallengeCardProps {
+  challengeId: number; // Challenge ID
   gameImage: string; // Oyun resmi
   gameName: string; // Oyun adı
   challengeName: string; // Challenge adı
@@ -28,6 +30,7 @@ const formatTime = (seconds: number): string => {
 const trophyColors = ['#FFD700', '#C0C0C0', '#CD7F32']; // Altın, Gümüş, Bronz
 
 const PopularChallengeCard: React.FC<PopularChallengeCardProps> = ({
+  challengeId,
   gameImage,
   gameName,
   challengeName,
@@ -35,6 +38,7 @@ const PopularChallengeCard: React.FC<PopularChallengeCardProps> = ({
   leaderboard,
   loading,
 }) => {
+  const navigate = useNavigate();
   return (
     <Card
       shadow="md"
@@ -111,7 +115,13 @@ const PopularChallengeCard: React.FC<PopularChallengeCardProps> = ({
           </Table>
 
           {/* Challenge Katıl Butonu */}
-          <Button variant="outline" color="yellow" fullWidth mt="15">
+          <Button 
+            variant="outline" 
+            color="yellow" 
+            fullWidth 
+            mt="15"
+            onClick={() => navigate(`/challenges/${challengeId}`)}
+          >
             Join
           </Button>
         </>

@@ -42,8 +42,9 @@ const latestChallenges = async (req, res) => {
 
 const getChallengeDetail = async (req, res) => {
   const { id } = req.params;
+  const userId = req.user?.id || null; // Get from auth middleware if available
   try {
-    const challenge = await getChallengeById(id);
+    const challenge = await getChallengeById(id, userId);
     if (!challenge) {
       return res.status(404).json({ error: 'Challenge not found' });
     }
@@ -51,6 +52,6 @@ const getChallengeDetail = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}
+};
 
 module.exports = { getChallenges, addChallenge, latestChallenges, getChallengeDetail };

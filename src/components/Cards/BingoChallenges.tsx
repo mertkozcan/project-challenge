@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, Text, Badge, Button, Group, Grid, Skeleton } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
 
 interface BingoChallenge {
+  id: number;
   gameName: string; // Oyun adı
   challengeName: string; // Challenge adı
   description: string; // Challenge açıklaması
@@ -13,6 +15,7 @@ interface BingoChallengesProps {
 }
 
 const BingoChallenges: React.FC<BingoChallengesProps> = ({ challenges ,loading}) => {
+  const navigate = useNavigate();
   return (
     <>
     { loading ? (
@@ -24,39 +27,49 @@ const BingoChallenges: React.FC<BingoChallengesProps> = ({ challenges ,loading})
       ) : 
     <Grid>
       {challenges.map((challenge, index) => (
-        <Grid.Col span={4} key={index}>
+        <Grid.Col span={6} key={index}>
           <Card
             shadow="md"
             padding="lg"
             radius="md"
+            h="100%"
             style={{
               backgroundImage: 'linear-gradient(145deg, #1e1e2e, #151515)',
               boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.5)',
               color: 'white',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             {/* Oyun Adı */}
-            <Group justify="space-between" mb="md">
-              <Text size="lg" fw={700}>
+            {/* Oyun Adı ve Badge */}
+            <Group justify="space-between" mb="xs" mt="xs" align="flex-start">
+              <Text size="lg" fw={700} lineClamp={2} style={{ minHeight: '3em', lineHeight: '1.3', flex: 1 }}>
                 {challenge.gameName}
               </Text>
-              <Badge color="pink" variant="filled">
+              <Badge color="pink" variant="filled" size="sm">
                 Bingo
               </Badge>
             </Group>
 
             {/* Challenge Adı */}
-            <Text size="md" fw={700}>
+            <Text size="md" fw={700} mb={5} lineClamp={2} style={{ minHeight: '2.6em', lineHeight: '1.3' }}>
               {challenge.challengeName}
             </Text>
 
             {/* Challenge Açıklaması */}
-            <Text size="sm" color="gray.4" mt="xs">
+            <Text size="xs" color="gray.4" mt={0} lineClamp={3} style={{ minHeight: '4em', lineHeight: '1.3' }}>
               {challenge.description}
             </Text>
 
             {/* Katıl Butonu */}
-            <Button variant="outline" color="pink" fullWidth mt="lg">
+            <Button 
+                variant="outline" 
+                color="pink" 
+                fullWidth 
+                mt="auto"
+                onClick={() => navigate(`/bingo/${challenge.id}`)}
+            >
               Start Bingo
             </Button>
           </Card>

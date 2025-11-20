@@ -22,45 +22,35 @@ function SideBar() {
     setActive(currentPath);
   }, [location.pathname]);
 
-  const links = navigationConfig.map((item, index) => {
-    let links: { label: string; link: string }[] = [];
-
+  const links = navigationConfig.map((item) => {
     if (item.subMenu && item.subMenu.length > 0) {
-      links = item.subMenu.map((i) => ({
-        label: i.title,
-        link: i.path,
-      }));
-      return <LinksGroup key={index} icon={item.icon} label={item.title} links={links} />;
-    } else {
-      return (
-        <AuthorityCheck
-          userAuthority={userAuthority ? userAuthority : ''}
-          authority={item.authority}
-        >
-          <Link
-            className={classes.link}
-            data-active={item.path.split('/')[1] === active ? 'true' : undefined}
-            to={item.path}
-            key={index}
-            onClick={(event) => {
-              event.preventDefault();
-              setActive(item.path.split('/')[1]);
-              navigate(item.path);
-            }}
-          >
-            <item.icon className={classes.linkIcon} stroke={1.5} />
-            <span>{item.translateKey ? t(item.translateKey) : item.title}</span>
-          </Link>
-        </AuthorityCheck>
-      );
+      const subLinks = item.subMenu.map((i) => ({ label: i.title, link: i.path }));
+      return <LinksGroup key={item.key} icon={item.icon} label={item.title} links={subLinks} />;
     }
+    return (
+      <AuthorityCheck key={item.key} userAuthority={userAuthority || ''} authority={item.authority}>
+        <Link
+          className={classes.link}
+          data-active={item.path.split('/')[1] === active ? 'true' : undefined}
+          to={item.path}
+          onClick={(e) => {
+            e.preventDefault();
+            setActive(item.path.split('/')[1]);
+            navigate(item.path);
+          }}
+        >
+          <item.icon className={classes.linkIcon} stroke={1.5} />
+          <span>{item.translateKey ? t(item.translateKey) : item.title}</span>
+        </Link>
+      </AuthorityCheck>
+    );
   });
 
   return (
     <nav className={classes.navbar}>
       <div className={classes.navbarMain}>
         <Group className={classes.header} justify="space-between">
-          <img className={classes.logo} alt={'Mantine Logo'} src={'/logo/logo-light-full.svg'} />
+          <img className={classes.logo} alt="Mantine Logo" src="/logo/logo-light-full.svg" />
         </Group>
         {links}
       </div>
@@ -77,14 +67,14 @@ export default function SimpleSideBar() {
       style={{
         // backgroundColor: 'rgb(241,240,240)',
         display: 'flex',
-        flex: ' 1 1 auto',
+        flex: '1 1 auto',
       }}
     >
       <SideBar />
       <div
         style={{
           padding: '1rem',
-          marginLeft: '300px' /* Sidebar genişliği kadar boşluk bırak */,
+          marginLeft: '300px', // Sidebar genişliği kadar boşluk bırak
           flex: 1,
         }}
       >

@@ -1,10 +1,11 @@
 export interface Build {
   id: number;
-  user_id: number;
-  username?: string;
+  user_id: string;
   game_name: string;
   build_name: string;
   description: string;
-  items_json: Record<string, any>;
+  items_json: any;
   created_at: string;
+  username?: string;
+  is_official?: boolean;
 }

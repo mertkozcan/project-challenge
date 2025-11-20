@@ -34,7 +34,7 @@ const getBoards = async (req, res) => {
 
 const getBoardDetail = async (req, res) => {
     const { id } = req.params;
-    const userId = req.query.user_id || 1; // Hardcoded for now
+    const userId = req.query.user_id;
 
     try {
         const board = await getBoardById(id);

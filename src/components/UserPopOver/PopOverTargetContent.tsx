@@ -3,8 +3,8 @@ import classes from './PopOverTargetContent.module.css'
 import {useAppSelector} from "@/store";
 
 export default function PopOverTargetContent(){
-  const {fullName,email} = useAppSelector((state) => state.auth.user);
-  const firstNameInitial = fullName!.slice(0, 1);
+  const {username,email} = useAppSelector((state) => state.auth.user);
+  const firstNameInitial = username ? username.slice(0, 1).toUpperCase() : '';
 
   return(
     <>

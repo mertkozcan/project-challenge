@@ -35,7 +35,7 @@ function useAuth() {
   > => {
     try {
       const resp = await AuthService.signIn(values.username, values.password)
-      const user=resp.user;
+      const user=resp.profile;
       dispatch(setUserId(user.id))
       const {
         avatar_url,
@@ -75,7 +75,7 @@ function useAuth() {
 
   const signUp = async (values: SignUpCredential) => {
     try {
-      await AuthService.signUp(values)
+      await AuthService.signUp(values.email, values.password, values.username)
       return {
         status: 'success',
         message: ''

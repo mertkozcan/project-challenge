@@ -2,9 +2,12 @@ const { getChallengeLeaderboard, getGlobalLeaderboardByCompletions, getGlobalLea
 
 const getChallengeRankings = async (req, res) => {
     const { challengeId } = req.params;
+    const userId = req.query.userId || req.user?.id || null;
+    const limit = parseInt(req.query.limit) || 50;
+
     try {
-        const rankings = await getChallengeLeaderboard(challengeId);
-        res.json(rankings);
+        const result = await getChallengeLeaderboard(challengeId, userId, limit);
+        res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

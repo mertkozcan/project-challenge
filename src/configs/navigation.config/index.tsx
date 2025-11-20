@@ -9,6 +9,7 @@ import {
   IconSword,
   IconSettings,
   IconUser,
+  IconGridDots,
 } from '@tabler/icons-react';
 
 const navigationConfig: NavigationTree[] = [
@@ -40,6 +41,15 @@ const navigationConfig: NavigationTree[] = [
     subMenu: [],
   },
   {
+    key: 'bingo-challenges',
+    path: '/bingo-challenges',
+    title: 'Bingo Challenges',
+    translateKey: '',
+    icon: IconGridDots,
+    authority: [],
+    subMenu: [],
+  },
+  {
     key: 'leaderboard',
     path: '/leaderboard',
     title: 'Leaderboard',
@@ -48,15 +58,7 @@ const navigationConfig: NavigationTree[] = [
     authority: [],
     subMenu: [],
   },
-  {
-    key: 'profile',
-    path: '/profile/1',
-    title: 'My Profile',
-    translateKey: '',
-    icon: IconUser,
-    authority: [],
-    subMenu: [],
-  },
+
   {
     key: 'admin',
     path: '/admin',

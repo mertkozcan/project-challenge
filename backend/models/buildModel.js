@@ -18,7 +18,11 @@ const getBuildsByGame = async (gameName) => {
 
 const getBuildById = async (id) => {
     const result = await pool.query(
-        'SELECT builds.*, users.username FROM builds JOIN users ON builds.user_id = users.id WHERE builds.id = $1',
+        `SELECT builds.*, users.username, g.banner_url, g.icon_url as game_icon
+         FROM builds 
+         JOIN users ON builds.user_id = users.id
+         LEFT JOIN games g ON builds.game_name = g.name
+         WHERE builds.id = $1`,
         [id]
     );
     return result.rows[0];

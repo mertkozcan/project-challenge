@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Text, Table, Button, Group, Badge, Skeleton } from '@mantine/core';
 import { IconTrophy } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 
 interface LeaderboardEntry {
   name: string; // Oyuncu adı
@@ -8,6 +9,7 @@ interface LeaderboardEntry {
 }
 
 interface ChallengeOfTheWeekProps {
+  challengeId: number; // Challenge ID
   gameName: string; // Oyun adı
   challengeName: string; // Challenge adı
   description: string; // Challenge açıklaması
@@ -23,6 +25,7 @@ const formatTime = (seconds: number): string => {
 };
 
 const ChallengeOfTheWeek: React.FC<ChallengeOfTheWeekProps> = ({
+  challengeId,
   gameName,
   challengeName,
   description,
@@ -30,6 +33,7 @@ const ChallengeOfTheWeek: React.FC<ChallengeOfTheWeekProps> = ({
   leaderboard,
   loading,
 }) => {
+  const navigate = useNavigate();
   return (
     <Card
       shadow="md"
@@ -113,7 +117,13 @@ const ChallengeOfTheWeek: React.FC<ChallengeOfTheWeekProps> = ({
             </Table>
           </div>
 
-          <Button variant="outline" color="yellow" fullWidth mt="60">
+          <Button 
+            variant="outline" 
+            color="yellow" 
+            fullWidth 
+            mt="60"
+            onClick={() => navigate(`/challenges/${challengeId}`)}
+          >
             Join
           </Button>
         </>

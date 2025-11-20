@@ -80,7 +80,7 @@ export const protectedRoutes = [
   {
     key: 'leaderboard',
     path: '/leaderboard',
-    component: lazy(() => import('@/pages/leaderboard')),
+    component: lazy(() => import('@/pages/leaderboard/index')),
     authority: [],
   },
 ];

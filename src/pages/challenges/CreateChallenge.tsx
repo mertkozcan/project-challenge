@@ -18,24 +18,25 @@ interface Game {
   name: string;
 }
 
+import { useAppSelector } from '@/store';
+
 const CreateChallenge: React.FC = () => {
   const navigate = useNavigate();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(false);
+  const userId = useAppSelector((state) => state.auth.userInfo.userId);
 
   const form = useForm({
     initialValues: {
       game_name: '',
       challenge_name: '',
       description: '',
-      reward: '',
       type: 'permanent',
     },
     validate: {
       game_name: (value) => (!value ? 'Game is required' : null),
       challenge_name: (value) => (!value ? 'Challenge name is required' : null),
       description: (value) => (!value ? 'Description is required' : null),
-      reward: (value) => (!value ? 'Reward is required' : null),
     },
   });
 
@@ -48,6 +49,7 @@ const CreateChallenge: React.FC = () => {
       const res = await ApiService.fetchData<void, Game[]>({
         url: '/games',
         method: 'GET',
+        data: undefined,
       });
       setGames(res.data);
     } catch (error) {
@@ -63,7 +65,8 @@ const CreateChallenge: React.FC = () => {
         method: 'POST',
         data: {
           ...values,
-          created_by: 1, // Hardcoded user ID
+          reward: 'None', // Community challenges have no reward
+          created_by: userId,
         },
       });
       navigate('/challenges');
@@ -106,25 +109,7 @@ const CreateChallenge: React.FC = () => {
             mb="md"
           />
 
-          <TextInput
-            label="Reward"
-            placeholder="e.g., 100 Points"
-            required
-            {...form.getInputProps('reward')}
-            mb="md"
-          />
-
-          <Select
-            label="Type"
-            data={[
-              { value: 'permanent', label: 'Permanent' },
-              { value: 'daily', label: 'Daily' },
-              { value: 'weekly', label: 'Weekly' },
-            ]}
-            required
-            {...form.getInputProps('type')}
-            mb="xl"
-          />
+          {/* Type is always permanent for community challenges */}
 
           <Group justify="flex-end">
             <Button variant="subtle" onClick={() => navigate('/challenges')}>

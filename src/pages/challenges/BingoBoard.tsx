@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
   Title,
@@ -12,13 +12,25 @@ import {
   LoadingOverlay,
   Badge,
   Group,
+  Box,
+  Stack,
 } from '@mantine/core';
 import { BingoService, type BingoCell, type BingoBoard as BingoBoardType } from '@/services/bingo/bingo.service';
-import { IconUpload, IconCheck, IconClock } from '@tabler/icons-react';
+import { IconUpload, IconCheck, IconClock, IconArrowLeft, IconTrophy } from '@tabler/icons-react';
+import { useAppSelector } from '@/store';
+import BingoHero from '@/components/Bingo/BingoHero';
+import { getGameTheme } from '@/utils/gameThemes';
+
+interface BingoBoardData extends BingoBoardType {
+  banner_url?: string;
+  game_icon?: string;
+}
 
 const BingoBoard: React.FC = () => {
   const { id } = useParams();
-  const [board, setBoard] = useState<BingoBoardType | null>(null);
+  const navigate = useNavigate();
+  const { userId } = useAppSelector((state) => state.auth.userInfo);
+  const [board, setBoard] = useState<BingoBoardData | null>(null);
   const [cells, setCells] = useState<BingoCell[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCell, setSelectedCell] = useState<BingoCell | null>(null);
@@ -31,12 +43,15 @@ const BingoBoard: React.FC = () => {
   }, [id]);
 
   const fetchBoard = async () => {
+    if (!userId) return;
     try {
-      const data = await BingoService.getBoardDetail(id!);
+      console.log('Fetching bingo board with ID:', id, 'for user:', userId);
+      const data = await BingoService.getBoardDetail(id!, userId);
+      console.log('Bingo board data received:', data);
       setBoard(data.board);
       setCells(data.cells);
     } catch (error) {
-      console.error('Failed to fetch board', error);
+      console.error('Failed to fetch board:', error);
     } finally {
       setLoading(false);
     }
@@ -48,11 +63,11 @@ const BingoBoard: React.FC = () => {
   };
 
   const handleUpload = async () => {
-    if (!file || !selectedCell) return;
+    if (!file || !selectedCell || !userId) return;
     setUploading(true);
 
     try {
-      await BingoService.submitCellProof(selectedCell.id, '1', file);
+      await BingoService.submitCellProof(selectedCell.id, userId, file);
       setSelectedCell(null);
       setFile(null);
       fetchBoard(); // Refresh
@@ -64,7 +79,20 @@ const BingoBoard: React.FC = () => {
   };
 
   if (loading) return <LoadingOverlay visible={true} />;
-  if (!board) return <Text>Board not found</Text>;
+  if (!board) {
+    return (
+      <Container size="sm" py="xl">
+        <Text size="xl" ta="center" c="dimmed">
+          Bingo Board not found. Please check the URL or try again.
+        </Text>
+        <Button onClick={() => navigate('/bingo')} mt="md" fullWidth>
+          Back to Bingo Challenges
+        </Button>
+      </Container>
+    );
+  }
+
+  const theme = getGameTheme(board.game_name);
 
   // Create grid structure
   const gridSize = board.size;
@@ -74,71 +102,214 @@ const BingoBoard: React.FC = () => {
     grid[cell.row_index][cell.col_index] = cell;
   });
 
+  // Calculate completion
+  const completedCells = cells.filter(c => c.status === 'APPROVED').length;
+  const totalCells = cells.length;
+  const completionPercentage = Math.round((completedCells / totalCells) * 100);
+
   return (
-    <Container size="lg" py="xl">
-      <Title order={2} mb="md">{board.title}</Title>
-      <Text c="dimmed" mb="xl">{board.description}</Text>
+    <Box style={{ minHeight: '100vh', paddingBottom: '3rem' }}>
+      {/* Back Button */}
+      <Container size="xl" pt="md">
+        <Button
+          variant="subtle"
+          leftSection={<IconArrowLeft />}
+          onClick={() => navigate('/bingo')}
+          mb="md"
+        >
+          Back to Bingo Challenges
+        </Button>
+      </Container>
 
-      <Grid gutter="xs">
-        {grid.map((row, rowIndex) => (
-          <React.Fragment key={rowIndex}>
-            {row.map((cell, colIndex) => (
-              <Grid.Col key={`${rowIndex}-${colIndex}`} span={12 / gridSize}>
-                <Paper
-                  p="md"
-                  withBorder
-                  style={{
-                    cursor: cell.status === 'APPROVED' ? 'default' : 'pointer',
-                    backgroundColor:
-                      cell.status === 'APPROVED'
-                        ? '#2f9e44'
-                        : cell.status === 'PENDING'
-                        ? '#f59f00'
-                        : '#1a1b1e',
-                    minHeight: '120px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                  }}
-                  onClick={() => handleCellClick(cell)}
-                >
-                  {cell.status === 'APPROVED' && <IconCheck size={24} color="white" />}
-                  {cell.status === 'PENDING' && <IconClock size={24} color="white" />}
-                  <Text size="sm" mt="xs" c="white">
-                    {cell.task}
-                  </Text>
-                </Paper>
-              </Grid.Col>
-            ))}
-          </React.Fragment>
-        ))}
-      </Grid>
+      {/* Hero Section */}
+      <Container size="xl">
+        <BingoHero
+          bannerUrl={board.banner_url}
+          gameName={board.game_name}
+          title={board.title}
+          description={board.description}
+          size={board.size}
+        />
+      </Container>
 
+      {/* Progress Section */}
+      <Container size="xl" mb="xl">
+        <Paper
+          p="xl"
+          radius="md"
+          style={{
+            background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+            border: `1px solid ${theme.primary}20`,
+          }}
+        >
+          <Group justify="space-between">
+            <div>
+              <Text size="sm" c="dimmed" mb="xs">
+                Your Progress
+              </Text>
+              <Title order={2} c={theme.primary}>
+                {completedCells} / {totalCells} Completed
+              </Title>
+            </div>
+            <Box
+              style={{
+                width: '120px',
+                height: '120px',
+                borderRadius: '50%',
+                background: `conic-gradient(${theme.primary} ${completionPercentage * 3.6}deg, rgba(255,255,255,0.1) 0deg)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Box
+                style={{
+                  width: '100px',
+                  height: '100px',
+                  borderRadius: '50%',
+                  background: 'rgba(21, 21, 21, 0.95)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
+                }}
+              >
+                <Text size="2rem" fw={700} c={theme.primary}>
+                  {completionPercentage}%
+                </Text>
+              </Box>
+            </Box>
+          </Group>
+        </Paper>
+      </Container>
+
+      {/* Bingo Grid */}
+      <Container size="xl">
+        <Grid gutter="md">
+          {grid.map((row, rowIndex) => (
+            <React.Fragment key={rowIndex}>
+              {row.map((cell, colIndex) => {
+                const isCompleted = cell.status === 'APPROVED';
+                const isPending = cell.status === 'PENDING';
+                
+                return (
+                  <Grid.Col key={`${rowIndex}-${colIndex}`} span={12 / gridSize}>
+                    <Paper
+                      p="lg"
+                      radius="md"
+                      onClick={() => handleCellClick(cell)}
+                      style={{
+                        cursor: isCompleted ? 'default' : 'pointer',
+                        minHeight: '150px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        background: isCompleted
+                          ? `linear-gradient(135deg, ${theme.primary}40, ${theme.secondary}40)`
+                          : isPending
+                          ? 'linear-gradient(135deg, rgba(245, 159, 0, 0.2), rgba(245, 159, 0, 0.1))'
+                          : 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+                        border: isCompleted
+                          ? `2px solid ${theme.primary}`
+                          : isPending
+                          ? '2px solid #f59f00'
+                          : '1px solid rgba(255, 255, 255, 0.1)',
+                        transition: 'all 0.3s ease',
+                        position: 'relative',
+                        overflow: 'hidden',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isCompleted) {
+                          e.currentTarget.style.transform = 'translateY(-4px)';
+                          e.currentTarget.style.boxShadow = `0 8px 24px ${theme.glow}`;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      {isCompleted && (
+                        <Box
+                          style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                          }}
+                        >
+                          <IconTrophy size={32} color={theme.primary} />
+                        </Box>
+                      )}
+                      
+                      <Text
+                        size="sm"
+                        fw={600}
+                        style={{
+                          lineHeight: 1.4,
+                          color: isCompleted ? theme.primary : 'white',
+                        }}
+                      >
+                        {cell.task}
+                      </Text>
+
+                      <Group justify="space-between" mt="md">
+                        <Badge
+                          color={isCompleted ? 'green' : isPending ? 'yellow' : 'gray'}
+                          variant="filled"
+                          leftSection={
+                            isCompleted ? (
+                              <IconCheck size={12} />
+                            ) : isPending ? (
+                              <IconClock size={12} />
+                            ) : null
+                          }
+                        >
+                          {isCompleted ? 'Completed' : isPending ? 'Pending' : 'Not Started'}
+                        </Badge>
+                      </Group>
+                    </Paper>
+                  </Grid.Col>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </Grid>
+      </Container>
+
+      {/* Upload Modal */}
       <Modal
         opened={!!selectedCell}
         onClose={() => setSelectedCell(null)}
         title="Submit Proof"
+        centered
       >
         {selectedCell && (
-          <>
-            <Text mb="md">{selectedCell.task}</Text>
+          <Stack gap="md">
+            <Text fw={600}>{selectedCell.task}</Text>
             <FileInput
-              placeholder="Upload proof"
+              label="Upload Proof"
+              placeholder="Choose image or video"
+              accept="image/*,video/*"
               value={file}
               onChange={setFile}
-              accept="image/*,video/*"
-              leftSection={<IconUpload size={14} />}
-              mb="md"
+              leftSection={<IconUpload size={16} />}
             />
-            <Button onClick={handleUpload} loading={uploading} disabled={!file} fullWidth>
-              Submit
+            <Button
+              onClick={handleUpload}
+              loading={uploading}
+              disabled={!file}
+              fullWidth
+              style={{
+                background: theme.gradient,
+                boxShadow: `0 4px 20px ${theme.glow}`,
+              }}
+            >
+              Submit Proof
             </Button>
-          </>
+          </Stack>
         )}
       </Modal>
-    </Container>
+    </Box>
   );
 };
 

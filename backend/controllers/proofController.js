@@ -1,4 +1,4 @@
-const { createProof, getProofsByChallenge, updateProofStatus, getProofById } = require('../models/proofModel');
+const { createProof, getProofsByChallenge, updateProofStatus, getProofById, getAllPendingProofs } = require('../models/proofModel');
 const { incrementUserPoints } = require('../models/userModel');
 const { getChallengeById } = require('../models/challengeModel');
 const multer = require('multer');
@@ -79,4 +79,28 @@ const approveProof = async (req, res) => {
     }
 };
 
-module.exports = { submitProof, getProofs, approveProof, upload };
+const rejectProof = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const proof = await getProofById(id);
+        if (!proof) return res.status(404).json({ error: 'Proof not found' });
+        if (proof.status === 'REJECTED') return res.status(400).json({ error: 'Already rejected' });
+
+        const updatedProof = await updateProofStatus(id, 'REJECTED', 0);
+        res.json({ message: 'Proof rejected', proof: updatedProof });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const getPendingProofs = async (req, res) => {
+    try {
+        const proofs = await getAllPendingProofs();
+        res.json(proofs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { submitProof, getProofs, approveProof, rejectProof, getPendingProofs, upload };

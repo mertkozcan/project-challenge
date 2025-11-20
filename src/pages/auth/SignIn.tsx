@@ -23,11 +23,11 @@ const SignIn: React.FC = () => {
 
   const form = useForm({
     initialValues: {
-      email: '',
+      username: '',
       password: '',
     },
     validate: {
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      username: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
       password: (value) => (value.length >= 6 ? null : 'Password must be at least 6 characters'),
     },
   });

@@ -2,7 +2,7 @@ const pool = require('../config/db');
 
 // Middleware to check if user is admin
 const isAdmin = async (req, res, next) => {
-    const userId = req.body.user_id || req.query.user_id || 1; // Hardcoded for now
+    const userId = req.body.user_id || req.query.user_id;
 
     try {
         const result = await pool.query('SELECT is_admin FROM users WHERE id = $1', [userId]);

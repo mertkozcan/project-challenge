@@ -1,17 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Title, Text, Paper, Button, FileInput, Group, LoadingOverlay, Badge, Notification } from '@mantine/core';
+import {
+  Container,
+  Title,
+  Text,
+  Paper,
+  Button,
+  FileInput,
+  Group,
+  LoadingOverlay,
+  Badge,
+  Notification,
+  Grid,
+  Box,
+  Stack,
+  Divider,
+} from '@mantine/core';
 import { ChallengesService } from '@/services/challenges/challenges.service';
 import { Challenge } from '@/@types/challenge';
-import { IconUpload, IconArrowLeft, IconCheck, IconX } from '@tabler/icons-react';
+import {
+  IconUpload,
+  IconArrowLeft,
+  IconCheck,
+  IconX,
+  IconCoin,
+  IconCheckbox,
+} from '@tabler/icons-react';
 import ApiService from '@/services/ApiService';
-import { LeaderboardService } from '@/services/leaderboard/leaderboard.service';
-import { Table } from '@mantine/core';
+import { useAppSelector } from '@/store';
+import ChallengeHero from './ChallengeHero';
+import EnhancedLeaderboard from './EnhancedLeaderboard';
+import { getGameTheme } from '@/utils/gameThemes';
+
+interface ChallengeData extends Challenge {
+  banner_url?: string;
+  participant_count?: number;
+  user_participated?: boolean;
+  user_proof_status?: string;
+}
 
 const ChallengeDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const { userId } = useAppSelector((state) => state.auth.userInfo);
+  const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -33,13 +65,13 @@ const ChallengeDetail: React.FC = () => {
   }, [id]);
 
   const handleUpload = async () => {
-    if (!file || !id) return;
+    if (!file || !id || !userId) return;
     setUploading(true);
     setUploadStatus(null);
 
     const formData = new FormData();
     formData.append('media', file);
-    formData.append('user_id', '1'); // Hardcoded user ID
+    formData.append('user_id', userId);
     formData.append('challenge_id', id);
     formData.append('media_type', file.type.startsWith('video') ? 'video' : 'image');
 
@@ -52,6 +84,9 @@ const ChallengeDetail: React.FC = () => {
       });
       setUploadStatus('success');
       setFile(null);
+      // Refresh challenge data
+      const updatedData = await ChallengesService.getChallengeById(id);
+      setChallenge(updatedData);
     } catch (error) {
       console.error('Upload failed', error);
       setUploadStatus('error');
@@ -63,107 +98,168 @@ const ChallengeDetail: React.FC = () => {
   if (loading) return <LoadingOverlay visible={true} />;
   if (!challenge) return <Text>Challenge not found</Text>;
 
+  const theme = getGameTheme(challenge.game_name);
+
   return (
-    <Container size="md" py="xl">
-      <Button variant="subtle" leftSection={<IconArrowLeft />} onClick={() => navigate('/challenges')} mb="md">
-        Back to Challenges
-      </Button>
+    <Box style={{ minHeight: '100vh', paddingBottom: '3rem' }}>
+      {/* Back Button */}
+      <Container size="xl" pt="md">
+        <Button
+          variant="subtle"
+          leftSection={<IconArrowLeft />}
+          onClick={() => navigate('/challenges')}
+          mb="md"
+        >
+          Back to Challenges
+        </Button>
+      </Container>
 
-      <Paper shadow="xs" p="xl" withBorder>
-        <Group justify="space-between" mb="md">
-          <Title order={2}>{challenge.challenge_name}</Title>
-          <Badge color={challenge.type === 'daily' ? 'green' : challenge.type === 'weekly' ? 'blue' : 'gray'}>
-            {challenge.type.toUpperCase()}
-          </Badge>
-        </Group>
-        
-        <Text c="dimmed" size="lg" mb="md">{challenge.game_name}</Text>
-        <Text mb="lg">{challenge.description}</Text>
-        
-        <Text fw={700} c="yellow">Reward: {challenge.reward}</Text>
+      {/* Hero Section */}
+      <Container size="xl">
+        <ChallengeHero
+          bannerUrl={challenge.banner_url}
+          gameName={challenge.game_name}
+          challengeName={challenge.challenge_name}
+          type={challenge.type}
+          participantCount={challenge.participant_count || 0}
+        />
+      </Container>
 
-        <Paper withBorder p="md" mt="xl" bg="dark.8">
-          <Title order={4} mb="md">Submit Proof</Title>
-          
-          {uploadStatus === 'success' && (
-            <Notification icon={<IconCheck size="1.1rem" />} color="teal" title="Success" mb="md" onClose={() => setUploadStatus(null)}>
-              Proof uploaded successfully!
-            </Notification>
-          )}
-           {uploadStatus === 'error' && (
-            <Notification icon={<IconX size="1.1rem" />} color="red" title="Error" mb="md" onClose={() => setUploadStatus(null)}>
-              Failed to upload proof.
-            </Notification>
-          )}
+      {/* Main Content */}
+      <Container size="xl">
+        <Grid gutter="xl">
+          {/* Left Column - Challenge Info */}
+          <Grid.Col span={{ base: 12, md: 7 }}>
+            <Stack gap="xl">
+              {/* Description Card */}
+              <Paper
+                shadow="md"
+                p="xl"
+                radius="md"
+                style={{
+                  background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+                  border: `1px solid ${theme.primary}20`,
+                }}
+              >
+                <Title order={3} mb="md" c={theme.primary}>
+                  About This Challenge
+                </Title>
+                <Text size="lg" style={{ lineHeight: 1.8 }}>
+                  {challenge.description}
+                </Text>
 
-          <Group align="flex-end">
-            <FileInput
-              placeholder="Upload image or video"
-              label="Proof Media"
-              value={file}
-              onChange={setFile}
-              accept="image/*,video/*"
-              leftSection={<IconUpload size={14} />}
-              style={{ flex: 1 }}
-            />
-            <Button onClick={handleUpload} loading={uploading} disabled={!file}>
-              Submit
-            </Button>
-          </Group>
-        </Paper>
+                <Divider my="xl" />
 
-        <Paper withBorder p="md" mt="xl">
-            <Title order={4} mb="md">Leaderboard</Title>
-            <ChallengeLeaderboard challengeId={id!} />
-        </Paper>
-      </Paper>
-    </Container>
+                <Group>
+                  <IconCoin size={24} color={theme.primary} />
+                  <div>
+                    <Text size="sm" c="dimmed">
+                      Reward
+                    </Text>
+                    <Text size="xl" fw={700} c={theme.primary}>
+                      {challenge.reward}
+                    </Text>
+                  </div>
+                </Group>
+              </Paper>
+
+              {/* Proof Upload Card */}
+              <Paper
+                shadow="md"
+                p="xl"
+                radius="md"
+                style={{
+                  background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+                  border: `1px solid ${theme.primary}20`,
+                }}
+              >
+                <Group justify="space-between" mb="md">
+                  <Title order={4}>Submit Proof</Title>
+                  {challenge.user_participated && (
+                    <Badge
+                      color={challenge.user_proof_status === 'APPROVED' ? 'green' : 'yellow'}
+                      size="lg"
+                      leftSection={challenge.user_proof_status === 'APPROVED' ? <IconCheck size={16} /> : undefined}
+                    >
+                      {challenge.user_proof_status || 'PENDING'}
+                    </Badge>
+                  )}
+                </Group>
+
+                {uploadStatus === 'success' && (
+                  <Notification
+                    icon={<IconCheck size="1.1rem" />}
+                    color="teal"
+                    title="Success"
+                    mb="md"
+                    onClose={() => setUploadStatus(null)}
+                  >
+                    Proof uploaded successfully! Awaiting approval.
+                  </Notification>
+                )}
+                {uploadStatus === 'error' && (
+                  <Notification
+                    icon={<IconX size="1.1rem" />}
+                    color="red"
+                    title="Error"
+                    mb="md"
+                    onClose={() => setUploadStatus(null)}
+                  >
+                    Failed to upload proof. Please try again.
+                  </Notification>
+                )}
+
+                <Stack gap="md">
+                  <FileInput
+                    placeholder="Upload image or video proof"
+                    label="Proof Media"
+                    description="Upload a screenshot or video showing your completion"
+                    value={file}
+                    onChange={setFile}
+                    accept="image/*,video/*"
+                    leftSection={<IconUpload size={16} />}
+                  />
+                  <Button
+                    onClick={handleUpload}
+                    loading={uploading}
+                    disabled={!file || !userId}
+                    fullWidth
+                    size="lg"
+                    style={{
+                      background: theme.gradient,
+                      boxShadow: `0 4px 20px ${theme.glow}`,
+                    }}
+                  >
+                    Submit Proof
+                  </Button>
+                </Stack>
+              </Paper>
+            </Stack>
+          </Grid.Col>
+
+          {/* Right Column - Leaderboard */}
+          <Grid.Col span={{ base: 12, md: 5 }}>
+            <Paper
+              shadow="md"
+              p="xl"
+              radius="md"
+              style={{
+                background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+                border: `1px solid ${theme.primary}20`,
+                position: 'sticky',
+                top: '2rem',
+              }}
+            >
+              <Title order={3} mb="xl" c={theme.primary}>
+                Leaderboard
+              </Title>
+              <EnhancedLeaderboard challengeId={id!} currentUserId={userId} />
+            </Paper>
+          </Grid.Col>
+        </Grid>
+      </Container>
+    </Box>
   );
-};
-
-const ChallengeLeaderboard: React.FC<{ challengeId: string }> = ({ challengeId }) => {
-    const [rankings, setRankings] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchRankings = async () => {
-            try {
-                const data = await LeaderboardService.getChallengeRankings(challengeId);
-                setRankings(data);
-            } catch (error) {
-                console.error('Failed to fetch rankings', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchRankings();
-    }, [challengeId]);
-
-    if (loading) return <Text>Loading rankings...</Text>;
-    if (rankings.length === 0) return <Text c="dimmed">No completions yet. Be the first!</Text>;
-
-    return (
-        <Table>
-            <Table.Thead>
-                <Table.Tr>
-                    <Table.Th>Rank</Table.Th>
-                    <Table.Th>User</Table.Th>
-                    <Table.Th>Score</Table.Th>
-                    <Table.Th>Date</Table.Th>
-                </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-                {rankings.map((entry, index) => (
-                    <Table.Tr key={index}>
-                        <Table.Td>{index + 1}</Table.Td>
-                        <Table.Td>{entry.username}</Table.Td>
-                        <Table.Td>{entry.score}</Table.Td>
-                        <Table.Td>{new Date(entry.created_at).toLocaleDateString()}</Table.Td>
-                    </Table.Tr>
-                ))}
-            </Table.Tbody>
-        </Table>
-    );
 };
 
 export default ChallengeDetail;

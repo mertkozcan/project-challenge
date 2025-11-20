@@ -10,6 +10,7 @@ import {
   ScrollArea,
   Skeleton,
 } from '@mantine/core';
+import { useNavigate } from 'react-router-dom';
 
 import { Challenge } from '@/@types/challenge';
 
@@ -19,6 +20,7 @@ interface NewChallengesCardProps {
 }
 
 const NewChallengesCard: React.FC<NewChallengesCardProps> = ({ challenges, loading }) => {
+  const navigate = useNavigate();
   return (
     <Card
       shadow="md"
@@ -77,7 +79,13 @@ const NewChallengesCard: React.FC<NewChallengesCardProps> = ({ challenges, loadi
                       {challenge.challenge_name}
                     </td>
                     <td style={{ textAlign: 'center' }}>
-                      <Button variant="outline" color="yellow" size="xs" mr={5}>
+                      <Button 
+                        variant="outline" 
+                        color="yellow" 
+                        size="xs" 
+                        mr={5}
+                        onClick={() => navigate(`/challenges/${challenge.id}`)}
+                      >
                         More
                       </Button>
                     </td>

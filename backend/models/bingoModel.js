@@ -6,7 +6,13 @@ const getAllBoards = async () => {
 };
 
 const getBoardById = async (boardId) => {
-    const result = await pool.query('SELECT * FROM bingo_boards WHERE id = $1', [boardId]);
+    const result = await pool.query(
+        `SELECT bb.*, g.banner_url, g.icon_url as game_icon
+         FROM bingo_boards bb
+         LEFT JOIN games g ON bb.game_name = g.name
+         WHERE bb.id = $1`,
+        [boardId]
+    );
     return result.rows[0];
 };
 

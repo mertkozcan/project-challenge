@@ -1,5 +1,5 @@
 const pool = require('../config/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Kullanıcı kayıt fonksiyonu
 const signUp = async (username, email, password, avatar_url) => {

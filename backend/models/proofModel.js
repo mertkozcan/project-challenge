@@ -29,4 +29,16 @@ const getProofById = async (proofId) => {
     return result.rows[0];
 };
 
-module.exports = { createProof, getProofsByChallenge, updateProofStatus, getProofById };
+const getAllPendingProofs = async () => {
+    const result = await pool.query(
+        `SELECT proofs.*, users.username, challenges.challenge_name, challenges.game_name
+         FROM proofs 
+         JOIN users ON proofs.user_id = users.id
+         JOIN challenges ON proofs.challenge_id = challenges.id
+         WHERE proofs.status = 'PENDING'
+         ORDER BY proofs.created_at DESC`
+    );
+    return result.rows;
+};
+
+module.exports = { createProof, getProofsByChallenge, updateProofStatus, getProofById, getAllPendingProofs };
