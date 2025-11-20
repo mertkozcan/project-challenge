@@ -49,7 +49,7 @@ const signIn = async (username, password) => {
       username: user.username,
       email: user.email,
       avatar_url: user.avatar_url,
-      created_at: user.created_at,
+      role: user.role,
     };
   } catch (error) {
     console.error('Error during user sign-in:', error.message);

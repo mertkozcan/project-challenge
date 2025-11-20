@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import isEmpty from 'lodash/isEmpty'
 
 function useAuthority(
-  userAuthority: string[] = [],
+  userAuthority: string = '',
   authority: string[] = [],
   emptyCheck = false,
 ) {

@@ -5,8 +5,7 @@ export interface UserInfoState {
   email: string
   userId: string
   isTwoFaEnabled?: boolean
-  name?: string
-  walletAddress?: string
+  username?: string
   language?: string
   role: string,
   googleLogin?: boolean,
@@ -17,8 +16,7 @@ const initialState: UserInfoState = {
   email: '',
   userId: '',
   isTwoFaEnabled: false,
-  name: '',
-  walletAddress: '',
+  username: '',
   language: '',
   role: '',
   googleLogin: false,
@@ -34,8 +32,7 @@ const userInfoSlice = createSlice({
       state.email = action.payload?.email
       state.language = action.payload?.language
       state.role = action.payload?.role
-      state.walletAddress = action.payload?.walletAddress
-      state.name = action.payload?.name
+      state.username = action.payload?.username
       state.googleLogin = action.payload.googleLogin
       state.notificationCount = action.payload?.notificationCount
       state.isTwoFaEnabled = action.payload?.isTwoFaEnabled
@@ -47,10 +44,7 @@ const userInfoSlice = createSlice({
       state.role = action.payload?.role
     },
     setDisplayName(state, action) {
-      state.name = action.payload
-    },
-    setWalletAddress(state, action) {
-      state.walletAddress = action.payload
+      state.username = action.payload
     },
     setUserId(state, action) {
       state.userId = action.payload
@@ -68,7 +62,6 @@ export const {
   setUserInfo,
   setUserId,
   setLanguage,
-  setWalletAddress,
   setDisplayName,
   setTwoFactorAuth,
   setUserInfoRole,

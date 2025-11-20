@@ -44,7 +44,7 @@ function DeckedSideBarContent() {
             />
           </div>
           {navigationConfig.map((link, index) => (
-            <AuthorityCheck userAuthority={userAuthority ? userAuthority : []} authority={link.authority}>
+            <AuthorityCheck userAuthority={userAuthority ? userAuthority : ''} authority={link.authority}>
               <Tooltip
                 label={link.translateKey ? t(link.translateKey) : link.title}
                 position="right"
@@ -76,7 +76,7 @@ function DeckedSideBarContent() {
                 {
                   link.subMenu?.map((submenuItem, subIndex) => {
                     return (
-                      <AuthorityCheck userAuthority={userAuthority ? userAuthority : []} authority={submenuItem.authority}>
+                      <AuthorityCheck userAuthority={userAuthority ? userAuthority : ''} authority={submenuItem.authority}>
                         <Link
                           to={`${link.path}/${submenuItem.path}`}
                           className={classes.link}

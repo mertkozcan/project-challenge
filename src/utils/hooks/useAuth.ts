@@ -34,27 +34,28 @@ function useAuth() {
     | undefined
   > => {
     try {
-      const resp = await AuthService.signIn(values.email, values.password)
-      dispatch(setUserId(resp.id))
+      const resp = await AuthService.signIn(values.username, values.password)
+      const user=resp.user;
+      dispatch(setUserId(user.id))
       const {
-        access_token,
-        id,
+        avatar_url,
+        role,
         email,
-        fullName,
-        phoneNumber
-      } = resp
+        username
+      } = user
       dispatch(signInSuccess({
-        token: access_token,
+        token: '',
         refreshToken: '',
-        expireTime: 0
+        expireTime: 0,
+        signedIn: true,
       }))
       dispatch(
         setUser(
           {
-            fullName: fullName,
+            username: username,
             email: email,
-            role: resp.authority,
-            phoneNumber: phoneNumber
+            role: role,
+            avatar_url: avatar_url,
           }
         )
       )
@@ -73,35 +74,36 @@ function useAuth() {
   }
 
   const signUp = async (values: SignUpCredential) => {
-    // try {
-    //   await AuthService.signUp(values)
-    //   return {
-    //     status: 'success',
-    //     message: ''
-    //   }
-    //   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-    // } catch (errors: any) {
-    //   return {
-    //     status: 'failed',
-    //     message: errors?.response?.data?.description || errors.toString()
-    //   }
-    // }
+    try {
+      await AuthService.signUp(values)
+      return {
+        status: 'success',
+        message: ''
+      }
+      // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    } catch (errors: any) {
+      return {
+        status: 'failed',
+        message: errors?.response?.data?.description || errors.toString()
+      }
+    }
   }
 
   const handleSignOut = () => {
     dispatch(signOutSuccess())
     dispatch(setUserInfo({
       googleLogin: false,
-      name: '',
+      username: '',
       role: '',
       email: '',
       userId: userId
     }))
     dispatch(
       setUser({
-        fullName: '',
-        role: [],
-        email: ''
+        username: '',
+        role: '',
+        email: '',
+        avatar_url: '',
       })
     )
     navigate(appConfig.unAuthenticatedEntryPath)
@@ -113,7 +115,7 @@ function useAuth() {
   }
 
   return {
-    authenticated: token && signedIn,
+    authenticated:signedIn, //&& token ,
     signIn,
     signUp,
     signOut,

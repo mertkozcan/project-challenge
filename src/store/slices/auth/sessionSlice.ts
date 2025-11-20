@@ -19,8 +19,8 @@ const sessionSlice = createSlice({
   name: `${SLICE_BASE_NAME}/session`,
   initialState,
   reducers: {
-    signInSuccess(state, action: PayloadAction<{ token: string, expireTime: number, refreshToken: string }>) {
-      state.signedIn = true
+    signInSuccess(state, action: PayloadAction<{ token: string, expireTime: number, refreshToken: string , signedIn: boolean }>) {
+      state.signedIn = action.payload.signedIn
       state.token = action.payload.token
       state.expireTime = action.payload.expireTime
       state.refreshToken = action.payload.refreshToken

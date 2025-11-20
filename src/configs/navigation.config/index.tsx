@@ -18,7 +18,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Dashboard',
     translateKey: '',
     icon: IconDashboard,
-    authority: [],
+    authority: ['user'],
     subMenu: [],
   },
   {
@@ -27,7 +27,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Challenges',
     translateKey: '',
     icon: IconTarget,
-    authority: [],
+    authority: ['user'],
     subMenu: [],
   },
   {

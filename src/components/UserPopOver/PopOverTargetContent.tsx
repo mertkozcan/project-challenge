@@ -12,11 +12,11 @@ export default function PopOverTargetContent(){
         <Avatar color={'blue'} radius={'lg'}>{firstNameInitial}</Avatar>
         <div>
           <Text style={{fontWeight:'bold'}} size="md">
-            {fullName}
+            {username}
           </Text>
-          <Text size="xs">
+          {/* <Text size="xs">
             {email}
-          </Text>
+          </Text> */}
         </div>
       </div>
     </>

@@ -34,7 +34,7 @@ function SideBar() {
     } else {
       return (
         <AuthorityCheck
-          userAuthority={userAuthority ? userAuthority : []}
+          userAuthority={userAuthority ? userAuthority : ''}
           authority={item.authority}
         >
           <Link

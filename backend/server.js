@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const challengeRoutes = require('./routes/challengeRoutes');
+const loginRoutes = require('./routes/loginRoutes');
 
 const app = express();
 
