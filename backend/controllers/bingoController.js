@@ -121,6 +121,25 @@ const completeCellDirect = async (req, res) => {
     }
 };
 
+const resetBoardProgress = async (req, res) => {
+    const { boardId } = req.params;
+    const { user_id } = req.body;
+
+    try {
+        const pool = require('../config/db');
+
+        // Delete all progress for this user and board
+        await pool.query(
+            'DELETE FROM user_bingo_progress WHERE user_id = $1 AND cell_id IN (SELECT id FROM bingo_cells WHERE board_id = $2)',
+            [user_id, boardId]
+        );
+
+        res.json({ message: 'Board progress reset successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getBoards,
     getBoardDetail,

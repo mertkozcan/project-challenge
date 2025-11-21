@@ -10,6 +10,7 @@ export interface BingoRoom {
   started_at?: string;
   completed_at?: string;
   created_at: string;
+  is_private: boolean;
   // Joined data
   board_title?: string;
   game_name?: string;
@@ -49,11 +50,11 @@ export interface CompleteCellResponse {
 
 export const BingoRoomService = {
   // Room Management
-  async createRoom(boardId: number, userId: string, maxPlayers: number = 4): Promise<BingoRoom> {
-    const res = await ApiService.fetchData<{ boardId: number; maxPlayers: number; user_id: string }, BingoRoom>({
+  async createRoom(boardId: number, userId: string, maxPlayers: number = 4, isPrivate: boolean = false, password?: string): Promise<BingoRoom> {
+    const res = await ApiService.fetchData<{ boardId: number; maxPlayers: number; user_id: string; isPrivate: boolean; password?: string }, BingoRoom>({
       url: '/bingo/rooms/create',
       method: 'POST',
-      data: { boardId, maxPlayers, user_id: userId },
+      data: { boardId, maxPlayers, user_id: userId, isPrivate, password },
     });
     return res.data;
   },
@@ -83,11 +84,11 @@ export const BingoRoomService = {
     return res.data;
   },
 
-  async joinRoom(roomId: string, userId: string): Promise<RoomParticipant> {
-    const res = await ApiService.fetchData<{ user_id: string }, RoomParticipant>({
+  async joinRoom(roomId: string, userId: string, password?: string): Promise<RoomParticipant> {
+    const res = await ApiService.fetchData<{ user_id: string; password?: string }, RoomParticipant>({
       url: `/bingo/rooms/${roomId}/join`,
       method: 'POST',
-      data: { user_id: userId },
+      data: { user_id: userId, password },
     });
     return res.data;
   },

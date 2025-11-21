@@ -14,6 +14,9 @@ import {
   Stack,
   NumberInput,
   Modal,
+  Switch,
+  PasswordInput,
+  Card,
 } from '@mantine/core';
 import { BingoService, type BingoCell, type BingoBoard as BingoBoardType } from '@/services/bingo/bingo.service';
 import { BingoRoomService } from '@/services/bingo/bingoRoom.service';
@@ -21,6 +24,9 @@ import { IconCheck, IconClock, IconArrowLeft, IconTrophy, IconUsers } from '@tab
 import { useAppSelector } from '@/store';
 import BingoHero from '@/components/Bingo/BingoHero';
 import { getGameTheme } from '@/utils/gameThemes';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
+import { useGameSounds } from '@/hooks/useGameSounds';
 
 interface BingoBoardData extends BingoBoardType {
   banner_url?: string;
@@ -38,10 +44,11 @@ interface Activity {
 const BingoBoard: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { userId } = useAppSelector((state) => state.auth.userInfo);
+  const userId = useAppSelector((state) => state.auth.userInfo.userId);
   const [board, setBoard] = useState<BingoBoardData | null>(null);
   const [cells, setCells] = useState<BingoCell[]>([]);
   const [loading, setLoading] = useState(true);
+  const { playSound } = useGameSounds();
   
   // Timer state
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -50,14 +57,22 @@ const BingoBoard: React.FC = () => {
   // Multiplayer modal state
   const [createRoomModalOpen, setCreateRoomModalOpen] = useState(false);
   const [maxPlayers, setMaxPlayers] = useState(4);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [password, setPassword] = useState('');
   
   // Activity feed state
   const [activities, setActivities] = useState<Activity[]>([]);
   const [canFinish, setCanFinish] = useState(false);
+  
+  // Ref to track processed completions to prevent duplicates
+  const processedCompletions = React.useRef<{rows: Set<number>, cols: Set<number>}>({
+    rows: new Set(),
+    cols: new Set()
+  });
 
   useEffect(() => {
     if (!id) return;
-    fetchBoard();
+    fetchBoard(true);
   }, [id]);
   
   // Timer effect
@@ -71,15 +86,39 @@ const BingoBoard: React.FC = () => {
     return () => clearInterval(interval);
   }, [timerActive]);
 
-  const fetchBoard = async () => {
+  const fetchBoard = async (isInitialLoad = false) => {
     if (!userId) return;
     try {
       const data = await BingoService.getBoardDetail(id!, userId);
-      setBoard(data.board);
-      setCells(data.cells);
       
-      // Check for completed rows/columns
-      checkCompletions(data.cells, data.board.size);
+      // Auto-reset if 100% complete on load (New Game)
+      // We check this BEFORE setting state to prevent showing completed board
+      const completedCount = data.cells.filter(c => c.status === 'APPROVED').length;
+      
+      if (isInitialLoad && completedCount === data.cells.length && data.cells.length > 0) {
+        await BingoService.resetBoard(parseInt(id!), userId);
+        
+        // Fetch again to get clean state
+        const cleanData = await BingoService.getBoardDetail(id!, userId);
+        setBoard(cleanData.board);
+        setCells(cleanData.cells);
+        setActivities([]);
+        setCanFinish(false);
+        // Reset processed completions ref
+        processedCompletions.current = { rows: new Set(), cols: new Set() };
+      } else {
+        // Normal load or update
+        setBoard(data.board);
+        setCells(data.cells);
+        
+        // Check for completed rows/columns
+        checkCompletions(data.cells, data.board.size);
+        
+        // Stop timer if 100% complete
+        if (completedCount === data.cells.length && data.cells.length > 0) {
+          setTimerActive(false);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch board:', error);
     } finally {
@@ -94,14 +133,16 @@ const BingoBoard: React.FC = () => {
     for (let row = 0; row < gridSize; row++) {
       const rowCells = cellsData.filter(c => c.row_index === row && c.status === 'APPROVED');
       if (rowCells.length === gridSize) {
-        const existing = activities.find(a => a.type === 'row' && a.index === row);
-        if (!existing) {
+        // Check if already processed using ref
+        if (!processedCompletions.current.rows.has(row)) {
+          processedCompletions.current.rows.add(row);
           newActivities.push({
             type: 'row',
             index: row,
             time: new Date().toLocaleTimeString(),
             elapsed: formatTime(elapsedTime),
           });
+          playSound('win');
         }
       }
     }
@@ -110,31 +151,35 @@ const BingoBoard: React.FC = () => {
     for (let col = 0; col < gridSize; col++) {
       const colCells = cellsData.filter(c => c.col_index === col && c.status === 'APPROVED');
       if (colCells.length === gridSize) {
-        const existing = activities.find(a => a.type === 'column' && a.index === col);
-        if (!existing) {
+        // Check if already processed using ref
+        if (!processedCompletions.current.cols.has(col)) {
+          processedCompletions.current.cols.add(col);
           newActivities.push({
             type: 'column',
             index: col,
             time: new Date().toLocaleTimeString(),
             elapsed: formatTime(elapsedTime),
           });
+          playSound('win');
         }
       }
     }
     
     if (newActivities.length > 0) {
-      setActivities(prev => [...prev, ...newActivities]);
+      setActivities(prev => [...newActivities, ...prev]);
       setCanFinish(true);
     }
   };
 
   const handleCellClick = async (cell: BingoCell) => {
     if (cell.status === 'APPROVED') return;
+    playSound('click');
     if (!timerActive) setTimerActive(true);
     if (!userId) return;
     
     try {
       await BingoService.completeCellDirect(cell.id, userId);
+      playSound('complete');
       
       // Add cell completion to activity feed
       const newActivity: Activity = {
@@ -143,7 +188,7 @@ const BingoBoard: React.FC = () => {
         time: new Date().toLocaleTimeString(),
         elapsed: formatTime(elapsedTime),
       };
-      setActivities(prev => [...prev, newActivity]);
+      setActivities(prev => [newActivity, ...prev]);
       
       fetchBoard();
     } catch (error) {
@@ -155,7 +200,7 @@ const BingoBoard: React.FC = () => {
     if (!userId || !id) return;
     
     try {
-      const room = await BingoRoomService.createRoom(parseInt(id), userId, maxPlayers);
+      const room = await BingoRoomService.createRoom(parseInt(id), userId, maxPlayers, isPrivate, password);
       navigate(`/bingo/room/${room.id}?boardId=${id}`);
     } catch (error) {
       console.error('Error creating room:', error);
@@ -175,6 +220,7 @@ const BingoBoard: React.FC = () => {
       setTimerActive(false);
       setActivities([]);
       setCanFinish(false);
+      processedCompletions.current = { rows: new Set(), cols: new Set() };
       
       // Refresh board
       fetchBoard();
@@ -185,20 +231,20 @@ const BingoBoard: React.FC = () => {
   
   const handleFinish = () => {
     setTimerActive(false);
+    playSound('win');
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+    
     const message = completionPercentage === 100 
       ? `Congratulations! You completed the entire bingo in ${formatTime(elapsedTime)}!`
       : `Great job! You completed ${activities.filter(a => a.type !== 'cell').length} line(s) in ${formatTime(elapsedTime)}!`;
-    alert(message);
     
-    // Reset progress after finishing
-    if (userId && id) {
-      BingoService.resetBoard(parseInt(id), userId).then(() => {
-        setElapsedTime(0);
-        setActivities([]);
-        setCanFinish(false);
-        fetchBoard();
-      });
-    }
+    setTimeout(() => {
+      alert(message);
+    }, 500);
   };
   
   const formatTime = (seconds: number) => {
@@ -260,303 +306,257 @@ const BingoBoard: React.FC = () => {
             </Paper>
             
             {/* Play Solo Button */}
-            {!timerActive && (
-              <Button
-                leftSection={<IconTrophy size={20} />}
+            {!timerActive && completionPercentage < 100 && (
+              <Button 
+                color="green" 
                 onClick={() => setTimerActive(true)}
-                variant="gradient"
-                gradient={{ from: 'blue', to: 'cyan', deg: 45 }}
+                leftSection={<IconClock size={18} />}
               >
-                Play Solo
+                Start Timer
               </Button>
             )}
-            
-            {/* Finish Bingo Button */}
-            {timerActive && (canFinish || completionPercentage === 100) && (
-              <Button
-                leftSection={<IconCheck size={20} />}
-                onClick={handleFinish}
-                variant="gradient"
-                gradient={{ from: 'green', to: 'lime', deg: 45 }}
+
+            {/* Finish Button */}
+            {canFinish && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                Finish Bingo
-              </Button>
+                <Button 
+                  color="yellow" 
+                  variant="filled"
+                  onClick={handleFinish}
+                  leftSection={<IconTrophy size={18} />}
+                  className="animate-pulse"
+                >
+                  Finish Bingo!
+                </Button>
+              </motion.div>
             )}
             
-            {/* Restart Button */}
-            <Button
-              leftSection={<IconArrowLeft size={20} />}
-              onClick={handleRestart}
-              variant="outline"
-              color="red"
-            >
-              Restart
-            </Button>
-            
-            {/* Create Multiplayer Room Button */}
-            <Button
-              leftSection={<IconUsers size={20} />}
+            {/* Multiplayer Button */}
+            <Button 
+              variant="light" 
+              color="blue" 
+              leftSection={<IconUsers size={18} />}
               onClick={() => setCreateRoomModalOpen(true)}
-              variant="filled"
             >
-              Create Multiplayer Room
+              Create Room
             </Button>
           </Group>
         </Group>
-      </Container>
 
-      {/* Hero Section */}
-      <Container size="xl">
-        <BingoHero
-          bannerUrl={board.banner_url}
-          gameName={board.game_name}
+        <BingoHero 
           title={board.title}
+          gameName={board.game_name}
           description={board.description}
+          bannerUrl={board.banner_url}
           size={board.size}
         />
       </Container>
 
-      {/* Progress Section */}
-      <Container size="xl" mb="xl">
-        <Paper
-          p="xl"
-          radius="md"
-          style={{
-            background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
-            border: `1px solid ${theme.primary}20`,
-          }}
-        >
-          <Group justify="space-between">
-            <div>
-              <Text size="sm" c="dimmed" mb="xs">
-                Your Progress
-              </Text>
-              <Title order={2} c={theme.primary}>
-                {completedCells} / {totalCells} Completed
-              </Title>
-            </div>
-            <Box
-              style={{
-                width: '120px',
-                height: '120px',
-                borderRadius: '50%',
-                background: `conic-gradient(${theme.primary} ${completionPercentage * 3.6}deg, rgba(255,255,255,0.1) 0deg)`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Box
-                style={{
-                  width: '100px',
-                  height: '100px',
-                  borderRadius: '50%',
-                  background: 'rgba(21, 21, 21, 0.95)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                }}
-              >
-                <Text size="2rem" fw={700} c={theme.primary}>
-                  {completionPercentage}%
-                </Text>
-              </Box>
-            </Box>
-          </Group>
-        </Paper>
-      </Container>
-
-      {/* Main Content */}
-      <Container size="xl" mb="xl">
+      <Container size="xl" mt="xl">
         <Grid>
-          {/* Bingo Grid - Left Side */}
-          <Grid.Col span={{ base: 12, lg: 8 }}>
+          {/* Main Bingo Board */}
+          <Grid.Col span={{ base: 12, md: 9 }}>
             <Paper
-              p="xl"
+              p={{ base: 'xs', md: 'xl' }}
               radius="md"
               style={{
                 background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
                 border: `1px solid ${theme.primary}20`,
               }}
             >
-              <Grid gutter="xs">
+              <Stack gap="xs">
                 {grid.map((row, rowIndex) => (
-                  <React.Fragment key={rowIndex}>
+                  <Group key={rowIndex} gap="xs" grow wrap="nowrap">
                     {row.map((cell) => {
                       const isCompleted = cell.status === 'APPROVED';
-                      
                       return (
-                        <Grid.Col key={`${cell.row_index}-${cell.col_index}`} span={12 / gridSize}>
+                        <motion.div
+                          key={cell.id}
+                          layout
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.95 }}
+                          style={{ flex: 1 }}
+                        >
                           <Paper
-                            p="lg"
-                            radius="md"
+                            p={{ base: 4, sm: 'md' }}
+                            withBorder
                             onClick={() => handleCellClick(cell)}
                             style={{
-                              cursor: isCompleted ? 'default' : 'pointer',
-                              minHeight: '150px',
+                              height: 'auto',
+                              aspectRatio: '1/1',
+                              minHeight: '60px',
+                              maxHeight: '120px',
                               display: 'flex',
                               flexDirection: 'column',
-                              justifyContent: 'space-between',
-                              background: isCompleted
-                                ? `linear-gradient(135deg, ${theme.primary}40, ${theme.secondary}40)`
-                                : 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
-                              border: isCompleted
-                                ? `2px solid ${theme.primary}`
-                                : '1px solid rgba(255, 255, 255, 0.1)',
-                              transition: 'all 0.3s ease',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              cursor: isCompleted ? 'default' : 'pointer',
+                              backgroundColor: isCompleted 
+                                ? 'rgba(64, 192, 87, 0.15)' 
+                                : 'var(--mantine-color-body)',
+                              borderColor: isCompleted ? '#40c057' : undefined,
+                              borderWidth: isCompleted ? 2 : 1,
+                              transition: 'all 0.2s ease',
                               position: 'relative',
-                            }}
-                            onMouseEnter={(e) => {
-                              if (!isCompleted) {
-                                e.currentTarget.style.transform = 'translateY(-4px)';
-                                e.currentTarget.style.boxShadow = `0 8px 24px ${theme.glow}`;
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = 'none';
+                              overflow: 'hidden'
                             }}
                           >
-                            {isCompleted && (
-                              <Box style={{ position: 'absolute', top: '10px', right: '10px' }}>
-                                <IconTrophy size={32} color={theme.primary} />
-                              </Box>
-                            )}
-                            
-                            <Text
-                              size="sm"
-                              fw={600}
-                              style={{
-                                lineHeight: 1.4,
-                                color: isCompleted ? theme.primary : 'white',
+                            <Text 
+                              size="sm" 
+                              ta="center" 
+                              fw={500}
+                              style={{ 
+                                zIndex: 1,
+                                userSelect: 'none',
+                                fontSize: 'clamp(0.6rem, 2vw, 0.9rem)',
+                                lineHeight: 1.2
                               }}
                             >
                               {cell.task}
                             </Text>
-
-                            <Group justify="space-between" mt="md">
-                              <Badge
-                                color={isCompleted ? 'green' : 'gray'}
-                                variant="filled"
-                                leftSection={isCompleted ? <IconCheck size={12} /> : null}
-                              >
-                                {isCompleted ? 'Completed' : 'Not Started'}
-                              </Badge>
-                            </Group>
+                            
+                            <AnimatePresence>
+                              {isCompleted && (
+                                <motion.div
+                                  initial={{ scale: 0, rotate: -180 }}
+                                  animate={{ scale: 1, rotate: 0 }}
+                                  transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                                  style={{
+                                    position: 'absolute',
+                                    bottom: 4,
+                                    right: 4,
+                                  }}
+                                >
+                                  <IconCheck size={16} color="#40c057" stroke={3} />
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </Paper>
-                        </Grid.Col>
+                        </motion.div>
                       );
                     })}
-                  </React.Fragment>
+                  </Group>
                 ))}
-              </Grid>
+              </Stack>
             </Paper>
           </Grid.Col>
-          
-          {/* Activity Feed - Right Side */}
-          <Grid.Col span={{ base: 12, lg: 4 }}>
-            <Paper
-              p="lg"
-              radius="md"
-              style={{
-                background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
-                border: `1px solid ${theme.primary}20`,
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <Title order={3} mb="md" c={theme.primary}>
-                Activity Feed
-              </Title>
-              
-              <Box style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', maxHeight: 'calc(100vh - 400px)' }}>
-                {activities.length === 0 ? (
-                  <Text size="sm" c="dimmed" ta="center" py="xl">
-                    Complete cells to see activity here!
-                  </Text>
-                ) : (
-                  <Stack gap="sm">
-                    {activities.map((activity, idx) => {
-                      const isLineCompletion = activity.type === 'row' || activity.type === 'column';
-                      
-                      return (
-                        <Paper
-                          key={idx}
-                          p="md"
-                          withBorder
-                          style={{
-                            background: isLineCompletion 
-                              ? 'rgba(64, 192, 87, 0.2)' 
-                              : 'rgba(30, 30, 46, 0.5)',
-                            borderColor: isLineCompletion ? theme.primary : 'rgba(255, 255, 255, 0.1)',
-                          }}
-                        >
-                          <Group justify="space-between">
-                            <div style={{ flex: 1 }}>
-                              {activity.type === 'cell' ? (
-                                <>
-                                  <Text fw={500} size="sm" c="white" lineClamp={2}>
-                                    {activity.cellTask}
-                                  </Text>
-                                  <Text size="xs" c="dimmed" mt={4}>
-                                    {activity.time} • {activity.elapsed}
-                                  </Text>
-                                </>
-                              ) : (
-                                <>
-                                  <Text fw={600} size="sm" c={theme.primary}>
-                                    ✓ Completed {activity.type === 'row' ? 'Row' : 'Column'} {activity.index! + 1}
-                                  </Text>
-                                  <Text size="xs" c="dimmed" mt={4}>
-                                    {activity.time} • {activity.elapsed}
-                                  </Text>
-                                </>
-                              )}
-                            </div>
-                            {isLineCompletion && <IconTrophy size={24} color={theme.primary} />}
-                          </Group>
-                        </Paper>
-                      );
-                    })}
-                  </Stack>
-                )}
-              </Box>
-            </Paper>
+
+          {/* Sidebar - Activity Feed */}
+          <Grid.Col span={{ base: 12, md: 3 }}>
+            <Stack>
+              {/* Progress Card */}
+              <Card shadow="sm" padding="md" radius="md" withBorder>
+                <Title order={4} mb="md">Progress</Title>
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm">Completed</Text>
+                  <Text fw={700}>{completedCells}/{totalCells}</Text>
+                </Group>
+                <Box 
+                  w="100%" 
+                  h={8} 
+                  style={{ 
+                    background: 'rgba(255,255,255,0.1)', 
+                    borderRadius: 4,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <Box 
+                    h="100%" 
+                    w={`${completionPercentage}%`}
+                    bg="blue"
+                    style={{ transition: 'width 0.5s ease' }}
+                  />
+                </Box>
+                
+                <Button 
+                  variant="light" 
+                  color="red" 
+                  fullWidth 
+                  mt="md" 
+                  size="xs"
+                  onClick={handleRestart}
+                >
+                  Restart Board
+                </Button>
+              </Card>
+
+              {/* Activity Feed */}
+              <Card shadow="sm" padding="md" radius="md" withBorder style={{ maxHeight: '500px', display: 'flex', flexDirection: 'column' }}>
+                <Title order={4} mb="md">Activity Log</Title>
+                <Stack 
+                  gap="sm" 
+                  style={{ 
+                    overflowY: 'auto', 
+                    flex: 1,
+                    paddingRight: '4px'
+                  }}
+                >
+                  {activities.length === 0 ? (
+                    <Text size="sm" c="dimmed" ta="center" py="xl">
+                      Start playing to see activity!
+                    </Text>
+                  ) : (
+                    activities.map((activity, index) => (
+                      <Paper key={index} p="xs" withBorder bg="rgba(0,0,0,0.2)">
+                        <Group justify="space-between" align="start">
+                          <Box style={{ flex: 1 }}>
+                            <Text size="xs" c="dimmed">{activity.time} ({activity.elapsed})</Text>
+                            <Text size="sm" fw={500}>
+                              {activity.type === 'cell' && `Completed: ${activity.cellTask}`}
+                              {activity.type === 'row' && `Completed Row ${activity.index! + 1} 🎯`}
+                              {activity.type === 'column' && `Completed Column ${activity.index! + 1} 🎯`}
+                            </Text>
+                          </Box>
+                          {activity.type !== 'cell' && (
+                            <IconTrophy size={16} color="#FFD700" />
+                          )}
+                        </Group>
+                      </Paper>
+                    ))
+                  )}
+                </Stack>
+              </Card>
+            </Stack>
           </Grid.Col>
         </Grid>
       </Container>
-      
-      {/* Create Multiplayer Room Modal */}
-      <Modal
-        opened={createRoomModalOpen}
-        onClose={() => setCreateRoomModalOpen(false)}
-        title="Create Multiplayer Room"
-        size="md"
-      >
-        <Stack gap="md">
-          <Text size="sm" c="dimmed">
-            Create a multiplayer room for this bingo board. Invite friends and compete to complete rows or columns first!
-          </Text>
 
+      {/* Create Room Modal */}
+      <Modal 
+        opened={createRoomModalOpen} 
+        onClose={() => setCreateRoomModalOpen(false)} 
+        title="Create Multiplayer Room"
+        centered
+      >
+        <Stack>
           <NumberInput
             label="Max Players"
-            placeholder="4"
-            min={2}
-            max={8}
             value={maxPlayers}
-            onChange={(value) => setMaxPlayers(Number(value))}
+            onChange={(val) => setMaxPlayers(Number(val))}
+            min={2}
+            max={10}
           />
-
-          <Button 
-            fullWidth 
-            onClick={handleCreateRoom}
-            style={{
-              background: theme.gradient,
-              boxShadow: `0 4px 20px ${theme.glow}`,
-            }}
-          >
+          <Switch
+            label="Private Room"
+            checked={isPrivate}
+            onChange={(event) => setIsPrivate(event.currentTarget.checked)}
+          />
+          {isPrivate && (
+            <PasswordInput
+              label="Room Password"
+              value={password}
+              onChange={(event) => setPassword(event.currentTarget.value)}
+              placeholder="Enter room password"
+            />
+          )}
+          <Button fullWidth onClick={handleCreateRoom} mt="md">
             Create Room
           </Button>
         </Stack>

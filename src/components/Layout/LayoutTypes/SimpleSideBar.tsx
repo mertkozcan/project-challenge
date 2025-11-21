@@ -4,14 +4,15 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import navigationConfig from '@/configs/navigation.config';
 import { LinksGroup } from '@/components/Layout/LinksGroup';
 import classes from '@/components/Layout/LayoutTypes/SimpleSideBar.module.css';
-import { Group } from '@mantine/core';
+import { Group, AppShell, Burger, ScrollArea, Box } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import SimpleSideBarBottomContent from '@/components/Layout/LayoutTypes/SimpleSideBarBottomContent';
 import { useTranslation } from 'react-i18next';
 import AuthorityCheck from '@/route/AuthorityCheck';
 import { useAppSelector } from '@/store';
-import Header from '@/components/Layout/Header';
+import NotificationBell from '@/components/Notifications/NotificationBell';
 
-function SideBar() {
+function SideBarContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const [active, setActive] = useState('');
@@ -47,46 +48,51 @@ function SideBar() {
     );
   });
 
-  return (
-    <nav className={classes.navbar}>
-      <div className={classes.navbarMain}>
-        <Group className={classes.header} justify="space-between">
-          <img className={classes.logo} alt="Mantine Logo" src="/logo/logo-light-full.svg" />
-        </Group>
-        {links}
-      </div>
-      <div className={classes.footer}>
-        <SimpleSideBarBottomContent />
-      </div>
-    </nav>
-  );
+  return <>{links}</>;
 }
 
 export default function SimpleSideBar() {
+  const [opened, { toggle }] = useDisclosure();
+
   return (
-    <div
-      style={{
-        // backgroundColor: 'rgb(241,240,240)',
-        display: 'flex',
-        flex: '1 1 auto',
+    <AppShell
+      header={{ height: 60 }}
+      navbar={{
+        width: 300,
+        breakpoint: 'sm',
+        collapsed: { mobile: !opened },
       }}
+      padding="md"
     >
-      <SideBar />
-      <div
-        style={{
-          // padding: '1rem', // Padding moved to Views or handled by Header + Content wrapper
-          marginLeft: '300px', // Sidebar genişliği kadar boşluk bırak
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100vh',
-        }}
-      >
-        <Header />
-        <div style={{ padding: '1rem', flex: 1 }}>
-          <Views />
-        </div>
-      </div>
-    </div>
+      <AppShell.Header>
+        <Group h="100%" px="md" justify="space-between">
+          <Group>
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+            <img 
+              className={classes.logo} 
+              alt="Mantine Logo" 
+              src="/logo/logo-light-full.svg" 
+              style={{ height: 30, width: 'auto' }}
+            />
+          </Group>
+          <Group>
+            <NotificationBell />
+          </Group>
+        </Group>
+      </AppShell.Header>
+
+      <AppShell.Navbar p="md">
+        <AppShell.Section grow component={ScrollArea}>
+          <SideBarContent />
+        </AppShell.Section>
+        <AppShell.Section>
+          <SimpleSideBarBottomContent />
+        </AppShell.Section>
+      </AppShell.Navbar>
+
+      <AppShell.Main>
+        <Views />
+      </AppShell.Main>
+    </AppShell>
   );
 }

@@ -101,4 +101,16 @@ export const protectedRoutes = [
     component: lazy(() => import('@/pages/bingo/GameView')),
     authority: [],
   },
+  {
+    key: 'bingo-history',
+    path: '/bingo/history',
+    component: lazy(() => import('@/pages/bingo/BingoHistory')),
+    authority: [],
+  },
+  {
+    key: 'bingo-game-details',
+    path: '/bingo/history/:roomId',
+    component: lazy(() => import('@/pages/bingo/BingoGameDetails')),
+    authority: [],
+  },
 ];

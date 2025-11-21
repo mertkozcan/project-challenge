@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Title, Grid, Card, Text, Badge, Button, LoadingOverlay } from '@mantine/core';
+import { Container, Title, Grid, Card, Text, Badge, Button, LoadingOverlay, Group } from '@mantine/core';
 import { BingoService, BingoBoard } from '@/services/bingo/bingo.service';
-import { IconGridDots } from '@tabler/icons-react';
+import { IconGridDots, IconUsers, IconHistory } from '@tabler/icons-react';
 
 const BingoChallenges: React.FC = () => {
   const [boards, setBoards] = useState<BingoBoard[]>([]);
@@ -27,7 +27,25 @@ const BingoChallenges: React.FC = () => {
 
   return (
     <Container size="lg" py="xl">
-      <Title order={2} mb="xl">Bingo Challenges</Title>
+      <Group justify="space-between" mb="xl">
+        <Title order={2}>Bingo Challenges</Title>
+        <Group>
+          <Button 
+            variant="light" 
+            leftSection={<IconUsers size={20} />}
+            onClick={() => navigate('/bingo/rooms')}
+          >
+            Multiplayer Rooms
+          </Button>
+          <Button 
+            variant="outline" 
+            leftSection={<IconHistory size={20} />}
+            onClick={() => navigate('/bingo/history')}
+          >
+            Game History
+          </Button>
+        </Group>
+      </Group>
 
       <Grid>
         {boards.map((board) => (

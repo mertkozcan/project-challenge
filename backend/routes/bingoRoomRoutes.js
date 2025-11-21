@@ -17,4 +17,11 @@ router.post('/rooms/:roomId/start', bingoRoomController.startGame);
 router.post('/rooms/:roomId/cells/:cellId/complete', bingoRoomController.completeCell);
 router.get('/rooms/:roomId/board-state', bingoRoomController.getBoardState);
 
+// Game History
+router.get('/history/my-games', bingoRoomController.getUserGameHistory);
+router.get('/history/:roomId', bingoRoomController.getGameDetails);
+
+// Game Statistics
+router.get('/rooms/:roomId/statistics', bingoRoomController.getGameStatistics);
+
 module.exports = router;

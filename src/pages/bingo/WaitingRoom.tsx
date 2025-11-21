@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Container, Title, Grid, Card, Text, Button, Group, Badge, Stack, Avatar, LoadingOverlay, Alert, Paper } from '@mantine/core';
-import { IconUsers, IconCheck, IconX, IconPlayerPlay, IconDoorExit, IconAlertCircle } from '@tabler/icons-react';
+import { Container, Title, Grid, Card, Text, Button, Group, Badge, Stack, Avatar, LoadingOverlay, Alert, Paper, Modal, TextInput, ActionIcon } from '@mantine/core';
+import { IconUsers, IconCheck, IconX, IconPlayerPlay, IconDoorExit, IconAlertCircle, IconUserPlus, IconSearch } from '@tabler/icons-react';
 import { BingoRoomService, RoomParticipant } from '@/services/bingo/bingoRoom.service';
+import { BingoInvitationService } from '@/services/bingo/bingoInvitation.service';
+import ApiService from '@/services/ApiService';
 import { useAppSelector } from '@/store';
+import SocketService from '@/services/socket.service';
 
 const BingoWaitingRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -16,22 +19,40 @@ const BingoWaitingRoom: React.FC = () => {
   const [participants, setParticipants] = useState<RoomParticipant[]>([]);
   const [loading, setLoading] = useState(true);
   const [myParticipant, setMyParticipant] = useState<RoomParticipant | null>(null);
+  
+  // Invitation state
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || !userId) return;
+
+    // Connect to WebSocket
+    const socket = SocketService.connect();
+    SocketService.joinRoom(roomId, userId);
+
+    // Initial data fetch
     fetchRoomData();
-    
-    // Poll for updates every 2 seconds
-    const interval = setInterval(fetchRoomData, 2000);
-    return () => clearInterval(interval);
-  }, [roomId]);
 
-  useEffect(() => {
-    // If game started, navigate to game view
-    if (room?.status === 'IN_PROGRESS') {
-      navigate(`/bingo/room/${roomId}/play`);
-    }
-  }, [room?.status]);
+    // Listen for real-time events
+    SocketService.on('player-joined', handlePlayerJoined);
+    SocketService.on('player-left', handlePlayerLeft);
+    SocketService.on('player-ready-changed', handlePlayerReadyChanged);
+    SocketService.on('game-started', handleGameStarted);
+    SocketService.on('room-closed', handleRoomClosed);
+
+    return () => {
+      // Cleanup
+      SocketService.leaveRoom(roomId, userId);
+      SocketService.off('player-joined', handlePlayerJoined);
+      SocketService.off('player-left', handlePlayerLeft);
+      SocketService.off('player-ready-changed', handlePlayerReadyChanged);
+      SocketService.off('game-started', handleGameStarted);
+      SocketService.off('room-closed', handleRoomClosed);
+    };
+  }, [roomId, userId]);
 
   const fetchRoomData = async () => {
     if (!roomId) return;
@@ -50,28 +71,47 @@ const BingoWaitingRoom: React.FC = () => {
     }
   };
 
+  const handlePlayerJoined = async () => {
+    await fetchRoomData();
+  };
+
+  const handlePlayerLeft = async () => {
+    await fetchRoomData();
+  };
+
+  const handlePlayerReadyChanged = async () => {
+    await fetchRoomData();
+  };
+
+  const handleGameStarted = () => {
+    console.log('Game started event received, navigating to game view...');
+    navigate(`/bingo/room/${roomId}/play`);
+  };
+
+  const handleRoomClosed = (data: { reason: string }) => {
+    console.log('Room closed:', data.reason);
+    alert(`Room was closed: ${data.reason}`);
+    navigate('/bingo/rooms');
+  };
+
   const handleToggleReady = async () => {
-    if (!roomId) return;
+    if (!roomId || !userId) return;
     
-    try {
-      if (!userId) return;
-      await BingoRoomService.toggleReady(roomId, userId);
-      await fetchRoomData();
-    } catch (error) {
-      console.error('Error toggling ready:', error);
-    }
+    // Emit to WebSocket
+    SocketService.toggleReady(roomId, userId);
   };
 
   const handleStartGame = async () => {
-    if (!roomId) return;
+    if (!roomId || !userId) return;
     
+    console.log('Starting game...', { roomId, userId });
     try {
-      if (!userId) return;
-      await BingoRoomService.startGame(roomId, userId);
-      // Will navigate automatically via useEffect
+      // Emit to WebSocket
+      SocketService.startGame(roomId, userId);
+      console.log('Start game event emitted');
     } catch (error) {
       console.error('Error starting game:', error);
-      alert(error instanceof Error ? error.message : 'Failed to start game');
+      alert('Failed to start game. Make sure all players are ready.');
     }
   };
 
@@ -81,31 +121,58 @@ const BingoWaitingRoom: React.FC = () => {
     try {
       if (!userId) return;
       await BingoRoomService.leaveRoom(roomId, userId);
-      // Navigate back to bingo board if boardId exists, otherwise to rooms
       navigate(boardId ? `/bingo/${boardId}` : '/bingo/rooms');
     } catch (error) {
       console.error('Error leaving room:', error);
     }
   };
 
+  const handleSearchUsers = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setSearching(true);
+    try {
+      const response = await ApiService.fetchData<void, any[]>({
+        url: `/users/search`,
+        method: 'GET',
+        params: { query: searchQuery },
+      });
+      setSearchResults(response.data);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleInviteUser = async (toUserId: string) => {
+    if (!roomId || !userId) return;
+    try {
+      await BingoInvitationService.sendInvitation(roomId, toUserId, userId);
+      alert('Invitation sent!');
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'Failed to send invitation');
+    }
+  };
+
+  // Auto-search when query changes
+  useEffect(() => {
+    if (searchQuery.length >= 2) {
+      const timer = setTimeout(() => {
+        handleSearchUsers();
+      }, 300); // Debounce 300ms
+      return () => clearTimeout(timer);
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
+
   if (loading) {
     return <LoadingOverlay visible />;
   }
 
-  if (!room) {
-    return (
-      <Container size="sm" py="xl">
-        <Alert icon={<IconAlertCircle />} title="Room not found" color="red">
-          This room doesn't exist or has been deleted.
-        </Alert>
-        <Button mt="md" onClick={() => navigate('/bingo/rooms')}>
-          Back to Lobby
-        </Button>
-      </Container>
-    );
-  }
-
-  const isHost = room.host_user_id === userId;
+  const isHost = room?.host_user_id === userId;
   const allReady = participants.every(p => p.is_ready);
   const canStart = isHost && allReady && participants.length >= 2;
 
@@ -114,46 +181,75 @@ const BingoWaitingRoom: React.FC = () => {
       {/* Header */}
       <Group justify="space-between" mb="xl">
         <div>
-          <Title order={1}>{room.board_title}</Title>
-          <Text c="dimmed">{room.game_name} • Waiting for players...</Text>
+          <Title order={1}>{room?.board_title}</Title>
+          <Text c="dimmed">{room?.game_name}</Text>
         </div>
-        <Badge size="lg" color="yellow">Waiting Room</Badge>
+        <Group>
+          <Badge size="lg" color="yellow">Waiting</Badge>
+          <Button 
+            variant="light" 
+            color="red" 
+            leftSection={<IconDoorExit size={16} />}
+            onClick={handleLeaveRoom}
+          >
+            Leave Room
+          </Button>
+        </Group>
       </Group>
 
+      {/* Room Info */}
+      <Alert icon={<IconAlertCircle size={16} />} title="Waiting for players" color="blue" mb="xl">
+        {participants.length}/{room?.max_players} players joined. 
+        {!allReady && ' Not all players are ready yet.'}
+        {allReady && participants.length < 2 && ' Waiting for more players...'}
+        {canStart && ' All players ready! Host can start the game.'}
+      </Alert>
+
       <Grid>
-        {/* Participants List */}
+        {/* Participants */}
         <Grid.Col span={{ base: 12, md: 8 }}>
           <Card shadow="sm" padding="lg" radius="md" withBorder>
-            <Title order={3} mb="md">
-              <Group gap="xs">
-                <IconUsers size={24} />
-                Players ({participants.length}/{room.max_players})
-              </Group>
-            </Title>
+            <Group justify="space-between" mb="md">
+              <Title order={3}>
+                <Group gap="xs">
+                  <IconUsers size={24} />
+                  Players ({participants.length}/{room?.max_players})
+                </Group>
+              </Title>
+              {isHost && (
+                <Button
+                  leftSection={<IconUserPlus size={16} />}
+                  variant="light"
+                  onClick={() => setInviteModalOpen(true)}
+                >
+                  Invite Friends
+                </Button>
+              )}
+            </Group>
 
             <Stack gap="md">
               {participants.map((participant) => (
                 <Paper key={participant.id} p="md" withBorder>
                   <Group justify="space-between">
-                    <Group>
+                    <Group gap="sm">
                       <Avatar src={participant.avatar_url} size="md" />
                       <div>
-                        <Text fw={500}>{participant.username}</Text>
-                        {participant.user_id === room.host_user_id && (
-                          <Badge size="sm" color="blue">Host</Badge>
-                        )}
+                        <Text fw={500}>
+                          {participant.username}
+                          {participant.user_id === userId && ' (You)'}
+                          {participant.user_id === room?.host_user_id && ' 👑'}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {participant.user_id === room?.host_user_id ? 'Host' : 'Player'}
+                        </Text>
                       </div>
                     </Group>
-
-                    {participant.is_ready ? (
-                      <Badge color="green" leftSection={<IconCheck size={14} />}>
-                        Ready
-                      </Badge>
-                    ) : (
-                      <Badge color="gray" leftSection={<IconX size={14} />}>
-                        Not Ready
-                      </Badge>
-                    )}
+                    <Badge 
+                      color={participant.is_ready ? 'green' : 'gray'}
+                      leftSection={participant.is_ready ? <IconCheck size={14} /> : <IconX size={14} />}
+                    >
+                      {participant.is_ready ? 'Ready' : 'Not Ready'}
+                    </Badge>
                   </Group>
                 </Paper>
               ))}
@@ -164,62 +260,96 @@ const BingoWaitingRoom: React.FC = () => {
         {/* Actions */}
         <Grid.Col span={{ base: 12, md: 4 }}>
           <Stack gap="md">
-            {/* Ready Toggle */}
             <Card shadow="sm" padding="lg" radius="md" withBorder>
               <Title order={4} mb="md">Your Status</Title>
               <Button
                 fullWidth
-                size="lg"
-                color={myParticipant?.is_ready ? 'red' : 'green'}
-                leftSection={myParticipant?.is_ready ? <IconX size={20} /> : <IconCheck size={20} />}
+                variant={myParticipant?.is_ready ? 'filled' : 'light'}
+                color={myParticipant?.is_ready ? 'green' : 'blue'}
+                leftSection={myParticipant?.is_ready ? <IconCheck size={16} /> : <IconX size={16} />}
                 onClick={handleToggleReady}
               >
-                {myParticipant?.is_ready ? 'Not Ready' : 'Ready'}
+                {myParticipant?.is_ready ? 'Ready!' : 'Mark as Ready'}
               </Button>
             </Card>
 
-            {/* Start Game (Host Only) */}
             {isHost && (
               <Card shadow="sm" padding="lg" radius="md" withBorder>
-                <Title order={4} mb="md">Game Control</Title>
+                <Title order={4} mb="md">Host Controls</Title>
                 <Button
                   fullWidth
-                  size="lg"
-                  color="blue"
-                  leftSection={<IconPlayerPlay size={20} />}
-                  onClick={handleStartGame}
+                  color="green"
+                  leftSection={<IconPlayerPlay size={16} />}
                   disabled={!canStart}
+                  onClick={handleStartGame}
                 >
                   Start Game
                 </Button>
-                {!allReady && (
-                  <Text size="xs" c="dimmed" mt="xs">
-                    All players must be ready
-                  </Text>
-                )}
-                {participants.length < 2 && (
-                  <Text size="xs" c="dimmed" mt="xs">
-                    Need at least 2 players
+                {!canStart && (
+                  <Text size="xs" c="dimmed" mt="xs" ta="center">
+                    {!allReady ? 'All players must be ready' : 'Need at least 2 players'}
                   </Text>
                 )}
               </Card>
             )}
 
-            {/* Leave Room */}
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Button
-                fullWidth
-                variant="light"
-                color="red"
-                leftSection={<IconDoorExit size={20} />}
-                onClick={handleLeaveRoom}
-              >
-                Leave Room
-              </Button>
+              <Title order={4} mb="md">Game Rules</Title>
+              <Stack gap="xs">
+                <Text size="sm">• Complete tasks to fill cells</Text>
+                <Text size="sm">• First to complete a row or column wins</Text>
+                <Text size="sm">• All players must be ready to start</Text>
+              </Stack>
             </Card>
           </Stack>
         </Grid.Col>
       </Grid>
+
+      {/* Invite Modal */}
+      <Modal
+        opened={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        title="Invite Friends"
+        size="md"
+      >
+        <Stack gap="md">
+          <TextInput
+            placeholder="Search by username..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftSection={<IconSearch size={16} />}
+          />
+
+          {searching && <Text size="sm" c="dimmed">Searching...</Text>}
+
+          <Stack gap="xs">
+            {searchResults.map((user) => {
+              const alreadyInRoom = participants.some(p => p.user_id === user.id);
+              return (
+                <Paper key={user.id} p="sm" withBorder>
+                  <Group justify="space-between">
+                    <Group gap="xs">
+                      <Avatar src={user.avatar_url} size="sm" />
+                      <Text size="sm">{user.username}</Text>
+                    </Group>
+                    {alreadyInRoom ? (
+                      <Badge color="green">Joined</Badge>
+                    ) : (
+                      <Button size="xs" onClick={() => handleInviteUser(user.id)}>
+                        Invite
+                      </Button>
+                    )}
+                  </Group>
+                </Paper>
+              );
+            })}
+          </Stack>
+
+          {searchQuery.length >= 2 && searchResults.length === 0 && !searching && (
+            <Text size="sm" c="dimmed" ta="center">No users found</Text>
+          )}
+        </Stack>
+      </Modal>
     </Container>
   );
 };
