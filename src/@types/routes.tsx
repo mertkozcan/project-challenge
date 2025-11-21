@@ -1,9 +1,9 @@
-import type {LazyExoticComponent} from 'react'
+import type { LazyExoticComponent, ComponentType } from 'react'
 
 export type Route = {
   key: string
   path: string
-  component: LazyExoticComponent<<T>(props: T) => JSX.Element>
+  component: LazyExoticComponent<ComponentType<any>>
   authority: string[]
 }
 

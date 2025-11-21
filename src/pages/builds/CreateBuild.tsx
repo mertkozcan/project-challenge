@@ -43,7 +43,7 @@ const CreateBuild: React.FC = () => {
       // Let's use the test user ID (1) we seeded.
       await BuildsService.createBuild({
         ...values,
-        user_id: 1, 
+        user_id: "1", 
         items_json: JSON.parse(values.items_json),
       });
       navigate('/builds');
