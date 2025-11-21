@@ -1,4 +1,4 @@
-const { getAllChallenges, createChallenge, getLatestChallenges, getChallengeById } = require('../models/challengeModel');
+const { getAllChallenges, createChallenge, getLatestChallenges, getChallengeById, getPopularChallenges: getPopularChallengesModel } = require('../models/challengeModel');
 
 const getChallenges = async (req, res) => {
   const { type, contentType } = req.query;
@@ -54,4 +54,14 @@ const getChallengeDetail = async (req, res) => {
   }
 };
 
-module.exports = { getChallenges, addChallenge, latestChallenges, getChallengeDetail };
+const getPopularChallenges = async (req, res) => {
+  try {
+    const limit = req.query.limit || 5;
+    const challenges = await getPopularChallengesModel(limit);
+    res.json(challenges);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { getChallenges, addChallenge, latestChallenges, getChallengeDetail, getPopularChallenges };

@@ -40,7 +40,7 @@ const getChallengeLeaderboard = async (challengeId, userId = null, limit = 50) =
 
 const getGlobalLeaderboardByCompletions = async () => {
     const result = await pool.query(
-        `SELECT users.username, users.avatar_url, COUNT(proofs.id) as completed_count
+        `SELECT users.id as user_id, users.username, users.avatar_url, COUNT(proofs.id) as completed_count
      FROM users
      JOIN proofs ON users.id = proofs.user_id
      WHERE proofs.status = 'APPROVED'
@@ -56,7 +56,7 @@ const getGlobalLeaderboardByPoints = async () => {
     // OR we sum up rewards from challenges.
     // Let's use the 'points' column in users table for now.
     const result = await pool.query(
-        `SELECT username, avatar_url, points FROM users ORDER BY points DESC LIMIT 100`
+        `SELECT id as user_id, username, avatar_url, points FROM users ORDER BY points DESC LIMIT 100`
     );
     return result.rows;
 }

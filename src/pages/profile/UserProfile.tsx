@@ -9,40 +9,50 @@ import {
   Text,
   Badge,
   Grid,
-  Card,
   Stack,
-  Timeline,
   LoadingOverlay,
-  RingProgress,
-  Center,
+  SimpleGrid,
+  Box,
+  Button,
 } from '@mantine/core';
 import { UserService, type ProfileData } from '@/services/user/user.service';
+import { UserStatsService, type UserBuild } from '@/services/userStats/userStats.service';
 import { 
   IconTrophy, 
-  IconTarget, 
   IconSword, 
-  IconClock, 
   IconMedal,
-  IconCheck,
-  IconX,
+  IconStar,
+  IconArrowRight,
 } from '@tabler/icons-react';
+import StatsCard from '@/components/Profile/StatsCard';
+import ActivityTimeline from '@/components/Profile/ActivityTimeline';
+import { useNavigate } from 'react-router-dom';
 
 const UserProfile: React.FC = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState<ProfileData | null>(null);
+  const [builds, setBuilds] = useState<UserBuild[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
-    fetchProfile();
+    fetchData();
   }, [id]);
 
-  const fetchProfile = async () => {
+  const fetchData = async () => {
     try {
-      const profileData = await UserService.getProfile(id!);
+      const [profileData, buildsData, activityData] = await Promise.all([
+        UserService.getProfile(id!),
+        UserStatsService.getUserBuilds(id!),
+        UserStatsService.getUserActivity(id!),
+      ]);
       setData(profileData);
+      setBuilds(buildsData);
+      setActivities(activityData);
     } catch (error) {
-      console.error('Failed to fetch profile', error);
+      console.error('Failed to fetch profile data', error);
     } finally {
       setLoading(false);
     }
@@ -53,175 +63,145 @@ const UserProfile: React.FC = () => {
 
   const { profile, stats, rank, recentActivity } = data;
 
-  // Calculate completion rate
-  const totalAttempts = stats.completed_challenges + stats.pending_proofs;
-  const completionRate = totalAttempts > 0 
-    ? Math.round((stats.completed_challenges / totalAttempts) * 100) 
-    : 0;
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'proof': return <IconTarget size={16} />;
-      case 'build': return <IconSword size={16} />;
-      case 'challenge': return <IconTrophy size={16} />;
-      default: return <IconClock size={16} />;
-    }
-  };
-
-  const getActivityColor = (status: string) => {
-    switch (status) {
-      case 'APPROVED': return 'green';
-      case 'PENDING': return 'yellow';
-      case 'REJECTED': return 'red';
-      default: return 'blue';
-    }
-  };
-
   return (
-    <Container size="xl" py="xl">
-      {/* Header Section */}
-      <Paper shadow="sm" p="xl" mb="xl" withBorder>
-        <Group>
-          <Avatar 
-            src={profile.avatar_url} 
-            size={120} 
-            radius={120}
-            alt={profile.username}
-          />
-          <Stack gap="xs" style={{ flex: 1 }}>
-            <Group>
-              <Title order={2}>{profile.username}</Title>
-              {rank && rank <= 10 && (
-                <Badge size="lg" color="yellow" leftSection={<IconMedal size={16} />}>
-                  Rank #{rank}
-                </Badge>
-              )}
-            </Group>
-            <Text c="dimmed">{profile.email}</Text>
-            <Group gap="xl" mt="md">
-              <div>
-                <Text size="xl" fw={700} c="yellow">{stats.total_points}</Text>
-                <Text size="sm" c="dimmed">Total Points</Text>
-              </div>
-              {rank && (
-                <div>
-                  <Text size="xl" fw={700}>#{rank}</Text>
-                  <Text size="sm" c="dimmed">Global Rank</Text>
-                </div>
-              )}
-              <div>
-                <Text size="xl" fw={700}>{stats.completed_challenges}</Text>
-                <Text size="sm" c="dimmed">Completed</Text>
-              </div>
-            </Group>
-          </Stack>
-        </Group>
-      </Paper>
+    <Box style={{ minHeight: '100vh', paddingBottom: '4rem' }}>
+      {/* Hero Section */}
+      <Box
+        style={{
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(26,27,30,1) 100%)',
+          paddingTop: '4rem',
+          paddingBottom: '2rem',
+          marginBottom: '2rem',
+          position: 'relative',
+        }}
+      >
+        <Container size="xl">
+          <Group align="flex-end" gap="xl">
+            <Avatar 
+              src={profile.avatar_url} 
+              size={160} 
+              radius={160}
+              alt={profile.username}
+              style={{ 
+                border: '4px solid #1A1B1E',
+                boxShadow: '0 0 30px rgba(0,0,0,0.5)'
+              }}
+            />
+            <Stack gap="xs" style={{ flex: 1, paddingBottom: '1rem' }}>
+              <Group>
+                <Title order={1} style={{ fontSize: '3rem' }}>{profile.username}</Title>
+                {rank && rank <= 10 && (
+                  <Badge 
+                    size="xl" 
+                    variant="gradient" 
+                    gradient={{ from: 'yellow', to: 'orange' }}
+                    leftSection={<IconMedal size={20} />}
+                  >
+                    Rank #{rank}
+                  </Badge>
+                )}
+              </Group>
+              <Text size="lg" c="dimmed">{profile.email}</Text>
+              <Text size="sm" c="dimmed">Member since {new Date(profile.created_at).toLocaleDateString()}</Text>
+            </Stack>
+          </Group>
+        </Container>
+      </Box>
 
-      <Grid>
-        {/* Stats Cards */}
-        <Grid.Col span={{ base: 12, md: 6, lg: 3 }}>
-          <Card shadow="sm" padding="lg" withBorder>
-            <Group justify="space-between">
-              <div>
-                <Text c="dimmed" size="sm">Challenges Completed</Text>
-                <Text size="xl" fw={700}>{stats.completed_challenges}</Text>
-              </div>
-              <IconTrophy size={40} color="green" />
-            </Group>
-          </Card>
-        </Grid.Col>
+      <Container size="xl">
+        <Grid gutter="xl">
+          {/* Left Column: Stats & Activity */}
+          <Grid.Col span={{ base: 12, md: 8 }}>
+            <Stack gap="xl">
+              {/* Stats Grid */}
+              <SimpleGrid cols={{ base: 2, sm: 4 }}>
+                <StatsCard
+                  label="Total Points"
+                  value={stats.total_points}
+                  icon={IconStar}
+                  color="yellow"
+                  delay={0.1}
+                />
+                <StatsCard
+                  label="Challenges"
+                  value={stats.completed_challenges}
+                  icon={IconTrophy}
+                  color="blue"
+                  delay={0.2}
+                />
+                <StatsCard
+                  label="Builds"
+                  value={stats.created_builds}
+                  icon={IconSword}
+                  color="red"
+                  delay={0.3}
+                />
+                <StatsCard
+                  label="Global Rank"
+                  value={rank ? `#${rank}` : '-'}
+                  icon={IconMedal}
+                  color="green"
+                  delay={0.4}
+                />
+              </SimpleGrid>
 
-        <Grid.Col span={{ base: 12, md: 6, lg: 3 }}>
-          <Card shadow="sm" padding="lg" withBorder>
-            <Group justify="space-between">
-              <div>
-                <Text c="dimmed" size="sm">Pending Proofs</Text>
-                <Text size="xl" fw={700}>{stats.pending_proofs}</Text>
-              </div>
-              <IconClock size={40} color="orange" />
-            </Group>
-          </Card>
-        </Grid.Col>
+              {/* Created Builds Showcase */}
+              <Box>
+                <Group justify="space-between" mb="md">
+                  <Title order={3}>Created Builds</Title>
+                  {builds.length > 0 && (
+                    <Button variant="subtle" rightSection={<IconArrowRight size={16} />} onClick={() => navigate('/builds')}>
+                      View All
+                    </Button>
+                  )}
+                </Group>
+                {builds.length > 0 ? (
+                  <SimpleGrid cols={{ base: 1, sm: 2 }}>
+                    {builds.slice(0, 4).map((build) => (
+                      <Paper
+                        key={build.id}
+                        p="md"
+                        radius="md"
+                        withBorder
+                        style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+                        onClick={() => navigate(`/builds/${build.id}`)}
+                        onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+                      >
+                        <Group mb="sm">
+                          {build.game_icon && (
+                            <Avatar src={build.game_icon} size="sm" radius="xl" />
+                          )}
+                          <Text fw={600} lineClamp={1}>{build.build_name}</Text>
+                        </Group>
+                        <Text size="sm" c="dimmed" lineClamp={2} mb="md">
+                          {build.description}
+                        </Text>
+                        <Badge size="sm" variant="light">
+                          {build.game_name}
+                        </Badge>
+                      </Paper>
+                    ))}
+                  </SimpleGrid>
+                ) : (
+                  <Paper p="xl" withBorder radius="md" ta="center" bg="dark.8">
+                    <Text c="dimmed">No builds created yet.</Text>
+                  </Paper>
+                )}
+              </Box>
+            </Stack>
+          </Grid.Col>
 
-        <Grid.Col span={{ base: 12, md: 6, lg: 3 }}>
-          <Card shadow="sm" padding="lg" withBorder>
-            <Group justify="space-between">
-              <div>
-                <Text c="dimmed" size="sm">Builds Created</Text>
-                <Text size="xl" fw={700}>{stats.created_builds}</Text>
-              </div>
-              <IconSword size={40} color="blue" />
-            </Group>
-          </Card>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 6, lg: 3 }}>
-          <Card shadow="sm" padding="lg" withBorder>
-            <Group justify="space-between">
-              <div>
-                <Text c="dimmed" size="sm">Challenges Created</Text>
-                <Text size="xl" fw={700}>{stats.created_challenges}</Text>
-              </div>
-              <IconTarget size={40} color="purple" />
-            </Group>
-          </Card>
-        </Grid.Col>
-
-        {/* Completion Rate */}
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <Card shadow="sm" padding="lg" withBorder>
-            <Text fw={700} mb="md">Completion Rate</Text>
-            <Center>
-              <RingProgress
-                size={180}
-                thickness={16}
-                sections={[{ value: completionRate, color: 'teal' }]}
-                label={
-                  <Center>
-                    <div style={{ textAlign: 'center' }}>
-                      <Text size="xl" fw={700}>{completionRate}%</Text>
-                      <Text size="xs" c="dimmed">Success Rate</Text>
-                    </div>
-                  </Center>
-                }
-              />
-            </Center>
-          </Card>
-        </Grid.Col>
-
-        {/* Recent Activity */}
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <Card shadow="sm" padding="lg" withBorder>
-            <Text fw={700} mb="md">Recent Activity</Text>
-            <Timeline active={-1} bulletSize={24} lineWidth={2}>
-              {recentActivity.slice(0, 5).map((activity, index) => (
-                <Timeline.Item
-                  key={index}
-                  bullet={getActivityIcon(activity.type)}
-                  title={
-                    <Group gap="xs">
-                      <Text size="sm" fw={500}>{activity.title}</Text>
-                      <Badge size="xs" color={getActivityColor(activity.status)}>
-                        {activity.status}
-                      </Badge>
-                    </Group>
-                  }
-                >
-                  <Text size="xs" c="dimmed">{activity.game_name}</Text>
-                  <Text size="xs" c="dimmed">
-                    {new Date(activity.created_at).toLocaleDateString()}
-                  </Text>
-                </Timeline.Item>
-              ))}
-            </Timeline>
-            {recentActivity.length === 0 && (
-              <Text c="dimmed" ta="center">No recent activity</Text>
-            )}
-          </Card>
-        </Grid.Col>
-      </Grid>
-    </Container>
+          {/* Right Column: Activity Timeline */}
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Paper p="xl" radius="md" withBorder>
+              <Title order={3} mb="xl">Recent Completions</Title>
+              <ActivityTimeline activities={activities} />
+            </Paper>
+          </Grid.Col>
+        </Grid>
+      </Container>
+    </Box>
   );
 };
 

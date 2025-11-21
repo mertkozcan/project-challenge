@@ -1,11 +1,11 @@
 import React from 'react';
-import { Card, Image, Text, Badge, Table, Button, Group, Skeleton } from '@mantine/core';
+import { Card, Image, Text, Badge, Table, Button, Group, Skeleton, Stack, Divider } from '@mantine/core';
 import { IconTrophy } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
 interface LeaderboardEntry {
   name: string; // Kullanıcının adı
-  time: number; // Kullanıcının süresi (saniye olarak)
+  score: number; // Kullanıcının puanı
 }
 
 interface PopularChallengeCardProps {
@@ -17,14 +17,6 @@ interface PopularChallengeCardProps {
   leaderboard: LeaderboardEntry[]; // İlk 3 kişinin bilgileri
   loading: boolean;
 }
-
-// Süre formatlama fonksiyonu
-const formatTime = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-};
 
 // Kupa renkleri
 const trophyColors = ['#FFD700', '#C0C0C0', '#CD7F32']; // Altın, Gümüş, Bronz
@@ -49,80 +41,90 @@ const PopularChallengeCard: React.FC<PopularChallengeCardProps> = ({
         backgroundImage: 'linear-gradient(145deg, #1e1e2e, #151515)',
         boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.5)',
         color: 'white',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {loading ? (
         <div>
-          <Skeleton height={20} mb="sm" />
+          <Skeleton height={140} mb="sm" />
           <Skeleton height={20} mb="sm" />
           <Skeleton height={20} />
         </div>
       ) : (
         <>
           {/* Oyun Görseli */}
-          <Card.Section>
-            <Image src={gameImage} alt={gameName} height={160} w="100%" fit="contain" />
-          </Card.Section>
-
-          {/* Oyun Bilgileri */}
-          <Group mt="md" mb="xs" justify="space-between">
-            <Text size="lg">{gameName}</Text>
-            <Badge color="yellow" variant="filled">
+          <Card.Section style={{ position: 'relative' }}>
+            <Image src={gameImage} alt={gameName} height={140} w="100%" fit="cover" />
+            <div style={{ 
+                position: 'absolute', 
+                bottom: 0, 
+                left: 0, 
+                right: 0, 
+                background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)', 
+                padding: '10px 16px' 
+            }}>
+                <Text fw={700} size="lg" c="white">{gameName}</Text>
+            </div>
+            <Badge 
+                color="yellow" 
+                variant="filled" 
+                style={{ position: 'absolute', top: 10, right: 10, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
+            >
               Popular
             </Badge>
-          </Group>
+          </Card.Section>
 
-          <Text size="sm" color="gray.4">
-            {challengeName}
-          </Text>
-          <Text size="xs" color="gray.5" mt="xs">
-            {description}
-          </Text>
-
-          {/* Liderler Tablosu */}
-          <Text
-            size="lg"
-            ta="center"
-            mt="lg"
-            style={{
-              textDecoration: 'underline',
-              textUnderlineOffset: 4,
-            }}
-          >
-            Leaderboard
-          </Text>
-
-          {/* Tablo */}
-          <Table highlightOnHover striped mt="sm">
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left' }}>#</th>
-                <th style={{ textAlign: 'left' }}>User</th>
-                <th style={{ textAlign: 'left' }}>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaderboard.map((player, index) => (
-                <tr key={index}>
-                  <td>
-                    <IconTrophy size={16} color={trophyColors[index]} />
-                  </td>
-                  <td>{player.name}</td>
-                  <td>{formatTime(player.time)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
+          {/* Content */}
+          <Stack mt="md" gap="xs" style={{ flexGrow: 1 }}>
+            <Text fw={700} size="md" lineClamp={1} title={challengeName}>
+                {challengeName}
+            </Text>
+            <Text size="xs" c="dimmed" lineClamp={2} title={description}>
+                {description}
+            </Text>
+            
+            <Divider my="xs" label={<Text size="xs" c="dimmed">Top Performers</Text>} labelPosition="center" color="dark.4" />
+            
+            {/* Compact Leaderboard */}
+            <div style={{ overflowY: 'auto', flexGrow: 1 }}>
+                <Table verticalSpacing={4} withRowBorders={false}>
+                    <tbody>
+                    {leaderboard.length > 0 ? (
+                        leaderboard.map((player, index) => (
+                        <tr key={index}>
+                            <td style={{ width: '30px' }}>
+                                <IconTrophy size={14} color={trophyColors[index]} />
+                            </td>
+                            <td>
+                                <Text size="sm" c="gray.3">{player.name}</Text>
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                                <Text size="sm" fw={700} c="yellow.2">{player.score}</Text>
+                            </td>
+                        </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={3}>
+                                <Text size="xs" c="dimmed" ta="center">No records yet</Text>
+                            </td>
+                        </tr>
+                    )}
+                    </tbody>
+                </Table>
+            </div>
+          </Stack>
 
           {/* Challenge Katıl Butonu */}
           <Button 
-            variant="outline" 
+            variant="light" 
             color="yellow" 
             fullWidth 
-            mt="15"
+            mt="md"
             onClick={() => navigate(`/challenges/${challengeId}`)}
           >
-            Join
+            Join Challenge
           </Button>
         </>
       )}

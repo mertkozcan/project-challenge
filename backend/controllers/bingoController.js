@@ -107,4 +107,27 @@ const createNewBoard = async (req, res) => {
     }
 };
 
-module.exports = { getBoards, getBoardDetail, submitProof, approveProof, createNewBoard, upload };
+const completeCellDirect = async (req, res) => {
+    const { cellId } = req.params;
+    const { user_id } = req.body;
+
+    try {
+        // Directly approve the cell without proof
+        const result = await submitCellProof(user_id, cellId, null);
+        await approveCellProof(result.id);
+        res.json({ message: 'Cell completed successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = {
+    getBoards,
+    getBoardDetail,
+    submitProof,
+    approveProof,
+    createNewBoard,
+    upload,
+    completeCellDirect,
+    resetBoardProgress,
+};

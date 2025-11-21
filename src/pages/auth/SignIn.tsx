@@ -23,11 +23,11 @@ const SignIn: React.FC = () => {
 
   const form = useForm({
     initialValues: {
-      username: '',
+      email: '',
       password: '',
     },
     validate: {
-      username: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
       password: (value) => (value.length >= 6 ? null : 'Password must be at least 6 characters'),
     },
   });
@@ -37,7 +37,7 @@ const SignIn: React.FC = () => {
     setError(null);
 
     try {
-      const result = await signIn(values);
+      const result = await signIn({ username: values.email, password: values.password });
       
       if (result?.status === 'failed') {
         setError(result.message || 'Login failed');

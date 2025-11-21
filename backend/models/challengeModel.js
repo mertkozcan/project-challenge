@@ -1,23 +1,28 @@
 const pool = require('../config/db');
 
 const getAllChallenges = async (type, contentType) => {
-  let query = 'SELECT * FROM challenges WHERE 1=1';
+  let query = `
+    SELECT c.*, g.banner_url, g.icon_url as game_icon 
+    FROM challenges c
+    LEFT JOIN games g ON c.game_name = g.name
+    WHERE 1=1
+  `;
   let params = [];
   let paramIndex = 1;
 
   if (type) {
-    query += ` AND type = $${paramIndex}`;
+    query += ` AND c.type = $${paramIndex}`;
     params.push(type);
     paramIndex++;
   }
 
   if (contentType === 'official') {
-    query += ` AND is_official = true`;
+    query += ` AND c.is_official = true`;
   } else if (contentType === 'community') {
-    query += ` AND is_official = false`;
+    query += ` AND c.is_official = false`;
   }
 
-  query += ' ORDER BY created_at DESC';
+  query += ' ORDER BY c.created_at DESC';
 
   const result = await pool.query(query, params);
   return result.rows;
@@ -34,7 +39,10 @@ const createChallenge = async (gameName, challengeName, description, reward, typ
 const getLatestChallenges = async (limit = 10) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM challenges ORDER BY created_at DESC LIMIT $1',
+      `SELECT c.*, g.banner_url, g.icon_url as game_icon
+       FROM challenges c
+       LEFT JOIN games g ON c.game_name = g.name
+       ORDER BY c.created_at DESC LIMIT $1`,
       [limit]
     );
     return result.rows;
@@ -84,4 +92,25 @@ const getChallengeById = async (id, userId = null) => {
   return challenge;
 }
 
-module.exports = { getAllChallenges, createChallenge, getLatestChallenges, getChallengeById };
+const getPopularChallenges = async (limit = 5) => {
+  try {
+    const result = await pool.query(
+      `SELECT c.*, g.banner_url, g.icon_url as game_icon, COUNT(p.id) as recent_participation_count
+       FROM challenges c
+       LEFT JOIN games g ON c.game_name = g.name
+       LEFT JOIN proofs p ON c.id = p.challenge_id 
+           AND p.created_at >= NOW() - INTERVAL '7 days'
+       WHERE c.is_official = true
+       GROUP BY c.id, g.banner_url, g.icon_url
+       ORDER BY recent_participation_count DESC
+       LIMIT $1`,
+      [limit]
+    );
+    return result.rows;
+  } catch (error) {
+    console.error('Error fetching popular challenges:', error.message);
+    throw error;
+  }
+};
+
+module.exports = { getAllChallenges, createChallenge, getLatestChallenges, getChallengeById, getPopularChallenges };

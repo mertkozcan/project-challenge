@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Title, Divider, Container, Button, Group, Text, Paper, ThemeIcon, SimpleGrid, Badge } from '@mantine/core';
-import { IconTrophy, IconFlame, IconNewSection, IconSword, IconGridDots, IconPlus, IconBolt } from '@tabler/icons-react';
+import { Grid, Title, Divider, Container, Button, Group, Text, ThemeIcon, Badge } from '@mantine/core';
+import { IconTrophy, IconFlame, IconNewSection, IconSword, IconGridDots, IconBolt } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import PopularChallengeCard from '../../components/Cards/PopularChallengeCard';
 import NewChallengesCard from '@/components/Cards/NewChallengesCard';
@@ -12,6 +12,7 @@ import BingoChallenges from '@/components/Cards/BingoChallenges';
 import { ChallengesService } from '../../services/challenges/challenges.service';
 import { BuildsService } from '../../services/builds/builds.service';
 import { BingoService } from '../../services/bingo/bingo.service';
+import { LeaderboardService } from '../../services/leaderboard/leaderboard.service';
 import { Challenge } from '@/@types/challenge';
 import { useAppSelector } from '@/store';
 
@@ -20,7 +21,6 @@ const Dashboard: React.FC = () => {
   const [latestChallenges, setLatestChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const { role } = useAppSelector((state) => state.auth.user);
-  const isAuthenticated = !!role;
 
   const [popularChallenge, setPopularChallenge] = useState<any>(null);
   const [challengeOfTheWeek, setChallengeOfTheWeek] = useState<any>(null);
@@ -39,67 +39,56 @@ const Dashboard: React.FC = () => {
         // 2. Challenge of the Week (Type: weekly)
         const challenges = await ChallengesService.getChallenges('weekly', 'official');
         if (challenges.length > 0) {
-             // Mock leaderboard for now as we don't have real user data for it yet
-             const cotwLeaderboard = [
-                { name: 'PlayerOne', time: 300 },
-                { name: 'MageMaster', time: 340 },
-                { name: 'BossSlayer', time: 390 },
-              ];
-            setChallengeOfTheWeek({ ...challenges[0], leaderboard: cotwLeaderboard });
+             const cotw = challenges[0];
+             let leaderboardData: any[] = [];
+             try {
+                const rankings = await LeaderboardService.getChallengeRankings(String(cotw.id));
+                leaderboardData = rankings.rankings.slice(0, 3).map(r => ({
+                    name: r.username,
+                    score: r.score
+                }));
+             } catch (e) {
+                 console.error("Failed to fetch COTW leaderboard", e);
+             }
+             setChallengeOfTheWeek({ ...cotw, leaderboard: leaderboardData });
         }
 
-        // 3. Popular Challenge (Mock logic: just pick a random permanent official challenge)
-        const permChallenges = await ChallengesService.getChallenges('permanent', 'official');
-        if (permChallenges.length > 0) {
-            // Mock leaderboard
-             const popLeaderboard = [
-                { avatar: 'https://example.com/user1.jpg', name: 'PlayerOne', time: 1200 },
-                { avatar: 'https://example.com/user2.jpg', name: 'MageMaster', time: 1100 },
-                { avatar: 'https://example.com/user3.jpg', name: 'BossSlayer', time: 1000 },
-              ];
-            // Need game image. Fetch game info? Or just use a placeholder/lookup.
-            // For now, let's assume we can get it or hardcode a mapping based on game name.
-            // A better way is to join games table in backend, but for now let's map it.
-            const gameImages: any = {
-                'Elden Ring': 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1245620/header.jpg?t=1726158298',
-                'Fallout 4': 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/3ccd3cde-f8c0-480c-ab9d-4db767bda944/dc0qed1-b0a282de-11cc-4844-b601-241b94f6de9b.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzNjY2QzY2RlLWY4YzAtNDgwYy1hYjlkLTRkYjc2N2JkYTk0NFwvZGMwcWVkMS1iMGEyODJkZS0xMWNjLTQ4NDQtYjYwMS0yNDFiOTRmNmRlOWIucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.0hqnm3A02kq-bPK5UCSumoHiKseVa-QJH-paxA2dn3Y',
-            };
+        // 3. Popular Challenge (Based on participation count)
+        const popularChallenges = await ChallengesService.getPopularChallenges(1);
+        if (popularChallenges.length > 0) {
+            const popChallenge = popularChallenges[0];
+            let popLeaderboard: any[] = [];
+             try {
+                const rankings = await LeaderboardService.getChallengeRankings(String(popChallenge.id));
+                popLeaderboard = rankings.rankings.slice(0, 3).map(r => ({
+                    name: r.username,
+                    score: r.score
+                }));
+             } catch (e) {
+                 console.error("Failed to fetch Popular Challenge leaderboard", e);
+             }
+            
             setPopularChallenge({ 
-                ...permChallenges[0], 
-                gameImage: gameImages[permChallenges[0].game_name] || 'https://placehold.co/600x400',
+                ...popChallenge, 
+                gameImage: popChallenge.banner_url || 'https://placehold.co/600x400',
                 leaderboard: popLeaderboard 
             });
         }
 
         // 4. Featured Builds (Official)
-        // We need a service method for this. Assuming BuildsService.getBuilds('official') works.
-        // Wait, BuildsService.getBuilds takes (contentType, game).
-        // Let's import BuildsService.
-        // 4. Featured Builds (Official)
-        // We need a service method for this. Assuming BuildsService.getBuilds('official') works.
-        // Wait, BuildsService.getBuilds takes (contentType, game).
-        // Let's import BuildsService.
         const builds = await BuildsService.getBuilds('official');
         // Map to component format
         const mappedBuilds = builds.map((b: any) => ({
             id: b.id,
-            gameImage: 'https://placehold.co/600x400', // Placeholder for now, or map like above
+            gameImage: b.banner_url || 'https://placehold.co/600x400',
             gameName: b.game_name,
             buildName: b.build_name,
             description: b.description
         }));
-        // Update images manually for demo
-        const gameImages: any = {
-             'Fallout 4': 'https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/3ccd3cde-f8c0-480c-ab9d-4db767bda944/dc0qed1-b0a282de-11cc-4844-b601-241b94f6de9b.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzNjY2QzY2RlLWY4YzAtNDgwYy1hYjlkLTRkYjc2N2JkYTk0NFwvZGMwcWVkMS1iMGEyODJkZS0xMWNjLTQ4NDQtYjYwMS0yNDFiOTRmNmRlOWIucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.0hqnm3A02kq-bPK5UCSumoHiKseVa-QJH-paxA2dn3Y',
-             'The Elder Scrolls V: Skyrim': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHWS3TCWOCd-df-P4O48JC76fk9Byp8uje5w&s',
-             'Cyberpunk 2077': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQueQFtpY8c-MiiP0xR36ItyR_x_Ef-igWcdw&s',
-             'Dark Souls 3': 'https://cdn2.steamgriddb.com/hero_thumb/2181d94fba9a1d2de2b5f6fb75f8ab08.jpg'
-        };
-        setBuildChallenges(mappedBuilds.map(b => ({ ...b, gameImage: gameImages[b.gameName] || b.gameImage })));
+        setBuildChallenges(mappedBuilds);
 
 
         // 5. Bingo Challenges
-        // Need BingoService.
         const bingos = await BingoService.getBoards();
         // Map to component format
         const mappedBingos = bingos.map((b: any) => ({
@@ -161,7 +150,7 @@ const Dashboard: React.FC = () => {
       </Group>
 
       {/* Featured Section: Challenge of the Week & Popular */}
-      <Grid gutter="xl" mb={50}>
+      <Grid gutter="xl" mb={50} align="stretch">
         <Grid.Col span={{ base: 12, md: 8 }}>
           <Group mb="md">
             <ThemeIcon size="lg" radius="md" variant="light" color="yellow">

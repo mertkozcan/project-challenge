@@ -1,6 +1,7 @@
 const { createProof, getProofsByChallenge, updateProofStatus, getProofById, getAllPendingProofs } = require('../models/proofModel');
 const { incrementUserPoints } = require('../models/userModel');
 const { getChallengeById } = require('../models/challengeModel');
+const { createNotification } = require('../models/notificationModel');
 const multer = require('multer');
 const path = require('path');
 
@@ -44,9 +45,11 @@ const getProofs = async (req, res) => {
     }
 };
 
+// ... (existing imports)
+
 const approveProof = async (req, res) => {
     const { id } = req.params;
-    const { score } = req.body; // Optional score for the leaderboard
+    const { score } = req.body;
 
     try {
         const proof = await getProofById(id);
@@ -60,9 +63,6 @@ const approveProof = async (req, res) => {
         const challenge = await getChallengeById(proof.challenge_id);
 
         // 3. Increment User Points
-        // Assuming reward is a string like "100 Points", we parse it. 
-        // Or better, we should store reward as integer in DB. 
-        // For now, let's assume the 'reward' field contains the point value or we default to 10.
         let pointsToAdd = 10;
         if (challenge && challenge.reward) {
             const match = challenge.reward.match(/(\d+)/);
@@ -70,6 +70,15 @@ const approveProof = async (req, res) => {
         }
 
         await incrementUserPoints(proof.user_id, pointsToAdd);
+
+        // 4. Create Notification
+        await createNotification(
+            proof.user_id,
+            'PROOF_APPROVED',
+            'Proof Approved! 🎉',
+            `Your proof for "${challenge.challenge_name}" has been approved! You earned ${pointsToAdd} points.`,
+            proof.id
+        );
 
         res.json({ message: 'Proof approved', proof: updatedProof, pointsAdded: pointsToAdd });
 
@@ -87,7 +96,18 @@ const rejectProof = async (req, res) => {
         if (!proof) return res.status(404).json({ error: 'Proof not found' });
         if (proof.status === 'REJECTED') return res.status(400).json({ error: 'Already rejected' });
 
+        const challenge = await getChallengeById(proof.challenge_id);
         const updatedProof = await updateProofStatus(id, 'REJECTED', 0);
+
+        // Create Notification
+        await createNotification(
+            proof.user_id,
+            'PROOF_REJECTED',
+            'Proof Rejected ❌',
+            `Your proof for "${challenge.challenge_name}" was rejected. Please check the requirements and try again.`,
+            proof.id
+        );
+
         res.json({ message: 'Proof rejected', proof: updatedProof });
     } catch (error) {
         res.status(500).json({ error: error.message });

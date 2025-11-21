@@ -9,6 +9,7 @@ import SimpleSideBarBottomContent from '@/components/Layout/LayoutTypes/SimpleSi
 import { useTranslation } from 'react-i18next';
 import AuthorityCheck from '@/route/AuthorityCheck';
 import { useAppSelector } from '@/store';
+import Header from '@/components/Layout/Header';
 
 function SideBar() {
   const navigate = useNavigate();
@@ -73,12 +74,18 @@ export default function SimpleSideBar() {
       <SideBar />
       <div
         style={{
-          padding: '1rem',
+          // padding: '1rem', // Padding moved to Views or handled by Header + Content wrapper
           marginLeft: '300px', // Sidebar genişliği kadar boşluk bırak
           flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
         }}
       >
-        <Views />
+        <Header />
+        <div style={{ padding: '1rem', flex: 1 }}>
+          <Views />
+        </div>
       </div>
     </div>
   );

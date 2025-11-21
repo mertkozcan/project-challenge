@@ -1,11 +1,11 @@
 import React from 'react';
-import { Card, Text, Table, Button, Group, Badge, Skeleton } from '@mantine/core';
+import { Card, Text, Table, Button, Group, Badge, Skeleton, Grid } from '@mantine/core';
 import { IconTrophy } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
 interface LeaderboardEntry {
   name: string; // Oyuncu adı
-  time: number; // Süre (saniye olarak)
+  score: number; // Puan
 }
 
 interface ChallengeOfTheWeekProps {
@@ -17,12 +17,6 @@ interface ChallengeOfTheWeekProps {
   leaderboard: LeaderboardEntry[]; // Liderlik tablosu
   loading: boolean;
 }
-
-const formatTime = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-};
 
 const ChallengeOfTheWeek: React.FC<ChallengeOfTheWeekProps> = ({
   challengeId,
@@ -46,6 +40,8 @@ const ChallengeOfTheWeek: React.FC<ChallengeOfTheWeekProps> = ({
         color: 'white',
         background: 'linear-gradient(145deg, #1e1e2e, #151515)',
         boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.5)',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
       {loading ? (
@@ -55,78 +51,106 @@ const ChallengeOfTheWeek: React.FC<ChallengeOfTheWeekProps> = ({
           <Skeleton height={20} />
         </div>
       ) : (
-        <>
-          <Group justify="space-between" mb="md" align="center">
-            <Badge color="green" size="lg">
-              Reward: {reward}
-            </Badge>
-            <Badge color="grape" variant="filled" size="lg" radius="sm">
-              {gameName}
-            </Badge>
-          </Group>
+        <Grid h="100%" align="stretch">
+          <Grid.Col span={{ base: 12, md: 7 }} style={{ display: 'flex', flexDirection: 'column' }}>
+            <Group justify="space-between" mb="md" align="center">
+              <Badge color="green" size="lg" variant="light">
+                Reward: {reward}
+              </Badge>
+              <Badge color="grape" variant="filled" size="lg" radius="sm">
+                {gameName}
+              </Badge>
+            </Group>
 
-          <Text
-            size="lg"
-            ta="center"
-            mb={10}
-            style={{
-              textDecoration: 'underline',
-              textUnderlineOffset: 4,
-            }}
-          >
-            Challenge of the Week
-          </Text>
+            <Text
+              size="xl"
+              fw={900}
+              variant="gradient"
+              gradient={{ from: 'yellow', to: 'orange', deg: 45 }}
+              mb="xs"
+            >
+              CHALLENGE OF THE WEEK
+            </Text>
 
-          <Text fw={700} size="md" mt="md">
-            {challengeName}
-          </Text>
-          <Text size="sm" color="gray.4" mt="xs">
-            {description}
-          </Text>
+            <Text fw={700} size="2rem" lh={1.2} mb="md" style={{ color: '#fff' }}>
+              {challengeName}
+            </Text>
+            
+            <Text size="md" color="gray.4" mb="xl" style={{ flexGrow: 1 }}>
+              {description}
+            </Text>
 
-          <Text fw={700} size="md" mt="lg" mb={5} ta="center">
-            Leaderboard
-          </Text>
-          <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-            <Table highlightOnHover striped>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'left' }}>#</th>
-                  <th style={{ textAlign: 'left' }}>User</th>
-                  <th style={{ textAlign: 'center' }}>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaderboard.map((player, index) => (
-                  <tr key={index}>
-                    <td>
-                      {index < 3 ? (
-                        <IconTrophy
-                          size={16}
-                          color={index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32'}
-                        />
-                      ) : (
-                        index + 1
-                      )}
-                    </td>
-                    <td>{player.name}</td>
-                    <td style={{ textAlign: 'center' }}>{formatTime(player.time)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </div>
+            <Button 
+              variant="gradient" 
+              gradient={{ from: 'yellow', to: 'orange', deg: 45 }}
+              size="lg"
+              fullWidth 
+              onClick={() => navigate(`/challenges/${challengeId}`)}
+              leftSection={<IconTrophy size={20} />}
+              style={{ marginTop: 'auto' }}
+            >
+              Join the Challenge
+            </Button>
+          </Grid.Col>
 
-          <Button 
-            variant="outline" 
-            color="yellow" 
-            fullWidth 
-            mt="60"
-            onClick={() => navigate(`/challenges/${challengeId}`)}
-          >
-            Join
-          </Button>
-        </>
+          <Grid.Col span={{ base: 12, md: 5 }}>
+            <Card 
+              bg="rgba(0,0,0,0.3)" 
+              radius="md" 
+              p="md" 
+              h="100%" 
+              style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              <Text fw={700} size="lg" mb="md" ta="center" c="yellow.4">
+                Top Performers
+              </Text>
+              
+              <div style={{ overflowY: 'auto' }}>
+                <Table verticalSpacing="sm" withRowBorders={false}>
+                  <thead>
+                    <tr>
+                      <th style={{ color: '#888' }}>Rank</th>
+                      <th style={{ color: '#888' }}>User</th>
+                      <th style={{ color: '#888', textAlign: 'right' }}>Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaderboard.length > 0 ? (
+                      leaderboard.map((player, index) => (
+                        <tr key={index}>
+                          <td>
+                            {index < 3 ? (
+                              <IconTrophy
+                                size={20}
+                                color={index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32'}
+                              />
+                            ) : (
+                              <Text c="dimmed" fw={500}>#{index + 1}</Text>
+                            )}
+                          </td>
+                          <td>
+                            <Text fw={500} c="white">{player.name}</Text>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <Text fw={700} c="yellow.2">{player.score}</Text>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={3}>
+                          <Text c="dimmed" ta="center" py="xl">
+                            No records yet. Be the first!
+                          </Text>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+              </div>
+            </Card>
+          </Grid.Col>
+        </Grid>
       )}
     </Card>
   );

@@ -3,21 +3,32 @@ const {
     getUserStats,
     getUserRecentActivity,
     getUserLeaderboardRank,
-    incrementUserPoints
+    incrementUserPoints,
+    getUserIdByUsername
 } = require('../models/userModel');
+
+const resolveUserId = async (identifier) => {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+    if (isUuid) return identifier;
+
+    const userId = await getUserIdByUsername(identifier);
+    if (!userId) throw new Error('User not found');
+    return userId;
+};
 
 const getProfile = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const profile = await getUserProfile(id);
+        const resolvedId = await resolveUserId(id);
+        const profile = await getUserProfile(resolvedId);
         if (!profile) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        const stats = await getUserStats(id);
-        const rank = await getUserLeaderboardRank(id);
-        const recentActivity = await getUserRecentActivity(id);
+        const stats = await getUserStats(resolvedId);
+        const rank = await getUserLeaderboardRank(resolvedId);
+        const recentActivity = await getUserRecentActivity(resolvedId);
 
         res.json({
             profile,

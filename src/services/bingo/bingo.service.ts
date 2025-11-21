@@ -56,4 +56,22 @@ export const BingoService = {
     });
     return res.data;
   },
+
+  async completeCellDirect(cellId: number, userId: string): Promise<any> {
+    const res = await ApiService.fetchData({
+      url: `/bingo/cell/${cellId}/complete`,
+      method: 'POST',
+      data: { user_id: userId },
+    });
+    return res.data;
+  },
+
+  async resetBoard(boardId: number, userId: string): Promise<any> {
+    const res = await ApiService.fetchData({
+      url: `/bingo/${boardId}/reset`,
+      method: 'POST',
+      data: { user_id: userId },
+    });
+    return res.data;
+  },
 };

@@ -7,4 +7,7 @@ export interface Challenge {
   type: 'daily' | 'weekly' | 'permanent';
   end_date?: string;
   created_at: string;
+  banner_url?: string;
+  game_icon?: string;
+  is_official?: boolean;
 }

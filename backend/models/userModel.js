@@ -26,7 +26,7 @@ const getUserRecentActivity = async (userId, limit = 10) => {
   const result = await pool.query(`
     SELECT 
       'proof' as type,
-      proofs.id,
+      proofs.id::text,
       proofs.created_at,
       proofs.status,
       challenges.challenge_name as title,
@@ -39,7 +39,7 @@ const getUserRecentActivity = async (userId, limit = 10) => {
     
     SELECT 
       'build' as type,
-      builds.id,
+      builds.id::text,
       builds.created_at,
       'published' as status,
       builds.build_name as title,
@@ -51,7 +51,7 @@ const getUserRecentActivity = async (userId, limit = 10) => {
     
     SELECT 
       'challenge' as type,
-      challenges.id,
+      challenges.id::text,
       challenges.created_at,
       'published' as status,
       challenges.challenge_name as title,
@@ -87,10 +87,19 @@ const incrementUserPoints = async (userId, points) => {
   return result.rows[0];
 };
 
+const getUserIdByUsername = async (username) => {
+  const result = await pool.query(
+    'SELECT id FROM users WHERE username = $1',
+    [username]
+  );
+  return result.rows[0]?.id;
+};
+
 module.exports = {
   getUserProfile,
   getUserStats,
   getUserRecentActivity,
   getUserLeaderboardRank,
   incrementUserPoints,
+  getUserIdByUsername,
 };

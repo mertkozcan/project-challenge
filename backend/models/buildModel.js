@@ -10,7 +10,12 @@ const createBuild = async (userId, gameName, buildName, description, itemsJson) 
 
 const getBuildsByGame = async (gameName) => {
     const result = await pool.query(
-        'SELECT builds.*, users.username FROM builds JOIN users ON builds.user_id = users.id WHERE game_name = $1 ORDER BY created_at DESC',
+        `SELECT builds.*, users.username, g.banner_url, g.icon_url as game_icon
+         FROM builds 
+         JOIN users ON builds.user_id = users.id 
+         LEFT JOIN games g ON builds.game_name = g.name
+         WHERE builds.game_name = $1 
+         ORDER BY builds.created_at DESC`,
         [gameName]
     );
     return result.rows;
@@ -29,7 +34,13 @@ const getBuildById = async (id) => {
 };
 
 const getAllBuilds = async (contentType) => {
-    let query = 'SELECT builds.*, users.username FROM builds JOIN users ON builds.user_id = users.id WHERE 1=1';
+    let query = `
+        SELECT builds.*, users.username, g.banner_url, g.icon_url as game_icon
+        FROM builds 
+        JOIN users ON builds.user_id = users.id 
+        LEFT JOIN games g ON builds.game_name = g.name
+        WHERE 1=1
+    `;
 
     if (contentType === 'official') {
         query += ' AND builds.is_official = true';
@@ -37,7 +48,7 @@ const getAllBuilds = async (contentType) => {
         query += ' AND builds.is_official = false';
     }
 
-    query += ' ORDER BY created_at DESC';
+    query += ' ORDER BY builds.created_at DESC';
 
     const result = await pool.query(query);
     return result.rows;

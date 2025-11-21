@@ -7,7 +7,7 @@ import useAuth from '@/utils/hooks/useAuth';
 
 export default function UserPopOver() {
   const [displayPopOver, setDisplayPopOver] = useState<boolean>(false);
-  const userId = useAppSelector((state) => state.auth.userInfo.userId);
+  const username = useAppSelector((state) => state.auth.user.username);
   const { signOut } = useAuth();
 
   return (
@@ -25,7 +25,7 @@ export default function UserPopOver() {
           </div>
         </Popover.Target>
         <Popover.Dropdown>
-          <Link to={`/profile/${userId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link to={`/profile/${username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <Button variant="subtle" fullWidth mb="xs">
               My Profile
             </Button>

@@ -30,4 +30,12 @@ export const ChallengesService = {
     });
     return res.data;
   },
+  async getPopularChallenges(limit: number = 5): Promise<Challenge[]> {
+    const res = await ApiService.fetchData<void, Challenge[]>({
+      url: '/challenges/popular',
+      method: 'GET',
+      params: { limit },
+    });
+    return res.data;
+  },
 };

@@ -83,4 +83,22 @@ export const protectedRoutes = [
     component: lazy(() => import('@/pages/leaderboard/index')),
     authority: [],
   },
+  {
+    key: 'bingo-rooms',
+    path: '/bingo/rooms',
+    component: lazy(() => import('@/pages/bingo/RoomLobby')),
+    authority: [],
+  },
+  {
+    key: 'bingo-waiting-room',
+    path: '/bingo/room/:roomId',
+    component: lazy(() => import('@/pages/bingo/WaitingRoom')),
+    authority: [],
+  },
+  {
+    key: 'bingo-game',
+    path: '/bingo/room/:roomId/play',
+    component: lazy(() => import('@/pages/bingo/GameView')),
+    authority: [],
+  },
 ];
