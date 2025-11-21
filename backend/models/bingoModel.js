@@ -71,6 +71,47 @@ const addCell = async (boardId, rowIndex, colIndex, task) => {
     return result.rows[0];
 };
 
+// User Bingo Runs functions
+const getUserRun = async (userId, boardId) => {
+    const result = await pool.query(
+        'SELECT * FROM user_bingo_runs WHERE user_id = $1 AND board_id = $2',
+        [userId, boardId]
+    );
+    return result.rows[0] || null;
+};
+
+const updateRunTime = async (userId, boardId, elapsedTime) => {
+    const result = await pool.query(
+        `INSERT INTO user_bingo_runs (user_id, board_id, elapsed_time, updated_at)
+         VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id, board_id)
+         DO UPDATE SET elapsed_time = $3, updated_at = CURRENT_TIMESTAMP
+         RETURNING *`,
+        [userId, boardId, elapsedTime]
+    );
+    return result.rows[0];
+};
+
+const finishRun = async (userId, boardId, elapsedTime) => {
+    const result = await pool.query(
+        `INSERT INTO user_bingo_runs (user_id, board_id, is_finished, elapsed_time, finished_at, updated_at)
+         VALUES ($1, $2, TRUE, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id, board_id)
+         DO UPDATE SET is_finished = TRUE, elapsed_time = $3, finished_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+         RETURNING *`,
+        [userId, boardId, elapsedTime]
+    );
+    return result.rows[0];
+};
+
+const resetRun = async (userId, boardId) => {
+    const result = await pool.query(
+        'DELETE FROM user_bingo_runs WHERE user_id = $1 AND board_id = $2 RETURNING *',
+        [userId, boardId]
+    );
+    return result.rows[0] || null;
+};
+
 module.exports = {
     getAllBoards,
     getBoardById,
@@ -80,4 +121,8 @@ module.exports = {
     approveCellProof,
     createBoard,
     addCell,
+    getUserRun,
+    updateRunTime,
+    finishRun,
+    resetRun,
 };

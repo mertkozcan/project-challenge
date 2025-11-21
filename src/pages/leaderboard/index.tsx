@@ -145,7 +145,7 @@ const Leaderboard: React.FC = () => {
               <Box mb={50}>
                 <Group justify="center" align="flex-end" gap="md">
                     {podiumOrder.map((entry) => (
-                        <Box key={entry.username} style={{ width: 250 }}>
+                        <Box key={entry.username} w={{ base: '100%', sm: 250 }}>
                             <PodiumItem 
                                 entry={entry} 
                                 rank={entry.rank} 
@@ -160,43 +160,45 @@ const Leaderboard: React.FC = () => {
             {/* List Section */}
             {rest.length > 0 && (
               <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
-                <Table verticalSpacing="md" highlightOnHover>
-                  <Table.Thead bg="dark.8">
-                    <Table.Tr>
-                      <Table.Th w={80} ta="center">Rank</Table.Th>
-                      <Table.Th>Player</Table.Th>
-                      <Table.Th ta="right">
-                        {activeTab === 'completions' ? 'Challenges' : 'Points'}
-                      </Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {rest.map((entry, index) => (
-                      <Table.Tr 
-                        key={entry.username} 
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => navigate(`/profile/${entry.username}`)}
-                      >
-                        <Table.Td ta="center">
-                          <Badge variant="light" color="gray" circle size="lg">
-                            {index + 4}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td>
-                          <Group gap="sm">
-                            <Avatar src={entry.avatar_url} radius="xl" size={40} />
-                            <Text fw={600}>{entry.username}</Text>
-                          </Group>
-                        </Table.Td>
-                        <Table.Td ta="right">
-                          <Text fw={700} c={activeTab === 'points' ? 'yellow' : 'blue'}>
-                            {activeTab === 'completions' ? entry.completed_count : entry.points}
-                          </Text>
-                        </Table.Td>
+                <Box style={{ overflowX: 'auto' }}>
+                  <Table verticalSpacing="md" highlightOnHover miw={500}>
+                    <Table.Thead bg="dark.8">
+                      <Table.Tr>
+                        <Table.Th w={80} ta="center">Rank</Table.Th>
+                        <Table.Th>Player</Table.Th>
+                        <Table.Th ta="right">
+                          {activeTab === 'completions' ? 'Challenges' : 'Points'}
+                        </Table.Th>
                       </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {rest.map((entry, index) => (
+                        <Table.Tr 
+                          key={entry.username} 
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => navigate(`/profile/${entry.username}`)}
+                        >
+                          <Table.Td ta="center">
+                            <Badge variant="light" color="gray" circle size="lg">
+                              {index + 4}
+                            </Badge>
+                          </Table.Td>
+                          <Table.Td>
+                            <Group gap="sm">
+                              <Avatar src={entry.avatar_url} radius="xl" size={40} />
+                              <Text fw={600}>{entry.username}</Text>
+                            </Group>
+                          </Table.Td>
+                          <Table.Td ta="right">
+                            <Text fw={700} c={activeTab === 'points' ? 'yellow' : 'blue'}>
+                              {activeTab === 'completions' ? entry.completed_count : entry.points}
+                            </Text>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </Box>
               </Paper>
             )}
             

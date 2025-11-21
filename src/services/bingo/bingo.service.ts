@@ -20,9 +20,16 @@ export interface BingoCell {
   progress_id: number | null;
 }
 
+export interface BingoRun {
+  is_finished: boolean;
+  elapsed_time: number;
+  finished_at: string | null;
+}
+
 export interface BingoBoardDetail {
   board: BingoBoard;
   cells: BingoCell[];
+  run: BingoRun;
 }
 
 export const BingoService = {
@@ -71,6 +78,24 @@ export const BingoService = {
       url: `/bingo/${boardId}/reset`,
       method: 'POST',
       data: { user_id: userId },
+    });
+    return res.data;
+  },
+
+  async finishRun(boardId: number, userId: string, elapsedTime: number): Promise<BingoRun> {
+    const res = await ApiService.fetchData<any, BingoRun>({
+      url: '/bingo/finish',
+      method: 'POST',
+      data: { user_id: userId, board_id: boardId, elapsed_time: elapsedTime },
+    });
+    return res.data;
+  },
+
+  async updateRunTime(boardId: number, userId: string, elapsedTime: number): Promise<BingoRun> {
+    const res = await ApiService.fetchData<any, BingoRun>({
+      url: '/bingo/update-time',
+      method: 'POST',
+      data: { user_id: userId, board_id: boardId, elapsed_time: elapsedTime },
     });
     return res.data;
   },

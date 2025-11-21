@@ -63,6 +63,7 @@ const BingoBoard: React.FC = () => {
   // Activity feed state
   const [activities, setActivities] = useState<Activity[]>([]);
   const [canFinish, setCanFinish] = useState(false);
+  const [hasFinished, setHasFinished] = useState(false);
   
   // Ref to track processed completions to prevent duplicates
   const processedCompletions = React.useRef<{rows: Set<number>, cols: Set<number>}>({
@@ -85,17 +86,96 @@ const BingoBoard: React.FC = () => {
     }
     return () => clearInterval(interval);
   }, [timerActive]);
+  
+  // Auto-save elapsed time every 5 seconds
+  const lastSaveTime = React.useRef<number>(0);
+  const elapsedTimeRef = React.useRef<number>(elapsedTime);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    elapsedTimeRef.current = elapsedTime;
+  }, [elapsedTime]);
+  
+  useEffect(() => {
+    if (!userId || !id) return;
+    
+    const saveInterval = setInterval(async () => {
+      const currentTime = elapsedTimeRef.current;
+      if (currentTime === 0) return;
+      
+      const now = Date.now();
+      // Only save if at least 4 seconds have passed since last save
+      if (now - lastSaveTime.current >= 4000) {
+        try {
+          console.log('Auto-saving elapsed time:', currentTime);
+          await BingoService.updateRunTime(parseInt(id), userId, currentTime);
+          lastSaveTime.current = now;
+        } catch (error) {
+          console.error('Failed to save elapsed time:', error);
+        }
+      }
+    }, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(saveInterval);
+  }, [userId, id]); // Remove elapsedTime from dependencies
+  
+  // Save on page unload or visibility change
+  useEffect(() => {
+    if (!userId || !id) return;
+    
+    const saveCurrentTime = async () => {
+      const currentTime = elapsedTimeRef.current;
+      if (currentTime > 0 && !hasFinished) {
+        try {
+          console.log('Saving on page unload/hide:', currentTime);
+          // Use fetch with keepalive for reliable save on page unload
+          await fetch('/api/bingo/update-time', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: userId,
+              board_id: parseInt(id),
+              elapsed_time: currentTime
+            }),
+            keepalive: true // Ensures request completes even if page is closing
+          });
+        } catch (error) {
+          console.error('Failed to save on unload:', error);
+        }
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        saveCurrentTime();
+      }
+    };
+    
+    const handleBeforeUnload = () => {
+      saveCurrentTime();
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasFinished, userId, id]);
 
   const fetchBoard = async (isInitialLoad = false) => {
     if (!userId) return;
     try {
       const data = await BingoService.getBoardDetail(id!, userId);
       
-      // Auto-reset if 100% complete on load (New Game)
+      // Auto-reset if 100% complete on load AND not finished (New Game)
       // We check this BEFORE setting state to prevent showing completed board
       const completedCount = data.cells.filter(c => c.status === 'APPROVED').length;
+      const isFullyCompleted = completedCount === data.cells.length && data.cells.length > 0;
       
-      if (isInitialLoad && completedCount === data.cells.length && data.cells.length > 0) {
+      // Only auto-reset if 100% complete AND not finished
+      if (isInitialLoad && isFullyCompleted && !data.run.is_finished) {
         await BingoService.resetBoard(parseInt(id!), userId);
         
         // Fetch again to get clean state
@@ -104,6 +184,8 @@ const BingoBoard: React.FC = () => {
         setCells(cleanData.cells);
         setActivities([]);
         setCanFinish(false);
+        setHasFinished(false);
+        setElapsedTime(0);
         // Reset processed completions ref
         processedCompletions.current = { rows: new Set(), cols: new Set() };
       } else {
@@ -111,11 +193,25 @@ const BingoBoard: React.FC = () => {
         setBoard(data.board);
         setCells(data.cells);
         
+        console.log('Run state from API:', data.run);
+        
+        // Load run state from DB
+        if (data.run.is_finished) {
+          console.log('Loading finished run with elapsed_time:', data.run.elapsed_time);
+          setHasFinished(true);
+          setElapsedTime(data.run.elapsed_time);
+          setTimerActive(false);
+        } else if (data.run.elapsed_time > 0) {
+          // Resume with saved time
+          console.log('Resuming with elapsed_time:', data.run.elapsed_time);
+          setElapsedTime(data.run.elapsed_time);
+        }
+        
         // Check for completed rows/columns
         checkCompletions(data.cells, data.board.size);
         
         // Stop timer if 100% complete
-        if (completedCount === data.cells.length && data.cells.length > 0) {
+        if (isFullyCompleted) {
           setTimerActive(false);
         }
       }
@@ -173,6 +269,7 @@ const BingoBoard: React.FC = () => {
 
   const handleCellClick = async (cell: BingoCell) => {
     if (cell.status === 'APPROVED') return;
+    if (hasFinished) return; // Disable clicks when finished
     playSound('click');
     if (!timerActive) setTimerActive(true);
     if (!userId) return;
@@ -180,6 +277,16 @@ const BingoBoard: React.FC = () => {
     try {
       await BingoService.completeCellDirect(cell.id, userId);
       playSound('complete');
+      
+      // Save elapsed time immediately after completing cell
+      if (elapsedTime > 0) {
+        try {
+          console.log('Saving elapsed time after cell click:', elapsedTime);
+          await BingoService.updateRunTime(parseInt(id!), userId, elapsedTime);
+        } catch (saveError) {
+          console.error('Failed to save elapsed time:', saveError);
+        }
+      }
       
       // Add cell completion to activity feed
       const newActivity: Activity = {
@@ -220,6 +327,7 @@ const BingoBoard: React.FC = () => {
       setTimerActive(false);
       setActivities([]);
       setCanFinish(false);
+      setHasFinished(false);
       processedCompletions.current = { rows: new Set(), cols: new Set() };
       
       // Refresh board
@@ -229,8 +337,20 @@ const BingoBoard: React.FC = () => {
     }
   };
   
-  const handleFinish = () => {
+  const handleFinish = async () => {
+    if (!userId || !id) return;
+    
     setTimerActive(false);
+    setCanFinish(false); // Hide the finish button
+    setHasFinished(true); // Mark game as finished
+    
+    try {
+      // Save finish state to database
+      await BingoService.finishRun(parseInt(id), userId, elapsedTime);
+    } catch (error) {
+      console.error('Failed to save finish state:', error);
+    }
+    
     playSound('win');
     confetti({
       particleCount: 150,
@@ -306,7 +426,7 @@ const BingoBoard: React.FC = () => {
             </Paper>
             
             {/* Play Solo Button */}
-            {!timerActive && completionPercentage < 100 && (
+            {!timerActive && !hasFinished && completionPercentage < 100 && (
               <Button 
                 color="green" 
                 onClick={() => setTimerActive(true)}
@@ -369,9 +489,9 @@ const BingoBoard: React.FC = () => {
                 border: `1px solid ${theme.primary}20`,
               }}
             >
-              <Stack gap="xs">
+              <Stack gap={8}>
                 {grid.map((row, rowIndex) => (
-                  <Group key={rowIndex} gap="xs" grow wrap="nowrap">
+                  <Group key={rowIndex} gap={8} grow wrap="nowrap">
                     {row.map((cell) => {
                       const isCompleted = cell.status === 'APPROVED';
                       return (
@@ -382,10 +502,10 @@ const BingoBoard: React.FC = () => {
                           animate={{ scale: 1, opacity: 1 }}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.95 }}
-                          style={{ flex: 1 }}
+                          style={{ flex: '1 1 0', minWidth: 0 }}
                         >
                           <Paper
-                            p={{ base: 4, sm: 'md' }}
+                            p="xs"
                             withBorder
                             onClick={() => handleCellClick(cell)}
                             style={{
@@ -405,7 +525,8 @@ const BingoBoard: React.FC = () => {
                               borderWidth: isCompleted ? 2 : 1,
                               transition: 'all 0.2s ease',
                               position: 'relative',
-                              overflow: 'hidden'
+                              overflow: 'hidden',
+                              width: '100%'
                             }}
                           >
                             <Text 

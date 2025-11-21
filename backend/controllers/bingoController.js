@@ -7,6 +7,10 @@ const {
     approveCellProof,
     createBoard,
     addCell,
+    getUserRun,
+    updateRunTime,
+    finishRun,
+    resetRun,
 } = require('../models/bingoModel');
 const multer = require('multer');
 const path = require('path');
@@ -54,7 +58,15 @@ const getBoardDetail = async (req, res) => {
             };
         });
 
-        res.json({ board, cells: cellsWithProgress });
+        // Get user's run state
+        const run = await getUserRun(userId, id);
+        console.log('getUserRun result:', { userId, boardId: id, run });
+
+        res.json({
+            board,
+            cells: cellsWithProgress,
+            run: run || { is_finished: false, elapsed_time: 0, finished_at: null }
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -134,7 +146,35 @@ const resetBoardProgress = async (req, res) => {
             [user_id, boardId]
         );
 
+        // Also reset the run state
+        await resetRun(user_id, boardId);
+
         res.json({ message: 'Board progress reset successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const finishBingoRun = async (req, res) => {
+    const { user_id, board_id, elapsed_time } = req.body;
+    console.log('finishBingoRun called:', { user_id, board_id, elapsed_time });
+
+    try {
+        const run = await finishRun(user_id, board_id, elapsed_time);
+        console.log('finishRun result:', run);
+        res.json(run);
+    } catch (error) {
+        console.error('finishBingoRun error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const updateBingoRunTime = async (req, res) => {
+    const { user_id, board_id, elapsed_time } = req.body;
+
+    try {
+        const run = await updateRunTime(user_id, board_id, elapsed_time);
+        res.json(run);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -149,4 +189,6 @@ module.exports = {
     upload,
     completeCellDirect,
     resetBoardProgress,
+    finishBingoRun,
+    updateBingoRunTime,
 };
