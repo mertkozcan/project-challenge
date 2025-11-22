@@ -35,6 +35,11 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' })
 })
 
+app.use((req, res, next) => {
+    console.log('REQ:', req.method, req.path)
+    next()
+})
+
 // Server Başlat
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
