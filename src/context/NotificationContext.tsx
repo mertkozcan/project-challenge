@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import NotificationService, { Notification } from '../services/NotificationService';
+import { NotificationService, Notification } from '@/services/notification/notification.service';
 import SocketService from '@/services/socket.service';
 import { useAppSelector } from '@/store';
 import { notifications } from '@mantine/notifications';
@@ -9,9 +9,9 @@ interface NotificationContextType {
   unreadCount: number;
   loading: boolean;
   fetchNotifications: () => Promise<void>;
-  markAsRead: (id: string) => Promise<void>;
+  markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
-  deleteNotification: (id: string) => Promise<void>;
+  deleteNotification: (id: number) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -26,9 +26,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     if (!userId) return;
     setLoading(true);
     try {
-      const data = await NotificationService.getNotifications();
+      const data = await NotificationService.getNotifications(userId);
       setNotificationsList(data);
-      const count = await NotificationService.getUnreadCount();
+      const count = await NotificationService.getUnreadCount(userId);
       setUnreadCount(count);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -37,9 +37,10 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   };
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = async (id: number) => {
+    if (!userId) return;
     try {
-      await NotificationService.markAsRead(id);
+      await NotificationService.markAsRead(id, userId);
       setNotificationsList(prev =>
         prev.map(n => (n.id === id ? { ...n, is_read: true } : n))
       );
@@ -50,8 +51,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   const markAllAsRead = async () => {
+    if (!userId) return;
     try {
-      await NotificationService.markAllAsRead();
+      await NotificationService.markAllAsRead(userId);
       setNotificationsList(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (error) {
@@ -59,9 +61,10 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   };
 
-  const deleteNotification = async (id: string) => {
+  const deleteNotification = async (id: number) => {
+    if (!userId) return;
     try {
-      await NotificationService.deleteNotification(id);
+      await NotificationService.deleteNotification(id, userId);
       setNotificationsList(prev => prev.filter(n => n.id !== id));
     } catch (error) {
       console.error('Error deleting notification:', error);

@@ -24,6 +24,8 @@ import { UserStatsService, UserStats } from '../../services/userStats/userStats.
 import { Challenge } from '@/@types/challenge';
 import { useAppSelector } from '@/store';
 import useAuth from '@/utils/hooks/useAuth';
+import { useTour } from '@/components/Tutorial/TourProvider';
+import TourButton from '@/components/Tutorial/TourButton';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -48,6 +50,20 @@ const Dashboard: React.FC = () => {
     completedBingos: 0,
     activeBingos: 0,
   });
+
+  const { startTour, completedTours } = useTour();
+
+  // Auto-start tour on first visit
+  useEffect(() => {
+    const hasSeenDashboardTour = localStorage.getItem('dashboard_tour_seen');
+    if (!hasSeenDashboardTour && authenticated) {
+      // Delay to ensure DOM is ready
+      setTimeout(() => {
+        startTour('dashboard');
+        localStorage.setItem('dashboard_tour_seen', 'true');
+      }, 1000);
+    }
+  }, [authenticated, startTour]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -405,6 +421,9 @@ const Dashboard: React.FC = () => {
           </Grid.Col>
         </Grid>
       </motion.div>
+
+      {/* Tour Help Button */}
+      <TourButton tourType="dashboard" />
     </Container>
   );
 };

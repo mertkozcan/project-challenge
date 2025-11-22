@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, Group, ActionIcon, Paper, ThemeIcon, Stack } from '@mantine/core';
 import { IconBell, IconMail, IconDeviceGamepad2, IconUserPlus, IconTrash, IconCheck } from '@tabler/icons-react';
-import { Notification } from '../../services/NotificationService';
+import { Notification } from '@/services/notification/notification.service';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -10,8 +10,8 @@ dayjs.extend(relativeTime);
 
 interface NotificationItemProps {
   notification: Notification;
-  onRead: (id: string) => void;
-  onDelete: (id: string) => void;
+  onRead: (id: number) => void;
+  onDelete: (id: number) => void;
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRead, onDelete }) => {

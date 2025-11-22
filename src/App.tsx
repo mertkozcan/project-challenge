@@ -13,6 +13,7 @@ import appConfig from './configs/app.config';
 import { mockServer } from './mock/mock';
 import ErrorBoundary from '@/components/ErrorBoundary/ErrorBoundary';
 import { NotificationProvider } from '@/context/NotificationContext';
+import { TourProvider } from '@/components/Tutorial/TourProvider';
 
 export default function App() {
   /**
@@ -29,11 +30,13 @@ export default function App() {
         <Notifications position="top-right" zIndex={1000} />
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <NotificationProvider>
-              <BrowserRouter>
-                <Layout />
-              </BrowserRouter>
-            </NotificationProvider>
+            <TourProvider>
+              <NotificationProvider>
+                <BrowserRouter>
+                  <Layout />
+                </BrowserRouter>
+              </NotificationProvider>
+            </TourProvider>
           </PersistGate>
         </Provider>
       </MantineProvider>

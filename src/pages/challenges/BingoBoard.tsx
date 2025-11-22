@@ -27,6 +27,8 @@ import { getGameTheme } from '@/utils/gameThemes';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useGameSounds } from '@/hooks/useGameSounds';
+import { useTour } from '@/components/Tutorial/TourProvider';
+import TourButton from '@/components/Tutorial/TourButton';
 
 interface BingoBoardData extends BingoBoardType {
   banner_url?: string;
@@ -70,6 +72,19 @@ const BingoBoard: React.FC = () => {
     rows: new Set(),
     cols: new Set()
   });
+
+  const { startTour } = useTour();
+
+  // Auto-start bingo tour on first visit
+  useEffect(() => {
+    const hasSeenBingoTour = localStorage.getItem('bingo_tour_seen');
+    if (!hasSeenBingoTour && board) {
+      setTimeout(() => {
+        startTour('bingo');
+        localStorage.setItem('bingo_tour_seen', 'true');
+      }, 1500);
+    }
+  }, [board, startTour]);
 
   useEffect(() => {
     if (!id) return;
@@ -695,6 +710,9 @@ const BingoBoard: React.FC = () => {
           </Button>
         </Stack>
       </Modal>
+
+      {/* Tour Help Button */}
+      <TourButton tourType="bingo" />
     </Box>
   );
 };
