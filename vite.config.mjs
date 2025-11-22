@@ -9,4 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './vitest.setup.mjs',
   },
+  preview: {
+    allowedHosts: ['project-challenge.up.railway.app'],
+  },
 });
