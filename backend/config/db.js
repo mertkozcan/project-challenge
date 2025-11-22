@@ -1,15 +1,15 @@
 // db.js
 const { Pool } = require('pg')
+require('dotenv').config() // sadece local içindir; Render'da önemli değil
 
-// .env sadece local için, Render'da zaten dashboard'dan geliyor
-require('dotenv').config()
+const connectionString = process.env.DATABASE_URL
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}` +
-  `@${process.env.DB_HOST}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME}`
+if (!connectionString) {
+  console.error('[DB] DATABASE_URL is not set!')
+  // Prod ortamında DB yoksa devam etmenin anlamı yok:
+  // process.exit(1)
+}
 
-// log'da host/port'u gör, şifre maskelenmiş olsun:
 console.log(
   '[DB] Connecting to:',
   connectionString?.replace(/(\/\/.*:)([^@]+)@/, '$1*****@')
@@ -18,7 +18,7 @@ console.log(
 const pool = new Pool({
   connectionString,
   ssl: {
-    require: true,           // Supabase TLS istiyor
+    require: true,          // Supabase TLS istiyor
     rejectUnauthorized: false,
   },
 })
