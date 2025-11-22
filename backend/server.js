@@ -49,6 +49,7 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userStatsRoutes); // User stats routes (must be before userRoutes to match specific paths first)
 app.use('/api/users', userRoutes);
 app.use('/api/bingo', bingoRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -59,7 +60,6 @@ app.use('/api/builds', buildRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/bingo', bingoInvitationRoutes);
-app.use('/api/user-stats', userStatsRoutes);
 app.use('/api', loginRoutes);
 
 // Server Başlat

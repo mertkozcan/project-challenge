@@ -118,6 +118,10 @@ class SocketService {
     this.socket?.emit('toggle-ready', { roomId, userId });
   }
 
+  joinUserRoom(userId: string): void {
+    this.socket?.emit('join-user-room', { userId });
+  }
+
   on(event: string, callback: (...args: any[]) => void): void {
     this.socket?.on(event, callback);
   }

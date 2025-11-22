@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, Group, ActionIcon, Paper, ThemeIcon, Stack } from '@mantine/core';
 import { IconBell, IconMail, IconDeviceGamepad2, IconUserPlus, IconTrash, IconCheck } from '@tabler/icons-react';
 import { Notification } from '../../services/NotificationService';
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -14,6 +15,8 @@ interface NotificationItemProps {
 }
 
 const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRead, onDelete }) => {
+  const navigate = useNavigate();
+
   const getIcon = () => {
     switch (notification.type) {
       case 'GAME_INVITE':
@@ -40,15 +43,30 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRea
     }
   };
 
+  const handleClick = () => {
+    // Mark as read if not already
+    if (!notification.is_read) {
+      onRead(notification.id);
+    }
+
+    // Navigate based on notification type
+    if (notification.type === 'GAME_INVITE') {
+      // Navigate to multiplayer rooms page
+      navigate('/challenges/bingo/multiplayer');
+    }
+  };
+
   return (
     <Paper 
       p="sm" 
       withBorder 
-      style={(theme) => ({
+      style={{
         backgroundColor: notification.is_read ? 'transparent' : 'var(--mantine-color-dark-6)',
         borderColor: notification.is_read ? 'var(--mantine-color-dark-4)' : `var(--mantine-color-${getColor()}-8)`,
         transition: 'all 0.2s ease',
-      })}
+        cursor: 'pointer',
+      }}
+      onClick={handleClick}
     >
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         <Group wrap="nowrap">
@@ -74,7 +92,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRea
               size="sm" 
               color="blue" 
               variant="subtle" 
-              onClick={() => onRead(notification.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRead(notification.id);
+              }}
               title="Mark as read"
             >
               <IconCheck size={14} />
@@ -84,7 +105,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onRea
             size="sm" 
             color="red" 
             variant="subtle" 
-            onClick={() => onDelete(notification.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(notification.id);
+            }}
             title="Delete"
           >
             <IconTrash size={14} />

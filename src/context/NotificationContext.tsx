@@ -74,6 +74,10 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
       const socket = SocketService.connect();
       if (socket) {
+        // Join user-specific room for notifications
+        SocketService.joinUserRoom(userId);
+
+        // Listen for real-time notifications
         socket.on('notification-received', (notification: Notification) => {
           setNotificationsList(prev => [notification, ...prev]);
           setUnreadCount(prev => prev + 1);

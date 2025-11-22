@@ -5,6 +5,14 @@ const initializeSocket = (io) => {
     io.on('connection', (socket) => {
         console.log('User connected:', socket.id);
 
+        // Join user-specific room for notifications
+        socket.on('join-user-room', ({ userId }) => {
+            const userRoom = `user_${userId}`;
+            socket.join(userRoom);
+            socket.userId = userId;
+            console.log(`User ${userId} joined personal room: ${userRoom}`);
+        });
+
         // Join a bingo room
         socket.on('join-room', async ({ roomId, userId }) => {
             try {
