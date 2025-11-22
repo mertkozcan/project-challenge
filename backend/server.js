@@ -7,6 +7,12 @@ require('dotenv').config();
 
 const challengeRoutes = require('./routes/challengeRoutes');
 const loginRoutes = require('./routes/loginRoutes');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const bingoRoutes = require('./routes/bingoRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const bingoRoomRoutes = require('./routes/bingoRoomRoutes');
+const proofRoutes = require('./routes/proofRoutes');
 const initializeSocket = require('./socket/bingoSocket');
 
 const app = express();
@@ -34,11 +40,15 @@ app.use('/uploads', express.static('uploads'));
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' })
 })
-
-app.use((req, res, next) => {
-    console.log('REQ:', req.method, req.path)
-    next()
-})
+// Routes
+app.use('/api/challenges', challengeRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/bingo', bingoRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/multiplayer', bingoRoomRoutes);
+app.use('/api/proofs', proofRoutes);
+app.use('/api', loginRoutes);
 
 // Server Başlat
 const PORT = process.env.PORT || 5000;
