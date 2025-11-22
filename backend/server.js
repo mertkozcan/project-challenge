@@ -31,6 +31,10 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads'));
 
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok' })
+})
+
 // Server Başlat
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
