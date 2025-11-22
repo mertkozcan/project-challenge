@@ -140,19 +140,50 @@ const startGame = async (req, res) => {
 const completeCell = async (req, res) => {
     const { roomId, cellId } = req.params;
     const userId = req.user?.id || req.body.user_id;
+    const io = req.app.get('io');
 
     if (!userId) {
         return res.status(401).json({ error: 'Authentication required' });
     }
 
     try {
+        // Check if cell is already completed (Shared Board Logic)
+        const isCompleted = await bingoRoomModel.isCellCompleted(roomId, cellId);
+        if (isCompleted) {
+            return res.status(400).json({ error: 'Cell already completed' });
+        }
+
         const completion = await bingoRoomModel.completeCell(roomId, cellId, userId);
 
-        // Check win conditions
-        const winCheck = await bingoRoomModel.checkWinConditions(roomId, userId);
+        // Broadcast cell completion to all players
+        if (io) {
+            io.to(roomId).emit('cell-completed', {
+                cellId: parseInt(cellId),
+                userId,
+                completedAt: new Date().toISOString()
+            });
+        }
+
+        // Check win conditions (Shared Board - anyone's completion counts)
+        const winCheck = await bingoRoomModel.checkWinConditions(roomId);
 
         if (winCheck.won) {
-            await bingoRoomModel.endGame(roomId, userId);
+            const winnerId = winCheck.winnerId || userId;
+            await bingoRoomModel.endGame(roomId, winnerId, winCheck.type, winCheck.index);
+
+            // Get game statistics
+            const statistics = await bingoRoomModel.getGameStatistics(roomId);
+
+            // Broadcast game end
+            if (io) {
+                io.to(roomId).emit('game-ended', {
+                    winnerId: winnerId,
+                    winType: winCheck.type,
+                    winIndex: winCheck.index,
+                    statistics
+                });
+            }
+
             return res.json({
                 completion,
                 gameWon: true,

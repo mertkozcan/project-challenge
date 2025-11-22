@@ -118,10 +118,34 @@ const BingoGameView: React.FC = () => {
   const handleCellClick = async (cellId: number) => {
     playSound('click');
     if (!roomId || !userId) return;
+    
+    // Optimistic update
+    setBoardState(prev => prev.map(cell => {
+      if (cell.cell_id === cellId) {
+        return {
+          ...cell,
+          completed_by_user_id: userId,
+          completed_by_username: 'You',
+          completed_by_avatar: undefined
+        };
+      }
+      return cell;
+    }));
+
     try {
-      await BingoRoomService.completeCell(roomId, cellId, userId);
+      const response = await BingoRoomService.completeCell(roomId, cellId, userId);
+      
+      if (response.gameWon) {
+        handleGameEnded({
+          winnerId: userId,
+          winType: response.winType || 'row',
+          winIndex: response.winIndex || 0,
+          statistics: null
+        });
+      }
     } catch (error) {
       console.error('Error completing cell:', error);
+      fetchGameData(); // Revert on error
     }
   };
 

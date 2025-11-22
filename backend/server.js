@@ -21,6 +21,9 @@ const io = new Server(server, {
 // Initialize WebSocket
 initializeSocket(io);
 
+// Make io accessible in routes
+app.set('io', io);
+
 // CORS Middleware
 app.use(cors());
 

@@ -229,7 +229,15 @@ const getBoardState = async (roomId) => {
     return result.rows;
 };
 
-const checkWinConditions = async (roomId, userId) => {
+const isCellCompleted = async (roomId, cellId) => {
+    const result = await pool.query(
+        `SELECT 1 FROM bingo_cell_completions WHERE room_id = $1 AND cell_id = $2`,
+        [roomId, cellId]
+    );
+    return result.rows.length > 0;
+};
+
+const checkWinConditions = async (roomId) => {
     // Get board size
     const boardInfo = await pool.query(
         `SELECT bb.size FROM bingo_rooms r
@@ -240,30 +248,40 @@ const checkWinConditions = async (roomId, userId) => {
 
     const size = boardInfo.rows[0]?.size || 5;
 
-    // Get user's completed cells
+    // Get ALL completed cells with user_id
     const completions = await pool.query(
-        `SELECT bc.row_index, bc.col_index
+        `SELECT bc.row_index, bc.col_index, bcc.user_id
      FROM bingo_cell_completions bcc
      JOIN bingo_cells bc ON bcc.cell_id = bc.id
-     WHERE bcc.room_id = $1 AND bcc.user_id = $2`,
-        [roomId, userId]
+     WHERE bcc.room_id = $1`,
+        [roomId]
     );
 
     const cells = completions.rows;
 
+    // Helper to check if all cells in a group belong to the same user
+    const checkGroup = (groupCells) => {
+        if (groupCells.length !== size) return null;
+        const firstUser = groupCells[0].user_id;
+        const allSameUser = groupCells.every(c => c.user_id === firstUser);
+        return allSameUser ? firstUser : null;
+    };
+
     // Check rows
     for (let row = 0; row < size; row++) {
         const rowCells = cells.filter(c => c.row_index === row);
-        if (rowCells.length === size) {
-            return { won: true, type: 'row', index: row };
+        const winnerId = checkGroup(rowCells);
+        if (winnerId) {
+            return { won: true, type: 'row', index: row, winnerId };
         }
     }
 
     // Check columns
     for (let col = 0; col < size; col++) {
         const colCells = cells.filter(c => c.col_index === col);
-        if (colCells.length === size) {
-            return { won: true, type: 'column', index: col };
+        const winnerId = checkGroup(colCells);
+        if (winnerId) {
+            return { won: true, type: 'column', index: col, winnerId };
         }
     }
 
@@ -315,12 +333,12 @@ const getGameStatistics = async (roomId) => {
     const completionStats = await pool.query(
         `SELECT 
             bcc.user_id,
-            u.username,
-            u.avatar_url,
-            COUNT(*) as cells_completed,
-            MIN(bcc.completed_at) as first_completion,
-            MAX(bcc.completed_at) as last_completion,
-            EXTRACT(EPOCH FROM (MAX(bcc.completed_at) - MIN(bcc.completed_at))) as completion_duration
+        u.username,
+        u.avatar_url,
+        COUNT(*) as cells_completed,
+        MIN(bcc.completed_at) as first_completion,
+        MAX(bcc.completed_at) as last_completion,
+        EXTRACT(EPOCH FROM(MAX(bcc.completed_at) - MIN(bcc.completed_at))) as completion_duration
          FROM bingo_cell_completions bcc
          JOIN users u ON bcc.user_id = u.id
          WHERE bcc.room_id = $1
@@ -372,22 +390,22 @@ const getGameStatistics = async (roomId) => {
 const getUserGameHistory = async (userId, limit = 20) => {
     const result = await pool.query(
         `SELECT r.id, r.board_id, r.status, r.started_at, r.completed_at,
-            r.winner_user_id,
-            bb.title as board_title,
-            bb.game_name,
-            u.username as winner_username,
-            u.avatar_url as winner_avatar,
-            COUNT(DISTINCT p.id) as participant_count,
-            EXTRACT(EPOCH FROM (r.completed_at - r.started_at)) as duration_seconds
+        r.winner_user_id,
+        bb.title as board_title,
+        bb.game_name,
+        u.username as winner_username,
+        u.avatar_url as winner_avatar,
+        COUNT(DISTINCT p.id) as participant_count,
+        EXTRACT(EPOCH FROM(r.completed_at - r.started_at)) as duration_seconds
          FROM bingo_rooms r
          JOIN bingo_boards bb ON r.board_id = bb.id
          LEFT JOIN users u ON r.winner_user_id = u.id
          LEFT JOIN bingo_room_participants p ON r.id = p.room_id
          WHERE r.status = 'COMPLETED'
-         AND EXISTS (
-           SELECT 1 FROM bingo_room_participants 
+         AND EXISTS(
+            SELECT 1 FROM bingo_room_participants 
            WHERE room_id = r.id AND user_id = $1
-         )
+        )
          GROUP BY r.id, bb.title, bb.game_name, u.username, u.avatar_url
          ORDER BY r.completed_at DESC
          LIMIT $2`,
@@ -415,13 +433,13 @@ const getGameDetails = async (roomId, userId) => {
     const cells = await pool.query(
         `SELECT 
             bc.id as cell_id,
-            bc.row_index,
-            bc.col_index,
-            bc.task,
-            bcc.user_id as completed_by_user_id,
-            bcc.completed_at,
-            u.username as completed_by_username,
-            u.avatar_url as completed_by_avatar
+        bc.row_index,
+        bc.col_index,
+        bc.task,
+        bcc.user_id as completed_by_user_id,
+        bcc.completed_at,
+        u.username as completed_by_username,
+        u.avatar_url as completed_by_avatar
          FROM bingo_cells bc
          JOIN bingo_rooms r ON bc.board_id = r.board_id
          LEFT JOIN bingo_cell_completions bcc ON bc.id = bcc.cell_id AND bcc.room_id = r.id
@@ -434,9 +452,9 @@ const getGameDetails = async (roomId, userId) => {
     const completionStats = await pool.query(
         `SELECT 
             bcc.user_id,
-            COUNT(*) as cells_completed,
-            MIN(bcc.completed_at) as first_completion,
-            MAX(bcc.completed_at) as last_completion
+        COUNT(*) as cells_completed,
+        MIN(bcc.completed_at) as first_completion,
+        MAX(bcc.completed_at) as last_completion
          FROM bingo_cell_completions bcc
          WHERE bcc.room_id = $1
          GROUP BY bcc.user_id`,
@@ -473,6 +491,7 @@ module.exports = {
     getBoardState,
     checkWinConditions,
     endGame,
+    isCellCompleted,
     getGameStatistics,
     getUserGameHistory,
     getGameDetails,

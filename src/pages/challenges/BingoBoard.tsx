@@ -410,7 +410,7 @@ const BingoBoard: React.FC = () => {
           <Button
             variant="subtle"
             leftSection={<IconArrowLeft />}
-            onClick={() => navigate('/bingo')}
+            onClick={() => navigate('/bingo-challenges')}
           >
             Back to Bingo Challenges
           </Button>
@@ -425,15 +425,23 @@ const BingoBoard: React.FC = () => {
             </Paper>
             
             {/* Play Solo Button */}
-            {!timerActive && !hasFinished && completionPercentage < 100 && (
-              <Button 
-                color="green" 
-                onClick={() => setTimerActive(true)}
-                leftSection={<IconClock size={18} />}
-              >
-                Start Timer
-              </Button>
-            )}
+            {!userId ? (
+  <Button 
+    color="green" 
+    onClick={() => navigate('/sign-in', { state: { message: 'You need to be logged in to play bingo.' } })}
+    leftSection={<IconClock size={18} />}
+  >
+    Login to Play
+  </Button>
+) : !timerActive && !hasFinished && completionPercentage < 100 && (
+  <Button 
+    color="green" 
+    onClick={() => setTimerActive(true)}
+    leftSection={<IconClock size={18} />}
+  >
+    Start Timer
+  </Button>
+)}
 
             {/* Finish Button */}
             {canFinish && (
@@ -457,13 +465,19 @@ const BingoBoard: React.FC = () => {
             
             {/* Multiplayer Button */}
             <Button 
-              variant="light" 
-              color="blue" 
-              leftSection={<IconUsers size={18} />}
-              onClick={() => setCreateRoomModalOpen(true)}
-            >
-              Create Room
-            </Button>
+  variant="light" 
+  color="blue" 
+  leftSection={<IconUsers size={18} />}
+  onClick={() => {
+    if (!userId) {
+      navigate('/sign-in', { state: { message: 'You need to be logged in to create a room.' } });
+    } else {
+      setCreateRoomModalOpen(true);
+    }
+  }}
+>
+  Create Room
+</Button>
           </Group>
         </Group>
 
