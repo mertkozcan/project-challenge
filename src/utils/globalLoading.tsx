@@ -1,15 +1,6 @@
 import { LoadingOverlay } from '@mantine/core';
 import { useEffect, useState } from 'react';
 
-/**
- * Global loading hook
- * Usage:
- * const { startLoading, stopLoading } = useGlobalLoading();
- * startLoading();
- * // ... async operation
- * stopLoading();
- */
-
 let loadingCount = 0;
 const listeners: Set<(loading: boolean) => void> = new Set();
 
@@ -22,9 +13,12 @@ export const globalLoading = {
     loadingCount = Math.max(0, loadingCount - 1);
     listeners.forEach(listener => listener(loadingCount > 0));
   },
-  subscribe: (listener: (loading: boolean) => void) => {
+  subscribe: (listener: (loading: boolean) => void): () => void => {
     listeners.add(listener);
-    return () => listeners.delete(listener);
+    return () => {
+      // Boolean dönüşü yok sayıyoruz, cleanup fonksiyonu void olsun
+      listeners.delete(listener);
+    };
   },
 };
 
@@ -32,6 +26,7 @@ export const useGlobalLoading = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // subscribe artık () => void döndüğü için React'in beklediği Destructor tipiyle uyumlu
     return globalLoading.subscribe(setLoading);
   }, []);
 
@@ -42,10 +37,6 @@ export const useGlobalLoading = () => {
   };
 };
 
-/**
- * Global Loading Overlay Component
- * Place this in your App.tsx to show loading overlay for all async operations
- */
 export const GlobalLoadingOverlay = () => {
   const { loading } = useGlobalLoading();
 
