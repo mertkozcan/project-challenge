@@ -927,7 +927,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mantine/carousel@npm:^8.0.1":
+"@mantine/carousel@npm:^8.3.9":
   version: 8.3.9
   resolution: "@mantine/carousel@npm:8.3.9"
   peerDependencies:
@@ -941,7 +941,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mantine/charts@npm:^8.0.1":
+"@mantine/charts@npm:^8.3.9":
   version: 8.3.9
   resolution: "@mantine/charts@npm:8.3.9"
   peerDependencies:
@@ -954,7 +954,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mantine/core@npm:^8.0.1":
+"@mantine/core@npm:^8.3.9":
   version: 8.3.9
   resolution: "@mantine/core@npm:8.3.9"
   dependencies:
@@ -972,7 +972,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mantine/dates@npm:^8.0.1":
+"@mantine/dates@npm:^8.3.9":
   version: 8.3.9
   resolution: "@mantine/dates@npm:8.3.9"
   dependencies:
@@ -987,19 +987,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mantine/form@npm:^7.7.1":
-  version: 7.17.8
-  resolution: "@mantine/form@npm:7.17.8"
+"@mantine/form@npm:^8.3.9":
+  version: 8.3.9
+  resolution: "@mantine/form@npm:8.3.9"
   dependencies:
     fast-deep-equal: "npm:^3.1.3"
     klona: "npm:^2.0.6"
   peerDependencies:
     react: ^18.x || ^19.x
-  checksum: 10c0/48cd768fd01dc9ce050d69c53076661beb1658c326cb22c8af86959d26cf2332a0080139d0ed0141ba8073d57f2a85fb2d62bcb6b7d59e89a55b4af00cab5021
+  checksum: 10c0/33f9a92cc4305c561d88b1d0631bc1aa667de6e32b49804c1d553e0adff74f359caa321da886bb24245f20ac7b8f3c66e217bd908b7926f3de9075519453ece4
   languageName: node
   linkType: hard
 
-"@mantine/hooks@npm:^8.0.1":
+"@mantine/hooks@npm:^8.3.9":
   version: 8.3.9
   resolution: "@mantine/hooks@npm:8.3.9"
   peerDependencies:
@@ -1008,7 +1008,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mantine/modals@npm:^8.0.1":
+"@mantine/modals@npm:^8.3.9":
   version: 8.3.9
   resolution: "@mantine/modals@npm:8.3.9"
   peerDependencies:
@@ -1020,27 +1020,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mantine/notifications@npm:^8.3.8":
-  version: 8.3.8
-  resolution: "@mantine/notifications@npm:8.3.8"
+"@mantine/notifications@npm:^8.3.9":
+  version: 8.3.9
+  resolution: "@mantine/notifications@npm:8.3.9"
   dependencies:
-    "@mantine/store": "npm:8.3.8"
+    "@mantine/store": "npm:8.3.9"
     react-transition-group: "npm:4.4.5"
   peerDependencies:
-    "@mantine/core": 8.3.8
-    "@mantine/hooks": 8.3.8
+    "@mantine/core": 8.3.9
+    "@mantine/hooks": 8.3.9
     react: ^18.x || ^19.x
     react-dom: ^18.x || ^19.x
-  checksum: 10c0/528ef41218046e457a4d4dee80dd390a951df7a30deea7940002c5c4dc82a3176fe3ac48e46cda57d3aa84cd4f43a8ae8a2388a94692e8eb4dd02c1a0f011d88
+  checksum: 10c0/03c31939a4d8833b1269455c6062d9dd6b55139d5806cafd88cdf956ec79e843b05c91b6e7d7f80c0001ccab9b76e366c0b13671878ddbf17e6d379578541a99
   languageName: node
   linkType: hard
 
-"@mantine/store@npm:8.3.8":
-  version: 8.3.8
-  resolution: "@mantine/store@npm:8.3.8"
+"@mantine/store@npm:8.3.9":
+  version: 8.3.9
+  resolution: "@mantine/store@npm:8.3.9"
   peerDependencies:
     react: ^18.x || ^19.x
-  checksum: 10c0/a9d277ed157ad4110e09e1da986ec695c96398ceab902e4063a842011587592594228aea1442580e953050f412f4bbf212c6caccf55f8e0483937decdfe840b4
+  checksum: 10c0/00e190088e692dfe4063baf211a1d33f770d471ab09819f3efd0ad4b3dbe53df65463a5133be4746215098df56af2f4faac8366684307f7020014743d3209943
   languageName: node
   linkType: hard
 
@@ -7293,14 +7293,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "mantine-vite-template@workspace:."
   dependencies:
-    "@mantine/carousel": "npm:^8.0.1"
-    "@mantine/charts": "npm:^8.0.1"
-    "@mantine/core": "npm:^8.0.1"
-    "@mantine/dates": "npm:^8.0.1"
-    "@mantine/form": "npm:^7.7.1"
-    "@mantine/hooks": "npm:^8.0.1"
-    "@mantine/modals": "npm:^8.0.1"
-    "@mantine/notifications": "npm:^8.3.8"
+    "@mantine/carousel": "npm:^8.3.9"
+    "@mantine/charts": "npm:^8.3.9"
+    "@mantine/core": "npm:^8.3.9"
+    "@mantine/dates": "npm:^8.3.9"
+    "@mantine/form": "npm:^8.3.9"
+    "@mantine/hooks": "npm:^8.3.9"
+    "@mantine/modals": "npm:^8.3.9"
+    "@mantine/notifications": "npm:^8.3.9"
     "@reduxjs/toolkit": "npm:^2.2.3"
     "@storybook/addon-essentials": "npm:^8.0.0"
     "@storybook/addon-interactions": "npm:^8.0.0"
