@@ -20,13 +20,19 @@ const sendInvitation = async (req, res) => {
         const invitation = await bingoInvitationModel.sendInvitation(roomId, fromUserId, toUserId);
 
         // Send notification to recipient
-        await notificationModel.createNotification(
+        const notification = await notificationModel.createNotification(
             toUserId,
-            'BINGO_INVITE',
+            'GAME_INVITE',
             'New Bingo Invitation',
             `You have been invited to play Bingo!`,
-            invitation.id
+            { roomId, invitationId: invitation.id }
         );
+
+        // Emit real-time notification via socket.io
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`user_${toUserId}`).emit('notification-received', notification);
+        }
 
         res.status(201).json(invitation);
     } catch (error) {

@@ -10,7 +10,7 @@ import SimpleSideBarBottomContent from '@/components/Layout/LayoutTypes/SimpleSi
 import { useTranslation } from 'react-i18next';
 import AuthorityCheck from '@/route/AuthorityCheck';
 import { useAppSelector } from '@/store';
-import NotificationBell from '@/components/Notifications/NotificationBell';
+import NotificationDropdown from '@/components/Notifications/NotificationDropdown';
 import useAuth from '@/utils/hooks/useAuth';
 import { IconLogin } from '@tabler/icons-react';
 
@@ -81,7 +81,7 @@ export default function SimpleSideBar() {
           </Group>
           <Group>
             {authenticated ? (
-              <NotificationBell />
+              <NotificationDropdown />
             ) : (
               <Group gap="xs">
                 <Button variant="default" size="xs" onClick={() => navigate('/sign-in')}>Sign In</Button>
