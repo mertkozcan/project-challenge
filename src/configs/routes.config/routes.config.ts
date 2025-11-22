@@ -2,9 +2,7 @@ import { lazy } from 'react';
 import authRoute from './authRoute';
 import type { Routes } from '@/@types/routes';
 
-export const publicRoutes: Routes = [...authRoute];
-
-export const protectedRoutes = [
+export const publicRoutes: Routes = [
   {
     key: 'dashboard',
     path: '/dashboard',
@@ -21,12 +19,6 @@ export const protectedRoutes = [
     key: 'challenge-details',
     path: '/challenges/:id',
     component: lazy(() => import('@/components/Challenge/Challenge')),
-    authority: [],
-  },
-  {
-    key: 'create-challenge',
-    path: '/challenges/create',
-    component: lazy(() => import('@/pages/challenges/CreateChallenge')),
     authority: [],
   },
   {
@@ -48,33 +40,9 @@ export const protectedRoutes = [
     authority: [],
   },
   {
-    key: 'create-build',
-    path: '/builds/create',
-    component: lazy(() => import('@/pages/builds/CreateBuild')),
-    authority: [],
-  },
-  {
     key: 'builds.detail',
     path: '/builds/:id',
     component: lazy(() => import('@/pages/builds/BuildDetail')),
-    authority: [],
-  },
-  {
-    key: 'bingo-board',
-    path: '/bingo/:id',
-    component: lazy(() => import('@/pages/challenges/BingoBoard')),
-    authority: [],
-  },
-  {
-    key: 'profile',
-    path: '/profile/:id',
-    component: lazy(() => import('@/pages/profile/UserProfile')),
-    authority: [],
-  },
-  {
-    key: 'admin',
-    path: '/admin',
-    component: lazy(() => import('@/pages/admin/AdminPanel')),
     authority: [],
   },
   {
@@ -84,9 +52,51 @@ export const protectedRoutes = [
     authority: [],
   },
   {
+    key: 'admin',
+    path: '/admin',
+    component: lazy(() => import('@/pages/admin/AdminPanel')),
+    authority: ['admin'],
+  },
+  {
+    key: 'bingo-history',
+    path: '/bingo/history',
+    component: lazy(() => import('@/pages/bingo/BingoHistory')),
+    authority: [],
+  },
+  {
+    key: 'bingo-history-detail',
+    path: '/bingo/history/:roomId',
+    component: lazy(() => import('@/pages/bingo/BingoGameDetails')),
+    authority: [],
+  },
+  {
+    key: 'bingo-challenges',
+    path: '/bingo-challenges',
+    component: lazy(() => import('@/pages/challenges/BingoChallenges')),
+    authority: [],
+  },
+  {
     key: 'bingo-rooms',
     path: '/bingo/rooms',
     component: lazy(() => import('@/pages/bingo/RoomLobby')),
+    authority: [],
+  },
+  {
+    key: 'bingo-board',
+    path: '/bingo/:id',
+    component: lazy(() => import('@/pages/challenges/BingoBoard')),
+    authority: [],
+  },
+  {
+    key: 'bingo-history',
+    path: '/bingo/history',
+    component: lazy(() => import('@/pages/bingo/BingoHistory')),
+    authority: [],
+  },
+  {
+    key: 'bingo-history-detail',
+    path: '/bingo/history/:roomId',
+    component: lazy(() => import('@/pages/bingo/BingoGameDetails')),
     authority: [],
   },
   {
@@ -102,15 +112,30 @@ export const protectedRoutes = [
     authority: [],
   },
   {
-    key: 'bingo-history',
-    path: '/bingo/history',
-    component: lazy(() => import('@/pages/bingo/BingoHistory')),
+    key: '404',
+    path: '/404',
+    component: lazy(() => import('@/pages/NotFound')),
+    authority: [],
+  },
+];
+
+export const protectedRoutes = [
+  {
+    key: 'create-challenge',
+    path: '/challenges/create',
+    component: lazy(() => import('@/pages/challenges/CreateChallenge')),
     authority: [],
   },
   {
-    key: 'bingo-game-details',
-    path: '/bingo/history/:roomId',
-    component: lazy(() => import('@/pages/bingo/BingoGameDetails')),
+    key: 'create-build',
+    path: '/builds/create',
+    component: lazy(() => import('@/pages/builds/CreateBuild')),
+    authority: [],
+  },
+  {
+    key: 'profile',
+    path: '/profile/:id',
+    component: lazy(() => import('@/pages/profile/UserProfile')),
     authority: [],
   },
 ];

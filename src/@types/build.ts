@@ -8,4 +8,5 @@ export interface Build {
   created_at: string;
   username?: string;
   is_official?: boolean;
+  banner_url?: string;
 }

@@ -11,7 +11,7 @@ export type AppConfig = {
 
 const appConfig: AppConfig = {
   layoutType: LayoutTypes.SimpleSideBar,
-  apiPrefix: 'http://localhost:5000/api',
+  apiPrefix: import.meta.env.VITE_API_PREFIX || 'http://localhost:5000/api',
   authenticatedEntryPath: '/dashboard',
   unAuthenticatedEntryPath: '/sign-in',
   enableMock: false,

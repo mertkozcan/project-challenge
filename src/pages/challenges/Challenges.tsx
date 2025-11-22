@@ -1,36 +1,61 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Title,
   Tabs,
   Grid,
-  Card,
-  Text,
-  Badge,
   Button,
   LoadingOverlay,
   Group,
+  Text,
+  Stack,
+  SimpleGrid,
+  ThemeIcon,
+  Divider,
 } from '@mantine/core';
+import { IconPlus, IconTrophy, IconUsers, IconFlame, IconStar } from '@tabler/icons-react';
+import { motion } from 'framer-motion';
 import { ChallengesService } from '@/services/challenges/challenges.service';
 import type { Challenge } from '@/@types/challenge';
-import { IconPlus, IconTrophy, IconUsers } from '@tabler/icons-react';
+import FilterBar from '@/components/Challenges/FilterBar';
+import ChallengeCard from '@/components/Challenges/ChallengeCard';
+import Pagination from '@/components/Common/Pagination';
+import useAuth from '@/utils/hooks/useAuth';
+
+const ITEMS_PER_PAGE = 12;
 
 const Challenges: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string | null>('official');
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [allChallenges, setAllChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { authenticated } = useAuth();
+
+  // Filter states
+  const [search, setSearch] = useState('');
+  const [gameFilter, setGameFilter] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState('latest');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchChallenges();
   }, [activeTab]);
 
+  useEffect(() => {
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+  }, [search, gameFilter, typeFilter, sortBy]);
+
   const fetchChallenges = async () => {
     setLoading(true);
     try {
-      const data = await ChallengesService.getChallenges(undefined, activeTab === 'official' ? 'official' : 'community');
-      setChallenges(data);
+      const data = await ChallengesService.getChallenges(
+        undefined,
+        activeTab === 'official' ? 'official' : 'community'
+      );
+      setAllChallenges(data);
     } catch (error) {
       console.error('Failed to fetch challenges', error);
     } finally {
@@ -38,21 +63,202 @@ const Challenges: React.FC = () => {
     }
   };
 
-  const getChallengeTypeColor = (type: string) => {
-    switch (type) {
-      case 'daily': return 'green';
-      case 'weekly': return 'blue';
-      case 'permanent': return 'gray';
-      default: return 'gray';
+  // Get unique games for filter
+  const gameOptions = useMemo(() => {
+    const games = Array.from(new Set(allChallenges.map(c => c.game_name)));
+    return games.map(game => ({ value: game, label: game }));
+  }, [allChallenges]);
+
+  // Filter and sort challenges
+  const filteredChallenges = useMemo(() => {
+    let filtered = [...allChallenges];
+
+    // Search filter
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(
+        c =>
+          c.challenge_name.toLowerCase().includes(searchLower) ||
+          c.description.toLowerCase().includes(searchLower) ||
+          c.game_name.toLowerCase().includes(searchLower)
+      );
     }
+
+    // Game filter
+    if (gameFilter) {
+      filtered = filtered.filter(c => c.game_name === gameFilter);
+    }
+
+    // Type filter
+    if (typeFilter) {
+      filtered = filtered.filter(c => c.type === typeFilter);
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'latest':
+        filtered.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+        break;
+      case 'popular':
+        filtered.sort((a, b) => (b.participation_count || 0) - (a.participation_count || 0));
+        break;
+      case 'reward':
+        filtered.sort((a, b) => parseInt(b.reward) - parseInt(a.reward));
+        break;
+    }
+
+    return filtered;
+  }, [allChallenges, search, gameFilter, typeFilter, sortBy]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredChallenges.length / ITEMS_PER_PAGE);
+  const paginatedChallenges = filteredChallenges.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Featured challenges (top 3 popular)
+  const featuredChallenges = useMemo(() => {
+    return [...allChallenges]
+      .sort((a, b) => (b.participation_count || 0) - (a.participation_count || 0))
+      .slice(0, 3);
+  }, [allChallenges]);
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setGameFilter(null);
+    setTypeFilter(null);
+    setSortBy('latest');
+    setCurrentPage(1);
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return <LoadingOverlay visible={true} />;
+    }
+
+    return (
+      <Stack gap="xl">
+        {/* Featured Section */}
+        {featuredChallenges.length > 0 && !search && !gameFilter && !typeFilter && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Group mb="md">
+              <ThemeIcon size="lg" radius="md" variant="light" color="orange">
+                <IconFlame size={20} />
+              </ThemeIcon>
+              <Title order={3}>Popular This Week</Title>
+            </Group>
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+              {featuredChallenges.map((challenge) => (
+                <ChallengeCard
+                  key={challenge.id}
+                  id={challenge.id}
+                  name={challenge.challenge_name}
+                  description={challenge.description}
+                  gameName={challenge.game_name}
+                  type={challenge.type}
+                  reward={challenge.reward}
+                  bannerUrl={challenge.banner_url}
+                  participantCount={challenge.participation_count}
+                />
+              ))}
+            </SimpleGrid>
+            <Divider my="xl" />
+          </motion.div>
+        )}
+
+        {/* Filter Bar */}
+        <FilterBar
+          search={search}
+          onSearchChange={setSearch}
+          gameFilter={gameFilter}
+          onGameFilterChange={setGameFilter}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+          onClearFilters={handleClearFilters}
+          games={gameOptions}
+        />
+
+        {/* Challenges Grid */}
+        {paginatedChallenges.length > 0 ? (
+          <>
+            <Grid>
+              {paginatedChallenges.map((challenge) => (
+                <Grid.Col key={challenge.id} span={{ base: 12, sm: 6, md: 4, lg: 3 }}>
+                  <ChallengeCard
+                    id={challenge.id}
+                    name={challenge.challenge_name}
+                    description={challenge.description}
+                    gameName={challenge.game_name}
+                    type={challenge.type}
+                    reward={challenge.reward}
+                    bannerUrl={challenge.banner_url}
+                    participantCount={challenge.participation_count}
+                  />
+                </Grid.Col>
+              ))}
+            </Grid>
+
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              totalItems={filteredChallenges.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+            />
+          </>
+        ) : (
+          <Stack align="center" gap="md" py="xl">
+            <ThemeIcon size={80} radius="xl" variant="light" color="gray">
+              <IconStar size={40} />
+            </ThemeIcon>
+            <Title order={3} c="dimmed">
+              No challenges found
+            </Title>
+            <Text c="dimmed" ta="center">
+              {activeTab === 'community'
+                ? "No community challenges yet. Be the first to create one!"
+                : "No official challenges match your filters."}
+            </Text>
+            {(search || gameFilter || typeFilter) && (
+              <Button variant="light" onClick={handleClearFilters}>
+                Clear Filters
+              </Button>
+            )}
+          </Stack>
+        )}
+      </Stack>
+    );
   };
 
   return (
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
-        <Title order={2}>Challenges</Title>
+        <Group>
+          <ThemeIcon size="xl" radius="md" variant="light" color="blue">
+            <IconTrophy size={28} />
+          </ThemeIcon>
+          <Title order={1}>Challenges</Title>
+        </Group>
         {activeTab === 'community' && (
-          <Button leftSection={<IconPlus size={16} />} onClick={() => navigate('/challenges/create')}>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            onClick={() => {
+              if (!authenticated) {
+                navigate('/sign-in', { state: { message: 'You need to be logged in to create a challenge.' } });
+              } else {
+                navigate('/challenges/create');
+              }
+            }}
+            variant="gradient"
+            gradient={{ from: 'blue', to: 'cyan', deg: 45 }}
+          >
             Create Challenge
           </Button>
         )}
@@ -68,70 +274,12 @@ const Challenges: React.FC = () => {
           </Tabs.Tab>
         </Tabs.List>
 
-        <Tabs.Panel value="official" pt="md">
-          {loading ? (
-            <LoadingOverlay visible={true} />
-          ) : (
-            <Grid>
-              {challenges.map((challenge) => (
-                <Grid.Col key={challenge.id} span={{ base: 12, md: 6, lg: 4 }}>
-                  <Card shadow="sm" padding="lg" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate(`/challenges/${challenge.id}`)}>
-                    <Group justify="space-between" mb="xs">
-                      <Text fw={700}>{challenge.challenge_name}</Text>
-                      <Badge color={getChallengeTypeColor(challenge.type)}>
-                        {challenge.type.toUpperCase()}
-                      </Badge>
-                    </Group>
-                    <Text size="sm" c="dimmed" mb="xs">
-                      {challenge.game_name}
-                    </Text>
-                    <Text size="sm" lineClamp={2} mb="md">
-                      {challenge.description}
-                    </Text>
-                    <Text size="sm" c="yellow" fw={700}>
-                      Reward: {challenge.reward}
-                    </Text>
-                  </Card>
-                </Grid.Col>
-              ))}
-            </Grid>
-          )}
-          {!loading && challenges.length === 0 && (
-            <Text c="dimmed" ta="center" mt="xl">No official challenges yet.</Text>
-          )}
+        <Tabs.Panel value="official" pt="xl">
+          {renderContent()}
         </Tabs.Panel>
 
-        <Tabs.Panel value="community" pt="md">
-          {loading ? (
-            <LoadingOverlay visible={true} />
-          ) : (
-            <Grid>
-              {challenges.map((challenge) => (
-                <Grid.Col key={challenge.id} span={{ base: 12, md: 6, lg: 4 }}>
-                  <Card shadow="sm" padding="lg" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate(`/challenges/${challenge.id}`)}>
-                    <Group justify="space-between" mb="xs">
-                      <Text fw={700}>{challenge.challenge_name}</Text>
-                      <Badge color={getChallengeTypeColor(challenge.type)}>
-                        {challenge.type.toUpperCase()}
-                      </Badge>
-                    </Group>
-                    <Text size="sm" c="dimmed" mb="xs">
-                      {challenge.game_name}
-                    </Text>
-                    <Text size="sm" lineClamp={2} mb="md">
-                      {challenge.description}
-                    </Text>
-                    <Text size="sm" c="yellow" fw={700}>
-                      Reward: {challenge.reward}
-                    </Text>
-                  </Card>
-                </Grid.Col>
-              ))}
-            </Grid>
-          )}
-          {!loading && challenges.length === 0 && (
-            <Text c="dimmed" ta="center" mt="xl">No community challenges yet. Be the first to create one!</Text>
-          )}
+        <Tabs.Panel value="community" pt="xl">
+          {renderContent()}
         </Tabs.Panel>
       </Tabs>
     </Container>

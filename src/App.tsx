@@ -1,6 +1,8 @@
 import '@mantine/core/styles.css';
 import '@mantine/carousel/styles.css';
+import '@mantine/notifications/styles.css';
 import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import { theme } from './theme';
 import { Layout } from '@/components/Layout/Layout';
 import { Provider } from 'react-redux';
@@ -9,6 +11,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter } from 'react-router-dom';
 import appConfig from './configs/app.config';
 import { mockServer } from './mock/mock';
+import ErrorBoundary from '@/components/ErrorBoundary/ErrorBoundary';
 
 export default function App() {
   /**
@@ -20,14 +23,17 @@ export default function App() {
   }
 
   return (
-    <MantineProvider forceColorScheme="dark" theme={theme}>
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
-          <BrowserRouter>
-            <Layout />
-          </BrowserRouter>
-        </PersistGate>
-      </Provider>
-    </MantineProvider>
+    <ErrorBoundary>
+      <MantineProvider forceColorScheme="dark" theme={theme}>
+        <Notifications position="top-right" zIndex={1000} />
+        <Provider store={store}>
+          <PersistGate loading={null} persistor={persistor}>
+            <BrowserRouter>
+              <Layout />
+            </BrowserRouter>
+          </PersistGate>
+        </Provider>
+      </MantineProvider>
+    </ErrorBoundary>
   );
 }

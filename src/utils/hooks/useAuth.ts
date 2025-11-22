@@ -96,7 +96,7 @@ function useAuth() {
       username: '',
       role: '',
       email: '',
-      userId: userId
+      userId: '' // Clear userId on sign out
     }))
     dispatch(
       setUser({
@@ -110,7 +110,7 @@ function useAuth() {
   }
 
   const signOut = async () => {
-    // await apiSignOut()
+    await AuthService.signOut() // Call Supabase signOut
     handleSignOut()
   }
 

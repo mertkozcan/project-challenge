@@ -45,7 +45,8 @@ const getBoardDetail = async (req, res) => {
         if (!board) return res.status(404).json({ error: 'Board not found' });
 
         const cells = await getBoardCells(id);
-        const progress = await getUserProgress(userId, id);
+        // Guest users (empty userId) get empty progress
+        const progress = userId ? await getUserProgress(userId, id) : [];
 
         // Merge cells with user progress
         const cellsWithProgress = cells.map((cell) => {
@@ -58,8 +59,8 @@ const getBoardDetail = async (req, res) => {
             };
         });
 
-        // Get user's run state
-        const run = await getUserRun(userId, id);
+        // Get user's run state (guests don't have runs)
+        const run = userId ? await getUserRun(userId, id) : null;
         console.log('getUserRun result:', { userId, boardId: id, run });
 
         res.json({
@@ -180,6 +181,32 @@ const updateBingoRunTime = async (req, res) => {
     }
 };
 
+// Get user's solo bingo history
+const getSoloHistory = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { getUserSoloHistory } = require('../models/bingoHistoryModel');
+        const history = await getUserSoloHistory(userId);
+        res.json(history);
+    } catch (error) {
+        console.error('Error getting solo history:', error);
+        res.status(500).json({ error: 'Failed to get solo history' });
+    }
+};
+
+// Get user's bingo statistics
+const getBingoStats = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { getUserBingoStats } = require('../models/bingoHistoryModel');
+        const stats = await getUserBingoStats(userId);
+        res.json(stats);
+    } catch (error) {
+        console.error('Error getting bingo stats:', error);
+        res.status(500).json({ error: 'Failed to get bingo stats' });
+    }
+};
+
 module.exports = {
     getBoards,
     getBoardDetail,
@@ -191,4 +218,6 @@ module.exports = {
     resetBoardProgress,
     finishBingoRun,
     updateBingoRunTime,
+    getSoloHistory,
+    getBingoStats,
 };

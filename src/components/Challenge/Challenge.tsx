@@ -39,10 +39,13 @@ interface ChallengeData extends Challenge {
   user_proof_status?: string;
 }
 
+import useAuth from '@/utils/hooks/useAuth';
+
 const ChallengeDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { userId } = useAppSelector((state) => state.auth.userInfo);
+  const { authenticated } = useAuth();
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState<File | null>(null);
@@ -209,30 +212,47 @@ const ChallengeDetail: React.FC = () => {
                   </Notification>
                 )}
 
-                <Stack gap="md">
-                  <FileInput
-                    placeholder="Upload image or video proof"
-                    label="Proof Media"
-                    description="Upload a screenshot or video showing your completion"
-                    value={file}
-                    onChange={setFile}
-                    accept="image/*,video/*"
-                    leftSection={<IconUpload size={16} />}
-                  />
-                  <Button
-                    onClick={handleUpload}
-                    loading={uploading}
-                    disabled={!file || !userId}
-                    fullWidth
-                    size="lg"
-                    style={{
-                      background: theme.gradient,
-                      boxShadow: `0 4px 20px ${theme.glow}`,
-                    }}
-                  >
-                    Submit Proof
-                  </Button>
-                </Stack>
+                {authenticated ? (
+                  <Stack gap="md">
+                    <FileInput
+                      placeholder="Upload image or video proof"
+                      label="Proof Media"
+                      description="Upload a screenshot or video showing your completion"
+                      value={file}
+                      onChange={setFile}
+                      accept="image/*,video/*"
+                      leftSection={<IconUpload size={16} />}
+                    />
+                    <Button
+                      onClick={handleUpload}
+                      loading={uploading}
+                      disabled={!file || !userId}
+                      fullWidth
+                      size="lg"
+                      style={{
+                        background: theme.gradient,
+                        boxShadow: `0 4px 20px ${theme.glow}`,
+                      }}
+                    >
+                      Submit Proof
+                    </Button>
+                  </Stack>
+                ) : (
+                  <Stack align="center" py="md">
+                    <Text c="dimmed" ta="center">
+                      You need to be logged in to submit proof and participate in this challenge.
+                    </Text>
+                    <Button
+                      onClick={() => navigate('/sign-in', { state: { message: 'You need to be logged in to submit proof and participate in this challenge.' } })}
+                      fullWidth
+                      size="lg"
+                      variant="gradient"
+                      gradient={{ from: 'blue', to: 'cyan' }}
+                    >
+                      Sign in to Participate
+                    </Button>
+                  </Stack>
+                )}
               </Paper>
             </Stack>
           </Grid.Col>

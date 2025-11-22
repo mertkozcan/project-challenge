@@ -9,6 +9,13 @@ const getUserStats = async (userId) => {
             [userId]
         );
 
+        // Active challenges (submitted but not approved yet)
+        const activeChallenges = await pool.query(
+            `SELECT COUNT(DISTINCT challenge_id) as count
+             FROM proofs WHERE user_id = $1 AND status = 'PENDING'`,
+            [userId]
+        );
+
         // Total builds created
         const createdBuilds = await pool.query(
             `SELECT COUNT(*) as count FROM builds WHERE user_id = $1`,
@@ -30,11 +37,30 @@ const getUserStats = async (userId) => {
             [userId]
         );
 
+        // Completed bingo boards
+        const completedBingos = await pool.query(
+            `SELECT COUNT(*) as count 
+             FROM user_bingo_runs 
+             WHERE user_id = $1 AND is_finished = true`,
+            [userId]
+        );
+
+        // Active bingo boards (started but not finished)
+        const activeBingos = await pool.query(
+            `SELECT COUNT(*) as count 
+             FROM user_bingo_runs 
+             WHERE user_id = $1 AND is_finished = false AND elapsed_time > 0`,
+            [userId]
+        );
+
         return {
             completedChallenges: parseInt(completedChallenges.rows[0]?.count || 0),
+            activeChallenges: parseInt(activeChallenges.rows[0]?.count || 0),
             createdBuilds: parseInt(createdBuilds.rows[0]?.count || 0),
             points: parseInt(userPoints.rows[0]?.points || 0),
             globalRank: rankQuery.rows[0]?.rank || null,
+            completedBingos: parseInt(completedBingos.rows[0]?.count || 0),
+            activeBingos: parseInt(activeBingos.rows[0]?.count || 0),
         };
     } catch (error) {
         console.error('Error getting user stats:', error);

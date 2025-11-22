@@ -10,4 +10,5 @@ export interface Challenge {
   banner_url?: string;
   game_icon?: string;
   is_official?: boolean;
+  participation_count?: number;
 }

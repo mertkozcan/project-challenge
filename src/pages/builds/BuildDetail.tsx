@@ -255,6 +255,11 @@ const BuildDetail: React.FC = () => {
                   style={{
                     background: theme.gradient,
                   }}
+                  onClick={() => {
+                    if (!localStorage.getItem('auth')) {
+                      navigate('/sign-in', { state: { message: 'You need to be logged in to rate a build.' } });
+                    }
+                  }}
                 >
                   Rate This Build
                 </Button>

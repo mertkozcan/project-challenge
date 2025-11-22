@@ -165,7 +165,13 @@ const BingoRoomLobby: React.FC = () => {
         </div>
         <Button 
           leftSection={<IconPlus size={20} />}
-          onClick={() => setCreateModalOpen(true)}
+          onClick={() => {
+            if (!userId) {
+              navigate('/sign-in', { state: { message: 'You need to be logged in to create a room.' } });
+            } else {
+              setCreateModalOpen(true);
+            }
+          }}
           size="md"
         >
           Create Room
@@ -256,7 +262,15 @@ const BingoRoomLobby: React.FC = () => {
           <Stack align="center" gap="md">
             <Text size="lg" c="dimmed">No rooms available</Text>
             <Text size="sm" c="dimmed">Be the first to create one!</Text>
-            <Button onClick={() => setCreateModalOpen(true)}>Create Room</Button>
+            <Button onClick={() => {
+  if (!userId) {
+    navigate('/sign-in', { state: { message: 'You need to be logged in to create a room.' } });
+  } else {
+    setCreateModalOpen(true);
+  }
+}}>
+  Create Room
+</Button>
           </Stack>
         </Card>
       ) : (

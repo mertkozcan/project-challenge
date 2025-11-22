@@ -2,10 +2,18 @@ const pool = require('../config/db');
 
 const getUserProfile = async (userId) => {
   const result = await pool.query(
-    'SELECT id, username, email, avatar_url, points, created_at FROM users WHERE id = $1',
+    'SELECT id, username, email, avatar_url, points, is_admin, created_at FROM users WHERE id = $1',
     [userId]
   );
-  return result.rows[0];
+
+  const user = result.rows[0];
+  if (!user) return null;
+
+  // Map is_admin to role for frontend
+  return {
+    ...user,
+    role: user.is_admin ? 'admin' : 'user'
+  };
 };
 
 const getUserStats = async (userId) => {

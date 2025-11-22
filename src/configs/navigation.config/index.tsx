@@ -19,7 +19,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Dashboard',
     translateKey: '',
     icon: IconDashboard,
-    authority: ['user'],
+    authority: [],
     subMenu: [],
   },
   {
@@ -28,7 +28,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Challenges',
     translateKey: '',
     icon: IconTarget,
-    authority: ['user'],
+    authority: [],
     subMenu: [],
   },
   {
@@ -65,7 +65,7 @@ const navigationConfig: NavigationTree[] = [
     title: 'Admin Panel',
     translateKey: '',
     icon: IconSettings,
-    authority: [],
+    authority: ['admin'],
     subMenu: [],
   },
 ];

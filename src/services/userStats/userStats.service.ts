@@ -2,9 +2,12 @@ import ApiService from '@/services/ApiService';
 
 export interface UserStats {
   completedChallenges: number;
+  activeChallenges: number;
   createdBuilds: number;
   points: number;
   globalRank: number | null;
+  completedBingos: number;
+  activeBingos: number;
 }
 
 export interface UserActivity {

@@ -14,12 +14,13 @@ import {
 import { useForm } from '@mantine/form';
 import useAuth from '@/utils/hooks/useAuth';
 import { IconAlertCircle } from '@tabler/icons-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const SignIn: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signIn } = useAuth();
+  const location = useLocation();
 
   const form = useForm({
     initialValues: {
@@ -62,6 +63,12 @@ const SignIn: React.FC = () => {
             {error && (
               <Alert icon={<IconAlertCircle size={16} />} color="red">
                 {error}
+              </Alert>
+            )}
+            
+            {(location.state as any)?.message && !error && (
+              <Alert icon={<IconAlertCircle size={16} />} color="blue" title="Authentication Required">
+                {(location.state as any).message}
               </Alert>
             )}
 

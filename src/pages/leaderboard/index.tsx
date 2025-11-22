@@ -5,6 +5,7 @@ import {
   ThemeIcon, rem
 } from '@mantine/core';
 import { LeaderboardService, GlobalLeaderboardEntry } from '@/services/leaderboard/leaderboard.service';
+import { BingoLeaderboardService } from '@/services/bingo/bingoLeaderboard.service';
 import { IconTrophy, IconMedal, IconStar, IconCrown } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -85,7 +86,21 @@ const Leaderboard: React.FC = () => {
     const fetchRankings = async () => {
       setLoading(true);
       try {
-        const data = await LeaderboardService.getGlobalRankings(activeTab as 'completions' | 'points');
+        let data;
+        if (activeTab?.startsWith('bingo-')) {
+          // Fetch bingo leaderboard
+          const bingoType = activeTab.replace('bingo-', '') as 'wins' | 'fastest' | 'games' | 'streaks';
+          const bingoData = await BingoLeaderboardService.getLeaderboard(bingoType);
+          // Transform to match GlobalLeaderboardEntry format
+          data = bingoData.map(entry => ({
+            ...entry,
+            completed_count: entry.value,
+            points: entry.value
+          }));
+        } else {
+          // Fetch regular leaderboard
+          data = await LeaderboardService.getGlobalRankings(activeTab as 'completions' | 'points');
+        }
         setRankings(data);
       } catch (error) {
         console.error('Failed to fetch rankings', error);
@@ -131,6 +146,18 @@ const Leaderboard: React.FC = () => {
           </Tabs.Tab>
           <Tabs.Tab value="points" leftSection={<IconStar size={18} />}>
             Top Points
+          </Tabs.Tab>
+          <Tabs.Tab value="bingo-wins" leftSection={<IconTrophy size={18} />}>
+            Bingo Wins
+          </Tabs.Tab>
+          <Tabs.Tab value="bingo-fastest" leftSection={<IconStar size={18} />}>
+            Speed Demons
+          </Tabs.Tab>
+          <Tabs.Tab value="bingo-games" leftSection={<IconTrophy size={18} />}>
+            Bingo Masters
+          </Tabs.Tab>
+          <Tabs.Tab value="bingo-streaks" leftSection={<IconStar size={18} />}>
+            Win Streaks
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>

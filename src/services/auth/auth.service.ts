@@ -56,7 +56,7 @@ export const AuthService = {
         email: data.user.email || '',
         fullName: profile.username || '',
         phoneNumber: '',
-        authority: profile.is_admin ? ['admin'] : ['user'],
+        authority: profile.role === 'admin' ? ['admin'] : ['user'],
         profile,
       };
     }

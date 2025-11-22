@@ -165,9 +165,8 @@ const BingoBoard: React.FC = () => {
   }, [hasFinished, userId, id]);
 
   const fetchBoard = async (isInitialLoad = false) => {
-    if (!userId) return;
     try {
-      const data = await BingoService.getBoardDetail(id!, userId);
+      const data = await BingoService.getBoardDetail(id!, userId || '');
       
       // Auto-reset if 100% complete on load AND not finished (New Game)
       // We check this BEFORE setting state to prevent showing completed board

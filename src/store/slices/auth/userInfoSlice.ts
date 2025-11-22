@@ -31,8 +31,9 @@ const userInfoSlice = createSlice({
       state.userId = action.payload?.userId
       state.email = action.payload?.email
       state.language = action.payload?.language
-      state.role = action.payload?.role
       state.username = action.payload?.username
+      state.role = action.payload?.role
+
       state.googleLogin = action.payload.googleLogin
       state.notificationCount = action.payload?.notificationCount
       state.isTwoFaEnabled = action.payload?.isTwoFaEnabled

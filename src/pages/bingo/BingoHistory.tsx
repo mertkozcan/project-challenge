@@ -12,6 +12,13 @@ const BingoHistory: React.FC = () => {
   const [games, setGames] = useState<GameHistory[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Redirect guests to login
+  useEffect(() => {
+    if (!userId) {
+      navigate('/sign-in', { state: { message: 'You need to be logged in to view game history.' } });
+    }
+  }, [userId, navigate]);
+
   useEffect(() => {
     fetchHistory();
   }, []);

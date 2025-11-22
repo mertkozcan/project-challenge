@@ -11,18 +11,31 @@ const layouts:any = {
   [LayoutTypes.CollapsedSideBar]: lazy(() => import('./LayoutTypes/CollapsedSideBar')),
 }
 
+import { useLocation } from 'react-router-dom';
+
 export function Layout() {
   const {authenticated} = useAuth()
   const layoutType = useAppSelector((state) => state.theme.currentLayout)
+  const location = useLocation()
 
   useLocale()
 
   const AppLayout = useMemo(() => {
     if (authenticated) {
-     return  layouts[layoutType]
+     return layouts[layoutType]
     }
-    return lazy(() => import('./AuthLayout'))
-  }, [authenticated])
+    
+    // List of paths that should use AuthLayout (login/signup pages)
+    const authPaths = ['/sign-in', '/sign-up', '/forgot-password', '/reset-password'];
+    const isAuthPath = authPaths.some(path => location.pathname.includes(path));
+
+    if (isAuthPath) {
+      return lazy(() => import('./AuthLayout'))
+    }
+
+    // For other public pages (dashboard, etc.), use the main layout even if not authenticated
+    return layouts[layoutType]
+  }, [authenticated, layoutType, location.pathname])
 
   return (
     <Suspense

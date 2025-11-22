@@ -9,8 +9,11 @@ const {
     completeCellDirect,
     resetBoardProgress,
     finishBingoRun,
-    updateBingoRunTime
+    updateBingoRunTime,
+    getSoloHistory,
+    getBingoStats
 } = require('../controllers/bingoController');
+const { getBingoLeaderboard, getUserBingoLeaderboardRanks } = require('../controllers/bingoLeaderboardController');
 
 const router = express.Router();
 
@@ -23,5 +26,13 @@ router.post('/:boardId/reset', resetBoardProgress);
 router.post('/finish', finishBingoRun);
 router.post('/update-time', updateBingoRunTime);
 router.put('/progress/:progressId/approve', approveProof);
+
+// History and stats
+router.get('/history/solo/:userId', getSoloHistory);
+router.get('/stats/:userId', getBingoStats);
+
+// Leaderboard routes
+router.get('/leaderboard/:type', getBingoLeaderboard);
+router.get('/leaderboard/user/:userId', getUserBingoLeaderboardRanks);
 
 module.exports = router;

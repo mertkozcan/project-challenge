@@ -12,7 +12,11 @@ const AuthorityGuard = (props: AuthorityGuardProps) => {
 
   const roleMatched = useAuthority(userAuthority, authority)
 
-  return <>{roleMatched ? children : <Navigate to="/access-denied" />}</>
+  // For admin-only routes, return 404 instead of access-denied to hide route existence
+  const isAdminRoute = authority.includes('admin')
+  const redirectPath = isAdminRoute ? '/404' : '/access-denied'
+
+  return <>{roleMatched ? children : <Navigate to={redirectPath} />}</>
 }
 
 export default AuthorityGuard

@@ -4,13 +4,15 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import navigationConfig from '@/configs/navigation.config';
 import { LinksGroup } from '@/components/Layout/LinksGroup';
 import classes from '@/components/Layout/LayoutTypes/SimpleSideBar.module.css';
-import { Group, AppShell, Burger, ScrollArea, Box } from '@mantine/core';
+import { Group, AppShell, Burger, ScrollArea, Box, Button } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import SimpleSideBarBottomContent from '@/components/Layout/LayoutTypes/SimpleSideBarBottomContent';
 import { useTranslation } from 'react-i18next';
 import AuthorityCheck from '@/route/AuthorityCheck';
 import { useAppSelector } from '@/store';
 import NotificationBell from '@/components/Notifications/NotificationBell';
+import useAuth from '@/utils/hooks/useAuth';
+import { IconLogin } from '@tabler/icons-react';
 
 function SideBarContent() {
   const navigate = useNavigate();
@@ -53,6 +55,8 @@ function SideBarContent() {
 
 export default function SimpleSideBar() {
   const [opened, { toggle }] = useDisclosure();
+  const { authenticated } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <AppShell
@@ -76,7 +80,14 @@ export default function SimpleSideBar() {
             />
           </Group>
           <Group>
-            <NotificationBell />
+            {authenticated ? (
+              <NotificationBell />
+            ) : (
+              <Group gap="xs">
+                <Button variant="default" size="xs" onClick={() => navigate('/sign-in')}>Sign In</Button>
+                <Button size="xs" onClick={() => navigate('/sign-up')}>Sign Up</Button>
+              </Group>
+            )}
           </Group>
         </Group>
       </AppShell.Header>
@@ -86,7 +97,14 @@ export default function SimpleSideBar() {
           <SideBarContent />
         </AppShell.Section>
         <AppShell.Section>
-          <SimpleSideBarBottomContent />
+          {authenticated ? (
+            <SimpleSideBarBottomContent />
+          ) : (
+            <div className={classes.link} onClick={() => navigate('/sign-in')} style={{ cursor: 'pointer' }}>
+              <IconLogin className={classes.linkIcon} stroke={1.5} />
+              <span>Sign In</span>
+            </div>
+          )}
         </AppShell.Section>
       </AppShell.Navbar>
 

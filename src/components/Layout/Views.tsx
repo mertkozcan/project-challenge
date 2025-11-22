@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import appConfig from '@/configs/app.config'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAppSelector } from '@/store'
-import {protectedRoutes, publicRoutes} from "@/configs/routes.config";
+import {protectedRoutes, publicRoutes, authRoute} from "@/configs/routes.config";
 import ProtectedRoute from "@/route/ProtectedRoute";
 import AppRoute from "@/route/AppRoute";
 import AuthorityGuard from "@/route/AuthorityGuard";
@@ -23,11 +23,8 @@ const AllRoutes = (props: AllRoutesProps) => {
 
   return (
     <Routes>
+      <Route path="/" element={<Navigate replace to="/dashboard" />} />
       <Route path="/" element={<ProtectedRoute />}>
-        <Route
-          path="/"
-          element={<Navigate replace to={authenticatedEntryPath} />}
-        />
         {protectedRoutes.map((route, index) => {
           return <Route
             key={route.key + index}
@@ -49,7 +46,7 @@ const AllRoutes = (props: AllRoutesProps) => {
         <Route path="*" element={<Navigate replace to="/" />} />
       </Route>
       <Route path="/" element={<PublicRoute />}>
-        {publicRoutes.map((route) => (
+        {authRoute.map((route) => (
           <Route
             key={route.path}
             path={route.path}
@@ -62,6 +59,30 @@ const AllRoutes = (props: AllRoutesProps) => {
           />
         ))}
       </Route>
+      {publicRoutes.map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={
+            route.authority && route.authority.length > 0 ? (
+              <AuthorityGuard
+                userAuthority={userAuthority}
+                authority={route.authority}
+              >
+                <AppRoute
+                  routeKey={route.key}
+                  component={route.component}
+                />
+              </AuthorityGuard>
+            ) : (
+              <AppRoute
+                routeKey={route.key}
+                component={route.component}
+              />
+            )
+          }
+        />
+      ))}
     </Routes>
   )
 }
