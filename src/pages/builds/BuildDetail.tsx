@@ -20,10 +20,17 @@ import { Build } from '@/@types/build';
 import { IconArrowLeft, IconStar } from '@tabler/icons-react';
 import BuildHero from '@/components/Build/BuildHero';
 import { getGameTheme } from '@/utils/gameThemes';
+import BuildRatingDisplay from '@/components/Builds/BuildRatingDisplay';
+import RateBuildSection from '@/components/Builds/RateBuildSection';
+import BuildComments from '@/components/Builds/BuildComments';
+import BuildRatingService from '@/services/buildRating.service';
 
 interface BuildData extends Build {
   banner_url?: string;
   game_icon?: string;
+  average_rating?: number;
+  rating_count?: number;
+  comment_count?: number;
 }
 
 const BuildDetail: React.FC = () => {
@@ -31,6 +38,7 @@ const BuildDetail: React.FC = () => {
   const navigate = useNavigate();
   const [build, setBuild] = useState<BuildData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userRating, setUserRating] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -38,6 +46,14 @@ const BuildDetail: React.FC = () => {
       try {
         const data = await BuildsService.getBuildById(id);
         setBuild(data);
+        
+        // Fetch user's rating
+        try {
+          const rating = await BuildRatingService.getUserRating(parseInt(id));
+          setUserRating(rating);
+        } catch (error) {
+          console.error('Failed to fetch user rating', error);
+        }
       } catch (error) {
         console.error('Failed to fetch build', error);
       } finally {
@@ -46,6 +62,18 @@ const BuildDetail: React.FC = () => {
     };
     fetchBuild();
   }, [id]);
+
+  const handleRatingUpdate = async () => {
+    if (!id) return;
+    try {
+      const data = await BuildsService.getBuildById(id);
+      setBuild(data);
+      const rating = await BuildRatingService.getUserRating(parseInt(id));
+      setUserRating(rating);
+    } catch (error) {
+      console.error('Failed to refresh build data', error);
+    }
+  };
 
   if (loading) return <LoadingOverlay visible={true} />;
   if (!build) return <Text>Build not found</Text>;
@@ -166,6 +194,9 @@ const BuildDetail: React.FC = () => {
                   and strategic gameplay. Follow the item recommendations above for optimal performance.
                 </Text>
               </Paper>
+
+              {/* Comments Section */}
+              <BuildComments buildId={parseInt(id!)} />
             </Stack>
           </Grid.Col>
 
@@ -186,6 +217,16 @@ const BuildDetail: React.FC = () => {
                   Build Statistics
                 </Title>
                 <Stack gap="md">
+                  <Box>
+                    <Text size="sm" c="dimmed" mb="xs">
+                      Rating
+                    </Text>
+                    <BuildRatingDisplay 
+                      averageRating={build.average_rating || 0} 
+                      ratingCount={build.rating_count || 0}
+                      size="md"
+                    />
+                  </Box>
                   <Box>
                     <Text size="sm" c="dimmed" mb="xs">
                       Creator
@@ -225,7 +266,14 @@ const BuildDetail: React.FC = () => {
                 </Stack>
               </Paper>
 
-              {/* Rating Card (Placeholder) */}
+              {/* Rate Build Section */}
+              <RateBuildSection 
+                buildId={parseInt(id!)} 
+                userRating={userRating}
+                onRatingSubmit={handleRatingUpdate}
+              />
+
+              {/* Quick Actions Card */}
               <Paper
                 shadow="md"
                 p="xl"

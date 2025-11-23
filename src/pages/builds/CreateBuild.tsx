@@ -116,13 +116,12 @@ const CreateBuild: React.FC = () => {
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Grid>
           <Grid.Col span={12}>
-            <Select
-              label="Game Name"
-              placeholder="Select Game"
-              data={['Elden Ring', 'World of Warcraft', 'Other']}
-              {...form.getInputProps('game_name')}
+            <TextInput
+              label="Game"
+              value="Elden Ring"
+              disabled
               mb="md"
-              required
+              description="Currently only Elden Ring builds are supported. More games coming soon!"
             />
           </Grid.Col>
 
@@ -147,44 +146,22 @@ const CreateBuild: React.FC = () => {
           </Grid.Col>
         </Grid>
 
-        {form.values.game_name === 'Elden Ring' ? (
-          <Paper withBorder p="md" radius="md" mb="xl" bg="dark.8">
-            <Text fw={700} mb="md" c="dimmed">Equipment</Text>
-            <Grid>
-              {ELDEN_RING_SLOTS.map((slot) => (
-                <Grid.Col key={slot.id} span={{ base: 6, sm: 4, md: 2.4 }}>
-                  <ItemSlot
-                    label={slot.label}
-                    item={equipment[slot.id]}
-                    onClick={() => handleSlotClick(slot.id, slot.category)}
-                    onClear={() => handleSlotClear(slot.id)}
-                  />
-                </Grid.Col>
-              ))}
-            </Grid>
-          </Paper>
-        ) : form.values.game_name ? (
-          <Paper withBorder p="xl" radius="md" mb="xl" bg="dark.8">
-            <Text size="lg" fw={500} mb="md">Manual Configuration</Text>
-            <Notification color="blue" title="Visual Editor Not Available" withCloseButton={false} mb="md">
-              The visual build editor is currently only available for <b>Elden Ring</b>. 
-              For {form.values.game_name}, please enter your build data in JSON format below.
-            </Notification>
-            <JsonInput
-              label="Items / Stats (JSON)"
-              placeholder="{ 'weapon': 'Rivers of Blood', 'level': 150 }"
-              validationError="Invalid JSON"
-              formatOnBlur
-              autosize
-              minRows={4}
-              {...form.getInputProps('items_json')}
-            />
-          </Paper>
-        ) : (
-          <Paper withBorder p="xl" radius="md" mb="xl" bg="dark.8" ta="center">
-            <Text c="dimmed">Please select a game to configure your build.</Text>
-          </Paper>
-        )}
+        <Paper withBorder p="md" radius="md" mb="xl" bg="dark.8">
+          <Text fw={700} mb="md" c="dimmed">Equipment</Text>
+          <Grid>
+            {ELDEN_RING_SLOTS.map((slot) => (
+              <Grid.Col key={slot.id} span={{ base: 6, sm: 4, md: 2.4 }}>
+                <ItemSlot
+                  label={slot.label}
+                  item={equipment[slot.id]}
+                  onClick={() => handleSlotClick(slot.id, slot.category)}
+                  onClear={() => handleSlotClear(slot.id)}
+                />
+              </Grid.Col>
+            ))}
+          </Grid>
+        </Paper>
+
 
         <Group justify="flex-end">
             <Button variant="default" onClick={() => navigate('/builds')}>Cancel</Button>
