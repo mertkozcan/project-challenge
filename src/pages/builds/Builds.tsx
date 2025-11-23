@@ -23,6 +23,7 @@ import { BuildsService } from '@/services/builds/builds.service';
 import { Build } from '@/@types/build';
 import FilterBar from '@/components/Challenges/FilterBar';
 import Pagination from '@/components/Common/Pagination';
+import { useAppSelector } from '@/store';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -31,6 +32,7 @@ const Builds: React.FC = () => {
   const [allBuilds, setAllBuilds] = useState<Build[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { signedIn } = useAppSelector((state) => state.auth.session);
 
   // Filter states
   const [search, setSearch] = useState('');
@@ -205,7 +207,7 @@ const Builds: React.FC = () => {
           <Button
             leftSection={<IconPlus size={16} />}
             onClick={() => {
-              if (!localStorage.getItem('auth')) {
+              if (!signedIn) {
                 navigate('/sign-in', { state: { message: 'You need to be logged in to create a build.' } });
               } else {
                 navigate('/builds/create');

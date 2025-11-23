@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import ApiService from '../ApiService';
 
 export interface AuthUser {
   id: string;
@@ -18,17 +19,17 @@ export const AuthService = {
 
     // 2. Create user record in our database
     if (authData.user) {
-      const response = await fetch('http://localhost:5000/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: authData.user.id,
-          email,
-          username,
-        }),
-      });
-
-      if (!response.ok) {
+      try {
+        await ApiService.fetchData<any, any>({
+          url: '/auth/signup',
+          method: 'post',
+          data: {
+            id: authData.user.id,
+            email,
+            username,
+          },
+        });
+      } catch (error) {
         throw new Error('Failed to create user profile');
       }
     }
@@ -46,17 +47,21 @@ export const AuthService = {
 
     // Fetch user profile from our database
     if (data.user && data.session) {
-      const response = await fetch(`http://localhost:5000/api/auth/profile/${data.user.id}`);
-      const profile = await response.json();
+      const response = await ApiService.fetchData<void, any>({
+        url: `/auth/profile/${data.user.id}`,
+        method: 'get',
+      });
+      
+      const profile = response.data;
       
       // Return format compatible with useAuth hook
       return {
         access_token: data.session.access_token,
         id: data.user.id,
         email: data.user.email || '',
-        fullName: profile.username || '',
+        fullName: profile?.username || '',
         phoneNumber: '',
-        authority: profile.role === 'admin' ? ['admin'] : ['user'],
+        authority: profile?.role === 'admin' ? ['admin'] : ['user'],
         profile,
       };
     }
@@ -73,13 +78,24 @@ export const AuthService = {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
-      const response = await fetch(`http://localhost:5000/api/auth/profile/${user.id}`);
-      const profile = await response.json();
-      
-      return {
-        ...user,
-        profile,
-      };
+      try {
+        const response = await ApiService.fetchData<void, any>({
+          url: `/auth/profile/${user.id}`,
+          method: 'get',
+        });
+        const profile = response.data;
+        
+        return {
+          ...user,
+          profile,
+        };
+      } catch (error) {
+        console.error('Failed to fetch user profile', error);
+        return {
+          ...user,
+          profile: null
+        };
+      }
     }
     
     return null;

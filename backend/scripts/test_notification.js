@@ -3,7 +3,7 @@ const axios = require('axios');
 // Test notification creation
 async function testNotification() {
     try {
-        const response = await axios.post('http://localhost:5000/api/notifications', {
+        const response = await axios.post('http://localhost:3000/api/notifications', {
             userId: '1', // Replace with actual user ID
             type: 'GAME_INVITE',
             title: 'Test Bingo Invitation',

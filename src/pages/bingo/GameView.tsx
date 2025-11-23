@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import BingoHero from '@/components/Bingo/BingoHero';
+import BingoCell from '@/components/Bingo/BingoCell';
 
 const BingoGameView: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -200,90 +201,15 @@ const BingoGameView: React.FC = () => {
                       const isMyCompletion = cell.completed_by_user_id === userId;
                       
                       return (
-                        <motion.div
+                        <BingoCell
                           key={cell.cell_id}
-                          layout
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.95 }}
-                          style={{ flex: '1 1 0', minWidth: 0 }}
-                        >
-                          <Paper
-                            p="xs"
-                            withBorder
-                            onClick={() => !isCompleted && handleCellClick(cell.cell_id)}
-                            style={{
-                              height: 'auto',
-                              aspectRatio: '1/1',
-                              minHeight: '60px',
-                              maxHeight: '120px',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              cursor: isCompleted ? 'default' : 'pointer',
-                              backgroundColor: isCompleted 
-                                ? isMyCompletion ? 'rgba(64, 192, 87, 0.15)' : 'rgba(34, 139, 230, 0.15)'
-                                : 'var(--mantine-color-body)',
-                              borderColor: isCompleted 
-                                ? isMyCompletion ? '#40c057' : '#228be6'
-                                : undefined,
-                              borderWidth: isCompleted ? 2 : 1,
-                              transition: 'all 0.2s ease',
-                              position: 'relative',
-                              overflow: 'hidden',
-                              width: '100%'
-                            }}
-                          >
-                            <Text 
-                              size="sm" 
-                              ta="center" 
-                              fw={500}
-                              style={{ 
-                                zIndex: 1,
-                                userSelect: 'none',
-                                fontSize: 'clamp(0.6rem, 2vw, 0.9rem)',
-                                lineHeight: 1.2
-                              }}
-                            >
-                              {cell.task}
-                            </Text>
-                            
-                            <AnimatePresence>
-                              {isCompleted && (
-                                <motion.div
-                                  initial={{ scale: 0, rotate: -180 }}
-                                  animate={{ scale: 1, rotate: 0 }}
-                                  transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                                  style={{
-                                    position: 'absolute',
-                                    bottom: 4,
-                                    right: 4,
-                                  }}
-                                >
-                                  <IconCheck size={16} color={isMyCompletion ? "#40c057" : "#228be6"} stroke={3} />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-
-                            {/* Show who completed it if not me */}
-                            {isCompleted && !isMyCompletion && (
-                              <Text 
-                                size="xs" 
-                                c="blue" 
-                                style={{ 
-                                  position: 'absolute', 
-                                  top: 2, 
-                                  fontSize: '0.6rem',
-                                  opacity: 0.8
-                                }}
-                              >
-                                {cell.completed_by_username}
-                              </Text>
-                            )}
-                          </Paper>
-                        </motion.div>
+                          task={cell.task}
+                          isCompleted={isCompleted}
+                          completedBy={!isMyCompletion ? cell.completed_by_username : undefined}
+                          isMyCompletion={isMyCompletion}
+                          onClick={() => !isCompleted && handleCellClick(cell.cell_id)}
+                          disabled={!!winModalOpen}
+                        />
                       );
                     })}
                   </Group>

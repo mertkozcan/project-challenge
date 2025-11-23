@@ -18,7 +18,7 @@ import {
   PasswordInput,
   Card,
 } from '@mantine/core';
-import { BingoService, type BingoCell, type BingoBoard as BingoBoardType } from '@/services/bingo/bingo.service';
+import { BingoService, type BingoCell as BingoCellType, type BingoBoard as BingoBoardType } from '@/services/bingo/bingo.service';
 import { BingoRoomService } from '@/services/bingo/bingoRoom.service';
 import { IconCheck, IconClock, IconArrowLeft, IconTrophy, IconUsers } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
@@ -29,6 +29,7 @@ import confetti from 'canvas-confetti';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import { useTour } from '@/components/Tutorial/TourProvider';
 import TourButton from '@/components/Tutorial/TourButton';
+import BingoCell from '@/components/Bingo/BingoCell';
 
 interface BingoBoardData extends BingoBoardType {
   banner_url?: string;
@@ -48,7 +49,7 @@ const BingoBoard: React.FC = () => {
   const navigate = useNavigate();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
   const [board, setBoard] = useState<BingoBoardData | null>(null);
-  const [cells, setCells] = useState<BingoCell[]>([]);
+  const [cells, setCells] = useState<BingoCellType[]>([]);
   const [loading, setLoading] = useState(true);
   const { playSound } = useGameSounds();
   
@@ -236,7 +237,7 @@ const BingoBoard: React.FC = () => {
     }
   };
   
-  const checkCompletions = (cellsData: BingoCell[], gridSize: number) => {
+  const checkCompletions = (cellsData: BingoCellType[], gridSize: number) => {
     const newActivities: Activity[] = [];
     
     // Check rows
@@ -281,7 +282,7 @@ const BingoBoard: React.FC = () => {
     }
   };
 
-  const handleCellClick = async (cell: BingoCell) => {
+  const handleCellClick = async (cell: BingoCellType) => {
     if (cell.status === 'APPROVED') return;
     if (hasFinished) return; // Disable clicks when finished
     playSound('click');
@@ -407,7 +408,7 @@ const BingoBoard: React.FC = () => {
 
   const theme = getGameTheme(board.game_name);
   const gridSize = board.size;
-  const grid: BingoCell[][] = Array.from({ length: gridSize }, () => []);
+  const grid: BingoCellType[][] = Array.from({ length: gridSize }, () => []);
   
   cells.forEach((cell) => {
     grid[cell.row_index][cell.col_index] = cell;
@@ -523,72 +524,13 @@ const BingoBoard: React.FC = () => {
                     {row.map((cell) => {
                       const isCompleted = cell.status === 'APPROVED';
                       return (
-                        <motion.div
+                        <BingoCell
                           key={cell.id}
-                          layout
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.95 }}
-                          style={{ flex: '1 1 0', minWidth: 0 }}
-                        >
-                          <Paper
-                            p="xs"
-                            withBorder
-                            onClick={() => handleCellClick(cell)}
-                            style={{
-                              height: 'auto',
-                              aspectRatio: '1/1',
-                              minHeight: '60px',
-                              maxHeight: '120px',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              cursor: isCompleted ? 'default' : 'pointer',
-                              backgroundColor: isCompleted 
-                                ? 'rgba(64, 192, 87, 0.15)' 
-                                : 'var(--mantine-color-body)',
-                              borderColor: isCompleted ? '#40c057' : undefined,
-                              borderWidth: isCompleted ? 2 : 1,
-                              transition: 'all 0.2s ease',
-                              position: 'relative',
-                              overflow: 'hidden',
-                              width: '100%'
-                            }}
-                          >
-                            <Text 
-                              size="sm" 
-                              ta="center" 
-                              fw={500}
-                              style={{ 
-                                zIndex: 1,
-                                userSelect: 'none',
-                                fontSize: 'clamp(0.6rem, 2vw, 0.9rem)',
-                                lineHeight: 1.2
-                              }}
-                            >
-                              {cell.task}
-                            </Text>
-                            
-                            <AnimatePresence>
-                              {isCompleted && (
-                                <motion.div
-                                  initial={{ scale: 0, rotate: -180 }}
-                                  animate={{ scale: 1, rotate: 0 }}
-                                  transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                                  style={{
-                                    position: 'absolute',
-                                    bottom: 4,
-                                    right: 4,
-                                  }}
-                                >
-                                  <IconCheck size={16} color="#40c057" stroke={3} />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </Paper>
-                        </motion.div>
+                          task={cell.task}
+                          isCompleted={isCompleted}
+                          onClick={() => handleCellClick(cell)}
+                          disabled={hasFinished}
+                        />
                       );
                     })}
                   </Group>

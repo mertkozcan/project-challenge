@@ -8,7 +8,7 @@ class SocketService {
   private maxReconnectAttempts = 5;
 
   constructor() {
-    this.serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    this.serverUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
   }
 
   connect(): Socket {
