@@ -8,6 +8,7 @@ import SocketService from '@/services/socket.service';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { useGameSounds } from '@/hooks/useGameSounds';
+import BingoHero from '@/components/Bingo/BingoHero';
 
 const BingoGameView: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -163,76 +164,87 @@ const BingoGameView: React.FC = () => {
   return (
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
-        <div>
-          <Title order={1}>{room?.board_title}</Title>
-          <Text c="dimmed">Game Room: {room?.game_name}</Text>
-        </div>
+        <BingoHero 
+          title={room?.board_title || 'Bingo Game'}
+          gameName={room?.game_name || 'Multiplayer'}
+          description={`Host: ${room?.host_username || 'Unknown'} • Players: ${room?.player_count || 0}/${room?.max_players || 0}`}
+          size={gridSize}
+        />
         <Button 
           color="red" 
           variant="light" 
           leftSection={<IconDoorExit size={16} />}
-          onClick={() => navigate('/bingo/rooms')}
+          onClick={() => navigate('/multiplayer/rooms')}
         >
           Leave Game
         </Button>
       </Group>
 
-      <Grid>
-        <Grid.Col span={{ base: 12, md: 8 }}>
-          <Card shadow="md" padding="lg" radius="md" withBorder>
-            <Stack gap="xs">
-              {rows.map((row, rowIndex) => (
-                <Group key={rowIndex} gap="xs" grow wrap="nowrap">
-                  {row.map((cell) => {
-                    const isCompleted = !!cell.completed_by_user_id;
-                    const isMyCompletion = cell.completed_by_user_id === userId;
-                    
-                    return (
-                      <motion.div
-                        key={cell.cell_id}
-                        layout
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{ flex: 1 }}
-                      >
-                        <Paper
-                          p={{ base: 4, sm: 'md' }}
-                          withBorder
-                          onClick={() => !isCompleted && handleCellClick(cell.cell_id)}
-                          style={{
-                            backgroundColor: isCompleted 
-                              ? isMyCompletion ? 'rgba(64, 192, 87, 0.2)' : 'rgba(34, 139, 230, 0.1)'
-                              : 'transparent',
-                            borderColor: isCompleted 
-                              ? isMyCompletion ? '#40c057' : '#228be6'
-                              : undefined,
-                            borderWidth: isCompleted ? 2 : 1,
-                            cursor: isCompleted ? 'default' : 'pointer',
-                            height: 'auto',
-                            aspectRatio: '1/1',
-                            minHeight: '60px',
-                            maxHeight: '120px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            transition: 'all 0.2s ease',
-                            position: 'relative',
-                            overflow: 'hidden'
-                          }}
+      <Container size="xl" mt="xl">
+        <Grid>
+          {/* Main Bingo Board */}
+          <Grid.Col span={{ base: 12, md: 9 }}>
+            <Paper
+              p={{ base: 'xs', md: 'xl' }}
+              radius="md"
+              style={{
+                background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              }}
+            >
+              <Stack gap={8}>
+                {rows.map((row, rowIndex) => (
+                  <Group key={rowIndex} gap={8} grow wrap="nowrap">
+                    {row.map((cell) => {
+                      const isCompleted = !!cell.completed_by_user_id;
+                      const isMyCompletion = cell.completed_by_user_id === userId;
+                      
+                      return (
+                        <motion.div
+                          key={cell.cell_id}
+                          layout
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.95 }}
+                          style={{ flex: '1 1 0', minWidth: 0 }}
                         >
-                          <Stack gap={0} align="center" justify="center" style={{ width: '100%', height: '100%' }}>
+                          <Paper
+                            p="xs"
+                            withBorder
+                            onClick={() => !isCompleted && handleCellClick(cell.cell_id)}
+                            style={{
+                              height: 'auto',
+                              aspectRatio: '1/1',
+                              minHeight: '60px',
+                              maxHeight: '120px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              cursor: isCompleted ? 'default' : 'pointer',
+                              backgroundColor: isCompleted 
+                                ? isMyCompletion ? 'rgba(64, 192, 87, 0.15)' : 'rgba(34, 139, 230, 0.15)'
+                                : 'var(--mantine-color-body)',
+                              borderColor: isCompleted 
+                                ? isMyCompletion ? '#40c057' : '#228be6'
+                                : undefined,
+                              borderWidth: isCompleted ? 2 : 1,
+                              transition: 'all 0.2s ease',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              width: '100%'
+                            }}
+                          >
                             <Text 
                               size="sm" 
                               ta="center" 
-                              lineClamp={3} 
                               fw={500}
-                              style={{
-                                fontSize: 'clamp(0.6rem, 1.5vw, 0.9rem)',
-                                lineHeight: 1.2,
-                                userSelect: 'none'
+                              style={{ 
+                                zIndex: 1,
+                                userSelect: 'none',
+                                fontSize: 'clamp(0.6rem, 2vw, 0.9rem)',
+                                lineHeight: 1.2
                               }}
                             >
                               {cell.task}
@@ -250,49 +262,78 @@ const BingoGameView: React.FC = () => {
                                     right: 4,
                                   }}
                                 >
-                                  <Group gap={2}>
-                                    <Avatar size="xs" src={cell.completed_by_avatar} radius="xl" style={{ width: 16, height: 16 }} />
-                                    <IconCheck size={14} color={isMyCompletion ? "#40c057" : "#228be6"} />
-                                  </Group>
+                                  <IconCheck size={16} color={isMyCompletion ? "#40c057" : "#228be6"} stroke={3} />
                                 </motion.div>
                               )}
                             </AnimatePresence>
-                          </Stack>
-                        </Paper>
-                      </motion.div>
-                    );
-                  })}
-                </Group>
-              ))}
-            </Stack>
-          </Card>
-        </Grid.Col>
 
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Card shadow="sm" padding="lg" radius="md" withBorder>
-            <Title order={3} mb="md">Players</Title>
-            <Stack gap="sm">
-              {room?.participants?.map((participant: any) => (
-                <motion.div
-                  key={participant.user_id}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                >
-                  <Group justify="space-between">
-                    <Group gap="sm">
-                      <Avatar src={participant.avatar_url} radius="xl" />
-                      <Text fw={500}>{participant.username}</Text>
-                    </Group>
-                    {participant.user_id === room?.host_user_id && (
-                      <Badge color="yellow">Host</Badge>
-                    )}
+                            {/* Show who completed it if not me */}
+                            {isCompleted && !isMyCompletion && (
+                              <Text 
+                                size="xs" 
+                                c="blue" 
+                                style={{ 
+                                  position: 'absolute', 
+                                  top: 2, 
+                                  fontSize: '0.6rem',
+                                  opacity: 0.8
+                                }}
+                              >
+                                {cell.completed_by_username}
+                              </Text>
+                            )}
+                          </Paper>
+                        </motion.div>
+                      );
+                    })}
                   </Group>
-                </motion.div>
-              ))}
-            </Stack>
-          </Card>
-        </Grid.Col>
-      </Grid>
+                ))}
+              </Stack>
+            </Paper>
+          </Grid.Col>
+
+          {/* Sidebar - Game Info & Chat (Placeholder) */}
+          <Grid.Col span={{ base: 12, md: 3 }}>
+             <Paper p="md" radius="md" withBorder>
+                <Title order={3} mb="md">Game Info</Title>
+                <Stack>
+                   <Group justify="space-between">
+                      <Text>Status:</Text>
+                      <Badge color={room?.status === 'IN_PROGRESS' ? 'green' : 'yellow'}>
+                        {room?.status}
+                      </Badge>
+                   </Group>
+                   <Text size="sm" c="dimmed">
+                      First to complete a row, column, or diagonal wins!
+                   </Text>
+                </Stack>
+             </Paper>
+
+             <Paper p="md" radius="md" withBorder mt="md">
+                <Title order={3} mb="md">Players</Title>
+                <Stack gap="sm">
+                  {room?.participants?.map((participant: any) => (
+                    <motion.div
+                      key={participant.user_id}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                    >
+                      <Group justify="space-between">
+                        <Group gap="sm">
+                          <Avatar src={participant.avatar_url} radius="xl" />
+                          <Text fw={500}>{participant.username}</Text>
+                        </Group>
+                        {participant.user_id === room?.host_user_id && (
+                          <Badge color="yellow">Host</Badge>
+                        )}
+                      </Group>
+                    </motion.div>
+                  ))}
+                </Stack>
+             </Paper>
+          </Grid.Col>
+        </Grid>
+      </Container>
 
       <Modal 
         opened={winModalOpen} 

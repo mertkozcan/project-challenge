@@ -52,7 +52,7 @@ export const BingoRoomService = {
   // Room Management
   async createRoom(boardId: number, userId: string, maxPlayers: number = 4, isPrivate: boolean = false, password?: string): Promise<BingoRoom> {
     const res = await ApiService.fetchData<{ boardId: number; maxPlayers: number; user_id: string; isPrivate: boolean; password?: string }, BingoRoom>({
-      url: '/bingo/rooms/create',
+      url: '/multiplayer/rooms/create',
       method: 'POST',
       data: { boardId, maxPlayers, user_id: userId, isPrivate, password },
     });
@@ -61,7 +61,7 @@ export const BingoRoomService = {
 
   async getAvailableRooms(): Promise<BingoRoom[]> {
     const res = await ApiService.fetchData<void, BingoRoom[]>({
-      url: '/bingo/rooms/available',
+      url: '/multiplayer/rooms/available',
       method: 'GET',
     });
     return res.data;
@@ -69,7 +69,7 @@ export const BingoRoomService = {
 
   async getUserRooms(userId: string): Promise<BingoRoom[]> {
     const res = await ApiService.fetchData<void, BingoRoom[]>({
-      url: '/bingo/rooms/my-rooms',
+      url: '/multiplayer/rooms/my-rooms',
       method: 'GET',
       params: { user_id: userId },
     });
@@ -78,7 +78,7 @@ export const BingoRoomService = {
 
   async getRoomDetails(roomId: string): Promise<BingoRoom & { participants: RoomParticipant[] }> {
     const res = await ApiService.fetchData<void, BingoRoom & { participants: RoomParticipant[] }>({
-      url: `/bingo/rooms/${roomId}`,
+      url: `/multiplayer/rooms/${roomId}`,
       method: 'GET',
     });
     return res.data;
@@ -86,7 +86,7 @@ export const BingoRoomService = {
 
   async joinRoom(roomId: string, userId: string, password?: string): Promise<RoomParticipant> {
     const res = await ApiService.fetchData<{ user_id: string; password?: string }, RoomParticipant>({
-      url: `/bingo/rooms/${roomId}/join`,
+      url: `/multiplayer/rooms/${roomId}/join`,
       method: 'POST',
       data: { user_id: userId, password },
     });
@@ -95,7 +95,7 @@ export const BingoRoomService = {
 
   async leaveRoom(roomId: string, userId: string): Promise<void> {
     await ApiService.fetchData<{ user_id: string }, void>({
-      url: `/bingo/rooms/${roomId}/leave`,
+      url: `/multiplayer/rooms/${roomId}/leave`,
       method: 'POST',
       data: { user_id: userId },
     });
@@ -103,7 +103,7 @@ export const BingoRoomService = {
 
   async toggleReady(roomId: string, userId: string): Promise<RoomParticipant> {
     const res = await ApiService.fetchData<{ user_id: string }, RoomParticipant>({
-      url: `/bingo/rooms/${roomId}/ready`,
+      url: `/multiplayer/rooms/${roomId}/ready`,
       method: 'POST',
       data: { user_id: userId },
     });
@@ -112,7 +112,7 @@ export const BingoRoomService = {
 
   async startGame(roomId: string, userId: string): Promise<BingoRoom> {
     const res = await ApiService.fetchData<{ user_id: string }, BingoRoom>({
-      url: `/bingo/rooms/${roomId}/start`,
+      url: `/multiplayer/rooms/${roomId}/start`,
       method: 'POST',
       data: { user_id: userId },
     });
@@ -122,7 +122,7 @@ export const BingoRoomService = {
   // Gameplay
   async completeCell(roomId: string, cellId: number, userId: string): Promise<CompleteCellResponse> {
     const res = await ApiService.fetchData<{ user_id: string }, CompleteCellResponse>({
-      url: `/bingo/rooms/${roomId}/cells/${cellId}/complete`,
+      url: `/multiplayer/rooms/${roomId}/cells/${cellId}/complete`,
       method: 'POST',
       data: { user_id: userId },
     });
@@ -131,7 +131,7 @@ export const BingoRoomService = {
 
   async getBoardState(roomId: string): Promise<BingoCellState[]> {
     const res = await ApiService.fetchData<void, BingoCellState[]>({
-      url: `/bingo/rooms/${roomId}/board-state`,
+      url: `/multiplayer/rooms/${roomId}/board-state`,
       method: 'GET',
     });
     return res.data;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Container, Title, Grid, Card, Text, Button, Group, Badge, Stack, Avatar, LoadingOverlay, Modal, Select, NumberInput, Switch, PasswordInput } from '@mantine/core';
 import { IconUsers, IconTrophy, IconPlus, IconClock, IconLock } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,9 @@ import { BingoRoomService, BingoRoom } from '@/services/bingo/bingoRoom.service'
 import { BingoInvitationService, BingoInvitation } from '@/services/bingo/bingoInvitation.service';
 import { BingoService } from '@/services/bingo/bingo.service';
 import { useAppSelector } from '@/store';
+import { useTour } from '@/components/Tutorial/TourProvider';
+import TourButton from '@/components/Tutorial/TourButton';
+import RoomFilters from '@/components/Bingo/RoomFilters';
 
 const BingoRoomLobby: React.FC = () => {
   const navigate = useNavigate();
@@ -22,10 +25,29 @@ const BingoRoomLobby: React.FC = () => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState('');
   
+  // Filters State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [gameFilter, setGameFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [hideFullRooms, setHideFullRooms] = useState(false);
+
   // Join private room state
   const [joinPasswordModalOpen, setJoinPasswordModalOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [joinPassword, setJoinPassword] = useState('');
+
+  const { startTour } = useTour();
+
+  // Auto-start multiplayer tour on first visit
+  useEffect(() => {
+    const hasSeenMultiplayerTour = localStorage.getItem('multiplayer_tour_seen');
+    if (!hasSeenMultiplayerTour && userId) {
+      setTimeout(() => {
+        startTour('multiplayer');
+        localStorage.setItem('multiplayer_tour_seen', 'true');
+      }, 1000);
+    }
+  }, [userId, startTour]);
 
   useEffect(() => {
     fetchData();
@@ -50,6 +72,35 @@ const BingoRoomLobby: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Filtered Rooms Logic
+  const filteredRooms = useMemo(() => {
+    return availableRooms.filter(room => {
+      // Search Filter
+      const matchesSearch = 
+        (room.board_title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (room.host_username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (room.game_name || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Game Filter
+      const matchesGame = gameFilter ? room.game_name === gameFilter : true;
+
+      // Status Filter
+      const matchesStatus = statusFilter ? room.status === statusFilter : true;
+
+      // Hide Full Rooms
+      const isFull = (room.player_count || 0) >= room.max_players;
+      const matchesFull = hideFullRooms ? !isFull : true;
+
+      return matchesSearch && matchesGame && matchesStatus && matchesFull;
+    });
+  }, [availableRooms, searchQuery, gameFilter, statusFilter, hideFullRooms]);
+
+  // Extract unique game names for filter options
+  const gameOptions = useMemo(() => {
+    const games = new Set(availableRooms.map(r => r.game_name || 'Unknown'));
+    return Array.from(games).filter(g => g !== 'Unknown');
+  }, [availableRooms]);
 
   const handleCreateRoom = async () => {
     if (!selectedBoardId) return;
@@ -256,26 +307,36 @@ const BingoRoomLobby: React.FC = () => {
           Available Rooms
         </Group>
       </Title>
+
+      <RoomFilters 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        gameFilter={gameFilter}
+        onGameFilterChange={setGameFilter}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        hideFullRooms={hideFullRooms}
+        onHideFullRoomsChange={setHideFullRooms}
+        gameOptions={gameOptions}
+      />
       
-      {availableRooms.length === 0 ? (
+      {filteredRooms.length === 0 ? (
         <Card shadow="sm" padding="xl" radius="md" withBorder>
           <Stack align="center" gap="md">
-            <Text size="lg" c="dimmed">No rooms available</Text>
-            <Text size="sm" c="dimmed">Be the first to create one!</Text>
-            <Button onClick={() => {
-  if (!userId) {
-    navigate('/sign-in', { state: { message: 'You need to be logged in to create a room.' } });
-  } else {
-    setCreateModalOpen(true);
-  }
-}}>
-  Create Room
-</Button>
+            <Text size="lg" c="dimmed">No rooms found matching your filters</Text>
+            <Button variant="light" onClick={() => {
+              setSearchQuery('');
+              setGameFilter(null);
+              setStatusFilter(null);
+              setHideFullRooms(false);
+            }}>
+              Clear Filters
+            </Button>
           </Stack>
         </Card>
       ) : (
         <Grid>
-          {availableRooms.map((room) => (
+          {filteredRooms.map((room) => (
             <Grid.Col key={room.id} span={{ base: 12, sm: 6, md: 4 }}>
               <RoomCard room={room} />
             </Grid.Col>
@@ -357,6 +418,9 @@ const BingoRoomLobby: React.FC = () => {
           </Button>
         </Stack>
       </Modal>
+
+      {/* Tour Help Button */}
+      <TourButton tourType="multiplayer" />
     </Container>
   );
 };
