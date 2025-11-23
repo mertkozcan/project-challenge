@@ -15,6 +15,45 @@ const storage = multer.diskStorage({
     },
 });
 
+const upload = multer({ storage: storage });
+
+const submitProof = async (req, res) => {
+    try {
+        const { challengeId, userId, run_code, video_url } = req.body;
+        const file = req.file;
+
+        // Validation
+        if (!video_url) {
+            return res.status(400).json({ error: 'Video URL is required' });
+        }
+
+        let ocrResult = null;
+        let ocrText = null;
+
+        // OCR Logic (if screenshot provided)
+        if (file) {
+            // TODO: Integrate Tesseract.js here
+            // For now, just mark as skipped or mock it
+            ocrResult = 'OCR_SKIPPED';
+        }
+
+        const newProof = await createProof({
+            challenge_id: challengeId,
+            user_id: userId,
+            image_url: file ? `/uploads/${file.filename}` : null,
+            video_url: video_url,
+            run_code: run_code,
+            ocr_result: ocrResult,
+            ocr_extracted_text: ocrText
+        });
+
+        res.status(201).json(newProof);
+    } catch (error) {
+        console.error('Submit Proof Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
 const getProofs = async (req, res) => {
     const { challengeId } = req.params;
     try {
