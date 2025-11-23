@@ -36,6 +36,7 @@ export interface BingoCellState {
   row_index: number;
   col_index: number;
   task: string;
+  is_completed_by_me?: boolean;
   completed_by_user_id?: string;
   completed_by_username?: string;
   completed_by_avatar?: string;
@@ -44,23 +45,6 @@ export interface BingoCellState {
 export interface CompleteCellResponse {
   completion: any;
   gameWon: boolean;
-  winType?: 'row' | 'column';
-  winIndex?: number;
-}
-
-export const BingoRoomService = {
-  // Room Management
-  async createRoom(boardId: number, userId: string, maxPlayers: number = 4, isPrivate: boolean = false, password?: string): Promise<BingoRoom> {
-    const res = await ApiService.fetchData<{ boardId: number; maxPlayers: number; user_id: string; isPrivate: boolean; password?: string }, BingoRoom>({
-      url: '/multiplayer/rooms/create',
-      method: 'POST',
-      data: { boardId, maxPlayers, user_id: userId, isPrivate, password },
-    });
-    return res.data;
-  },
-
-  async getAvailableRooms(): Promise<BingoRoom[]> {
-    const res = await ApiService.fetchData<void, BingoRoom[]>({
       url: '/multiplayer/rooms/available',
       method: 'GET',
     });

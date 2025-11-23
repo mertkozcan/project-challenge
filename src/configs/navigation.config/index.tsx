@@ -58,6 +58,15 @@ const navigationConfig: NavigationTree[] = [
     authority: [],
     subMenu: [],
   },
+  {
+    key: 'friends',
+    path: '/friends',
+    title: 'Friends',
+    translateKey: '',
+    icon: IconUser,
+    authority: [],
+    subMenu: [],
+  },
 
   {
     key: 'admin',

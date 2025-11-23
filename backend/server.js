@@ -49,6 +49,8 @@ app.get('/api/health', (req, res) => {
 })
 
 // Routes
+const friendRoutes = require('./routes/friendRoutes');
+
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/login', loginRoutes);
 app.use('/api/auth', authRoutes);
@@ -64,10 +66,9 @@ app.use('/api/games', gameRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/bingo-invitations', bingoInvitationRoutes);
 app.use('/api/run-sessions', runSessionRoutes);
-app.use('/api/proofs', proofRoutes); // Existing proof routes (upload etc)
-app.use('/api/proofs', require('./routes/proofReviewRoutes')); // New review routes (mounted on same path for now, or separate)
+app.use('/api/friends', friendRoutes);
+app.use('/api/proofs', require('./routes/proofReviewRoutes')); // New review routes
 
-// Server Başlat
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

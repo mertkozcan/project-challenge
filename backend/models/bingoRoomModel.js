@@ -2,12 +2,12 @@ const pool = require('../config/db');
 
 // ==================== ROOM MANAGEMENT ====================
 
-const createRoom = async (boardId, hostUserId, maxPlayers = 4) => {
+const createRoom = async (boardId, hostUserId, maxPlayers = 4, isPrivate = false, password = null, gameMode = 'STANDARD', theme = 'DEFAULT') => {
     const result = await pool.query(
-        `INSERT INTO bingo_rooms (board_id, host_user_id, max_players)
-     VALUES ($1, $2, $3)
+        `INSERT INTO bingo_rooms (board_id, host_user_id, max_players, is_private, password, game_mode, theme)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
-        [boardId, hostUserId, maxPlayers]
+        [boardId, hostUserId, maxPlayers, isPrivate, password, gameMode, theme]
     );
 
     // Automatically add host as participant
@@ -22,18 +22,11 @@ const createRoom = async (boardId, hostUserId, maxPlayers = 4) => {
 
 const getRoomById = async (roomId) => {
     const result = await pool.query(
-        `SELECT r.*, 
-            bb.title as board_title, 
-            bb.game_name,
-            bb.size as board_size,
-            u.username as host_username,
-            u.avatar_url as host_avatar,
-            w.username as winner_username
-     FROM bingo_rooms r
-     JOIN bingo_boards bb ON r.board_id = bb.id
-     JOIN users u ON r.host_user_id = u.id
-     LEFT JOIN users w ON r.winner_user_id = w.id
-     WHERE r.id = $1`,
+        `SELECT r.*, bb.title as board_title, bb.game_name, u.username as host_username, u.avatar_url as host_avatar
+         FROM bingo_rooms r
+         JOIN bingo_boards bb ON r.board_id = bb.id
+         JOIN users u ON r.host_user_id = u.id
+         WHERE r.id = $1`,
         [roomId]
     );
     return result.rows[0];
@@ -42,166 +35,144 @@ const getRoomById = async (roomId) => {
 const getRoomParticipants = async (roomId) => {
     const result = await pool.query(
         `SELECT p.*, u.username, u.avatar_url
-     FROM bingo_room_participants p
-     JOIN users u ON p.user_id = u.id
-     WHERE p.room_id = $1
-     ORDER BY p.joined_at ASC`,
+         FROM bingo_room_participants p
+         JOIN users u ON p.user_id = u.id
+         WHERE p.room_id = $1`,
         [roomId]
     );
     return result.rows;
 };
 
-const getAvailableRooms = async () => {
+const getAvailableRooms = async (userId) => {
     const result = await pool.query(
-        `SELECT r.*, 
-            bb.title as board_title, 
-            bb.game_name,
-            u.username as host_username,
-            COUNT(p.id) as player_count
-     FROM bingo_rooms r
-     JOIN bingo_boards bb ON r.board_id = bb.id
-     JOIN users u ON r.host_user_id = u.id
-     LEFT JOIN bingo_room_participants p ON r.id = p.room_id
-     WHERE r.status = 'WAITING'
-     GROUP BY r.id, bb.title, bb.game_name, u.username
-     HAVING COUNT(p.id) < r.max_players
-     ORDER BY r.created_at DESC`
+        `SELECT r.*, bb.title as board_title, bb.game_name, u.username as host_username,
+         (SELECT COUNT(*) FROM bingo_room_participants WHERE room_id = r.id) as participant_count
+         FROM bingo_rooms r
+         JOIN bingo_boards bb ON r.board_id = bb.id
+         JOIN users u ON r.host_user_id = u.id
+         WHERE r.status = 'WAITING' AND r.is_private = false
+         AND NOT EXISTS (SELECT 1 FROM bingo_room_participants WHERE room_id = r.id AND user_id = $1)
+         ORDER BY r.created_at DESC`,
+        [userId]
     );
     return result.rows;
 };
 
 const getUserRooms = async (userId) => {
     const result = await pool.query(
-        `SELECT r.*, 
-            bb.title as board_title, 
-            bb.game_name,
-            u.username as host_username,
-            COUNT(p.id) as player_count
-     FROM bingo_rooms r
-     JOIN bingo_boards bb ON r.board_id = bb.id
-     JOIN users u ON r.host_user_id = u.id
-     LEFT JOIN bingo_room_participants p ON r.id = p.room_id
-     WHERE EXISTS (
-       SELECT 1 FROM bingo_room_participants 
-       WHERE room_id = r.id AND user_id = $1
-     )
-     AND r.status IN ('WAITING', 'IN_PROGRESS')
-     GROUP BY r.id, bb.title, bb.game_name, u.username
-     ORDER BY r.created_at DESC`,
+        `SELECT r.*, bb.title as board_title, bb.game_name, u.username as host_username,
+         (SELECT COUNT(*) FROM bingo_room_participants WHERE room_id = r.id) as participant_count
+         FROM bingo_rooms r
+         JOIN bingo_boards bb ON r.board_id = bb.id
+         JOIN users u ON r.host_user_id = u.id
+         JOIN bingo_room_participants p ON r.id = p.room_id
+         WHERE p.user_id = $1 AND r.status != 'COMPLETED'
+         ORDER BY r.created_at DESC`,
         [userId]
     );
     return result.rows;
 };
 
-const joinRoom = async (roomId, userId) => {
-    // Check if room is full
-    const roomCheck = await pool.query(
-        `SELECT r.max_players, COUNT(p.id) as current_players
-     FROM bingo_rooms r
-     LEFT JOIN bingo_room_participants p ON r.id = p.room_id
-     WHERE r.id = $1 AND r.status = 'WAITING'
-     GROUP BY r.id, r.max_players`,
-        [roomId]
-    );
+const joinRoom = async (roomId, userId, password = null) => {
+    const room = await getRoomById(roomId);
+    if (!room) throw new Error('Room not found');
+    if (room.status !== 'WAITING') throw new Error('Game already started or completed');
 
-    if (!roomCheck.rows[0]) {
-        throw new Error('Room not found or already started');
+    if (room.is_private && room.password !== password) {
+        throw new Error('Invalid password');
     }
 
-    if (roomCheck.rows[0].current_players >= roomCheck.rows[0].max_players) {
-        throw new Error('Room is full');
-    }
+    const participants = await getRoomParticipants(roomId);
+    if (participants.length >= room.max_players) throw new Error('Room is full');
 
-    // Check if user is already a participant
-    const existingParticipant = await pool.query(
-        `SELECT * FROM bingo_room_participants WHERE room_id = $1 AND user_id = $2`,
-        [roomId, userId]
-    );
-
-    if (existingParticipant.rows.length > 0) {
-        // User already joined, return existing participant
-        return existingParticipant.rows[0];
-    }
-
-    // Add new participant
     const result = await pool.query(
         `INSERT INTO bingo_room_participants (room_id, user_id)
-     VALUES ($1, $2)
-     RETURNING *`,
+         VALUES ($1, $2)
+         ON CONFLICT (room_id, user_id) DO NOTHING
+         RETURNING *`,
         [roomId, userId]
     );
-
     return result.rows[0];
 };
 
 const leaveRoom = async (roomId, userId) => {
-    const result = await pool.query(
-        `DELETE FROM bingo_room_participants
-     WHERE room_id = $1 AND user_id = $2
-     RETURNING *`,
+    await pool.query(
+        'DELETE FROM bingo_room_participants WHERE room_id = $1 AND user_id = $2',
         [roomId, userId]
     );
-
-    // If host left, delete the room
-    const room = await pool.query(
-        'SELECT host_user_id FROM bingo_rooms WHERE id = $1',
-        [roomId]
-    );
-
-    if (room.rows[0]?.host_user_id === userId) {
+    const participants = await getRoomParticipants(roomId);
+    if (participants.length === 0) {
         await pool.query('DELETE FROM bingo_rooms WHERE id = $1', [roomId]);
     }
-
-    return result.rows[0];
+    return { success: true };
 };
 
 const toggleReady = async (roomId, userId) => {
     const result = await pool.query(
         `UPDATE bingo_room_participants
-     SET is_ready = NOT is_ready
-     WHERE room_id = $1 AND user_id = $2
-     RETURNING *`,
+         SET is_ready = NOT is_ready
+         WHERE room_id = $1 AND user_id = $2
+         RETURNING *`,
         [roomId, userId]
     );
     return result.rows[0];
 };
 
-const startGame = async (roomId, hostUserId) => {
-    // Verify host
-    const room = await pool.query(
-        'SELECT host_user_id FROM bingo_rooms WHERE id = $1',
-        [roomId]
-    );
-
-    if (room.rows[0]?.host_user_id !== hostUserId) {
-        throw new Error('Only host can start the game');
-    }
-
-    // Check all players are ready
-    const notReady = await pool.query(
-        `SELECT COUNT(*) as count FROM bingo_room_participants
-     WHERE room_id = $1 AND is_ready = false`,
-        [roomId]
-    );
-
-    if (parseInt(notReady.rows[0].count) > 0) {
-        throw new Error('Not all players are ready');
-    }
+const startGame = async (roomId, userId) => {
+    const room = await getRoomById(roomId);
+    if (room.host_user_id !== userId) throw new Error('Only host can start game');
 
     const result = await pool.query(
         `UPDATE bingo_rooms
-     SET status = 'IN_PROGRESS', started_at = CURRENT_TIMESTAMP
-     WHERE id = $1
-     RETURNING *`,
+         SET status = 'PLAYING', started_at = CURRENT_TIMESTAMP
+         WHERE id = $1
+         RETURNING *`,
         [roomId]
     );
-
     return result.rows[0];
 };
 
 // ==================== GAMEPLAY ====================
 
 const completeCell = async (roomId, cellId, userId) => {
+    // Check Game Mode
+    const room = await pool.query('SELECT game_mode FROM bingo_rooms WHERE id = $1', [roomId]);
+    const gameMode = room.rows[0]?.game_mode || 'STANDARD';
+
+    if (gameMode === 'LOCKOUT') {
+        // Atomic check and insert for Lockout
+        // Only insert if NO ONE has completed it yet
+        const result = await pool.query(
+            `INSERT INTO bingo_cell_completions (room_id, cell_id, user_id)
+             SELECT $1, $2, $3
+             WHERE NOT EXISTS (
+                 SELECT 1 FROM bingo_cell_completions 
+                 WHERE room_id = $1 AND cell_id = $2
+             )
+             ON CONFLICT (room_id, cell_id, user_id) DO NOTHING
+             RETURNING *`,
+            [roomId, cellId, userId]
+        );
+
+        if (result.rows.length === 0) {
+            // Check why it failed
+            const existing = await pool.query(
+                'SELECT user_id FROM bingo_cell_completions WHERE room_id = $1 AND cell_id = $2',
+                [roomId, cellId]
+            );
+
+            if (existing.rows.length > 0) {
+                if (existing.rows[0].user_id !== userId) {
+                    throw new Error('This cell is already locked by another player!');
+                }
+                // If I already have it, just return existing (idempotent)
+                return existing.rows[0];
+            }
+        }
+        return result.rows[0];
+    }
+
+    // Standard Mode
     const result = await pool.query(
         `INSERT INTO bingo_cell_completions (room_id, cell_id, user_id)
      VALUES ($1, $2, $3)
@@ -212,41 +183,46 @@ const completeCell = async (roomId, cellId, userId) => {
     return result.rows[0];
 };
 
-const getBoardState = async (roomId) => {
-    const result = await pool.query(
-        `SELECT bc.id as cell_id, bc.row_index, bc.col_index, bc.task,
-            bcc.user_id as completed_by_user_id,
-            u.username as completed_by_username,
-            u.avatar_url as completed_by_avatar
-     FROM bingo_cells bc
-     JOIN bingo_rooms r ON bc.board_id = r.board_id
-     LEFT JOIN bingo_cell_completions bcc ON bc.id = bcc.cell_id AND bcc.room_id = r.id
-     LEFT JOIN users u ON bcc.user_id = u.id
-     WHERE r.id = $1
-     ORDER BY bc.row_index, bc.col_index`,
-        [roomId]
-    );
-    return result.rows;
+const getBoardState = async (roomId, userId) => {
+    const room = await getRoomById(roomId);
+    if (!room) throw new Error('Room not found');
+
+    const query = `
+        SELECT bc.*,
+        EXISTS(SELECT 1 FROM bingo_cell_completions WHERE room_id = $1 AND cell_id = bc.id AND user_id = $2) as is_completed_by_me,
+        (SELECT user_id FROM bingo_cell_completions WHERE room_id = $1 AND cell_id = bc.id LIMIT 1) as completed_by_user_id,
+        (SELECT u.username FROM bingo_cell_completions bcc JOIN users u ON bcc.user_id = u.id WHERE bcc.room_id = $1 AND bcc.cell_id = bc.id LIMIT 1) as completed_by_username
+        FROM bingo_cells bc
+        WHERE bc.board_id = $3
+        ORDER BY bc.row_index, bc.col_index
+    `;
+
+    const cells = await pool.query(query, [roomId, userId, room.board_id]);
+
+    return {
+        ...room,
+        cells: cells.rows
+    };
 };
 
-const isCellCompleted = async (roomId, cellId) => {
+const isCellCompleted = async (roomId, cellId, userId) => {
     const result = await pool.query(
-        `SELECT 1 FROM bingo_cell_completions WHERE room_id = $1 AND cell_id = $2`,
-        [roomId, cellId]
+        'SELECT 1 FROM bingo_cell_completions WHERE room_id = $1 AND cell_id = $2 AND user_id = $3',
+        [roomId, cellId, userId]
     );
     return result.rows.length > 0;
 };
 
 const checkWinConditions = async (roomId) => {
-    // Get board size
-    const boardInfo = await pool.query(
-        `SELECT bb.size FROM bingo_rooms r
+    // Get room details
+    const roomInfo = await pool.query(
+        `SELECT r.game_mode, bb.size FROM bingo_rooms r
      JOIN bingo_boards bb ON r.board_id = bb.id
      WHERE r.id = $1`,
         [roomId]
     );
 
-    const size = boardInfo.rows[0]?.size || 5;
+    const { game_mode, size } = roomInfo.rows[0] || { game_mode: 'STANDARD', size: 5 };
 
     // Get ALL completed cells with user_id
     const completions = await pool.query(
@@ -267,6 +243,24 @@ const checkWinConditions = async (roomId) => {
         return allSameUser ? firstUser : null;
     };
 
+    if (game_mode === 'BLACKOUT') {
+        // Check if any user has completed ALL cells (size * size)
+        const userCounts = {};
+        cells.forEach(c => {
+            userCounts[c.user_id] = (userCounts[c.user_id] || 0) + 1;
+        });
+
+        const totalCells = size * size;
+        for (const [userId, count] of Object.entries(userCounts)) {
+            if (count === totalCells) {
+                return { won: true, type: 'blackout', index: 0, winnerId: userId };
+            }
+        }
+        return { won: false };
+    }
+
+    // STANDARD, LOCKOUT, etc. (Row/Col/Diag)
+
     // Check rows
     for (let row = 0; row < size; row++) {
         const rowCells = cells.filter(c => c.row_index === row);
@@ -284,6 +278,17 @@ const checkWinConditions = async (roomId) => {
             return { won: true, type: 'column', index: col, winnerId };
         }
     }
+
+    // Check Diagonals (Standard/Lockout usually include diagonals)
+    // Main Diagonal (0,0 to size-1, size-1)
+    const mainDiag = cells.filter(c => c.row_index === c.col_index);
+    const mainWinner = checkGroup(mainDiag);
+    if (mainWinner) return { won: true, type: 'diagonal', index: 0, winnerId: mainWinner };
+
+    // Anti Diagonal (0, size-1 to size-1, 0)
+    const antiDiag = cells.filter(c => c.row_index + c.col_index === size - 1);
+    const antiWinner = checkGroup(antiDiag);
+    if (antiWinner) return { won: true, type: 'diagonal', index: 1, winnerId: antiWinner };
 
     return { won: false };
 };
@@ -427,37 +432,27 @@ const getGameDetails = async (roomId, userId) => {
     const room = await getRoomById(roomId);
     const participants = await getRoomParticipants(roomId);
 
-    // Get board cells with completion info
-    // Join bingo_cells with bingo_rooms via board_id to filter by room_id indirectly
-    // Join bingo_cell_completions with room_id to get completion status for this specific room
+    // Get all cells with completion info
     const cells = await pool.query(
-        `SELECT 
-            bc.id as cell_id,
-        bc.row_index,
-        bc.col_index,
-        bc.task,
-        bcc.user_id as completed_by_user_id,
-        bcc.completed_at,
-        u.username as completed_by_username,
-        u.avatar_url as completed_by_avatar
+        `SELECT bc.*, 
+         (SELECT user_id FROM bingo_cell_completions WHERE room_id = $1 AND cell_id = bc.id LIMIT 1) as completed_by_user_id,
+         (SELECT u.username FROM bingo_cell_completions bcc JOIN users u ON bcc.user_id = u.id WHERE bcc.room_id = $1 AND bcc.cell_id = bc.id LIMIT 1) as completed_by_username
          FROM bingo_cells bc
-         JOIN bingo_rooms r ON bc.board_id = r.board_id
-         LEFT JOIN bingo_cell_completions bcc ON bc.id = bcc.cell_id AND bcc.room_id = r.id
-         LEFT JOIN users u ON bcc.user_id = u.id
-         WHERE r.id = $1
+         WHERE bc.board_id = $2
          ORDER BY bc.row_index, bc.col_index`,
-        [roomId]
+        [roomId, room.board_id]
     );
 
     const completionStats = await pool.query(
         `SELECT 
             bcc.user_id,
-        COUNT(*) as cells_completed,
-        MIN(bcc.completed_at) as first_completion,
-        MAX(bcc.completed_at) as last_completion
+        u.username,
+        u.avatar_url,
+        COUNT(*) as cells_completed
          FROM bingo_cell_completions bcc
+         JOIN users u ON bcc.user_id = u.id
          WHERE bcc.room_id = $1
-         GROUP BY bcc.user_id`,
+         GROUP BY bcc.user_id, u.username, u.avatar_url`,
         [roomId]
     );
 

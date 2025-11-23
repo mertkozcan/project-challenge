@@ -8,6 +8,8 @@ import ApiService from '@/services/ApiService';
 import { useAppSelector } from '@/store';
 import SocketService from '@/services/socket.service';
 
+import InviteFriendModal from '@/components/Bingo/InviteFriendModal';
+
 const BingoWaitingRoom: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
@@ -22,9 +24,6 @@ const BingoWaitingRoom: React.FC = () => {
   
   // Invitation state
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (!roomId || !userId) return;
@@ -126,47 +125,6 @@ const BingoWaitingRoom: React.FC = () => {
       console.error('Error leaving room:', error);
     }
   };
-
-  const handleSearchUsers = async () => {
-    if (!searchQuery.trim()) return;
-    
-    setSearching(true);
-    try {
-      const response = await ApiService.fetchData<void, any[]>({
-        url: `/users/search`,
-        method: 'GET',
-        params: { query: searchQuery },
-      });
-      setSearchResults(response.data);
-    } catch (error) {
-      console.error('Error searching users:', error);
-      setSearchResults([]);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const handleInviteUser = async (toUserId: string) => {
-    if (!roomId || !userId) return;
-    try {
-      await BingoInvitationService.sendInvitation(roomId, toUserId, userId);
-      alert('Invitation sent!');
-    } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to send invitation');
-    }
-  };
-
-  // Auto-search when query changes
-  useEffect(() => {
-    if (searchQuery.length >= 2) {
-      const timer = setTimeout(() => {
-        handleSearchUsers();
-      }, 300); // Debounce 300ms
-      return () => clearTimeout(timer);
-    } else {
-      setSearchResults([]);
-    }
-  }, [searchQuery]);
 
   if (loading) {
     return <LoadingOverlay visible />;
@@ -306,50 +264,12 @@ const BingoWaitingRoom: React.FC = () => {
       </Grid>
 
       {/* Invite Modal */}
-      <Modal
+      <InviteFriendModal
         opened={inviteModalOpen}
         onClose={() => setInviteModalOpen(false)}
-        title="Invite Friends"
-        size="md"
-      >
-        <Stack gap="md">
-          <TextInput
-            placeholder="Search by username..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            leftSection={<IconSearch size={16} />}
-          />
-
-          {searching && <Text size="sm" c="dimmed">Searching...</Text>}
-
-          <Stack gap="xs">
-            {searchResults.map((user) => {
-              const alreadyInRoom = participants.some(p => p.user_id === user.id);
-              return (
-                <Paper key={user.id} p="sm" withBorder>
-                  <Group justify="space-between">
-                    <Group gap="xs">
-                      <Avatar src={user.avatar_url} size="sm" />
-                      <Text size="sm">{user.username}</Text>
-                    </Group>
-                    {alreadyInRoom ? (
-                      <Badge color="green">Joined</Badge>
-                    ) : (
-                      <Button size="xs" onClick={() => handleInviteUser(user.id)}>
-                        Invite
-                      </Button>
-                    )}
-                  </Group>
-                </Paper>
-              );
-            })}
-          </Stack>
-
-          {searchQuery.length >= 2 && searchResults.length === 0 && !searching && (
-            <Text size="sm" c="dimmed" ta="center">No users found</Text>
-          )}
-        </Stack>
-      </Modal>
+        roomId={roomId || ''}
+        currentParticipants={participants.map(p => p.user_id)}
+      />
     </Container>
   );
 };

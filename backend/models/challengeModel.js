@@ -28,10 +28,15 @@ const getAllChallenges = async (type, contentType) => {
   return result.rows;
 };
 
-const createChallenge = async (gameName, challengeName, description, reward, type = 'permanent', endDate = null) => {
+const createChallenge = async (gameName, challengeName, description, reward, type = 'permanent', endDate = null, rewardXp = null) => {
+  // Auto-calculate XP if not provided
+  if (!rewardXp) {
+    rewardXp = type === 'daily' ? 200 : type === 'weekly' ? 500 : 100;
+  }
+
   const result = await pool.query(
-    'INSERT INTO challenges (game_name, challenge_name, description, reward, type, end_date) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-    [gameName, challengeName, description, reward, type, endDate]
+    'INSERT INTO challenges (game_name, challenge_name, description, reward, type, end_date, reward_xp) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+    [gameName, challengeName, description, reward, type, endDate, rewardXp]
   );
   return result.rows[0];
 };
@@ -113,4 +118,31 @@ const getPopularChallenges = async (limit = 5) => {
   }
 };
 
-module.exports = { getAllChallenges, createChallenge, getLatestChallenges, getChallengeById, getPopularChallenges };
+/**
+ * Complete a challenge and award XP
+ */
+const completeChallengeWithXP = async (challengeId, userId, proofId) => {
+  const { awardXP } = require('../utils/xpSystem');
+
+  // Get challenge details
+  const challenge = await getChallengeById(challengeId);
+  if (!challenge) {
+    throw new Error('Challenge not found');
+  }
+
+  // Award XP
+  const xpResult = await awardXP(userId, challenge.reward_xp || 100, `CHALLENGE_${challenge.type.toUpperCase()}`);
+
+  // Update streak if it's a daily challenge
+  if (challenge.type === 'daily') {
+    const { updateUserStreak } = require('../utils/xpSystem');
+    await updateUserStreak(userId);
+  }
+
+  return {
+    challenge,
+    xpResult
+  };
+};
+
+module.exports = { getAllChallenges, createChallenge, getLatestChallenges, getChallengeById, getPopularChallenges, completeChallengeWithXP };

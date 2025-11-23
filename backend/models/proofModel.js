@@ -24,7 +24,29 @@ const updateProofStatus = async (proofId, status, score = 0) => {
         'UPDATE proofs SET status = $1, score = $2 WHERE id = $3 RETURNING *',
         [status, score, proofId]
     );
-    return result.rows[0];
+
+    const proof = result.rows[0];
+
+    // Award XP if proof is approved
+    if (status === 'APPROVED' && proof) {
+        const { awardXP, XP_REWARDS } = require('../utils/xpSystem');
+        const { completeChallengeWithXP } = require('./challengeModel');
+
+        try {
+            // Award proof approval XP
+            await awardXP(proof.user_id, XP_REWARDS.PROOF_APPROVED, 'PROOF_APPROVED');
+
+            // Award challenge completion XP if challenge_id exists
+            if (proof.challenge_id) {
+                await completeChallengeWithXP(proof.challenge_id, proof.user_id, proofId);
+            }
+        } catch (error) {
+            console.error('Error awarding XP for proof approval:', error);
+            // Don't fail the proof approval if XP award fails
+        }
+    }
+
+    return proof;
 };
 
 const getProofById = async (proofId) => {

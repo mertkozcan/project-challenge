@@ -24,6 +24,8 @@ const BingoRoomLobby: React.FC = () => {
   const [maxPlayers, setMaxPlayers] = useState(4);
   const [isPrivate, setIsPrivate] = useState(false);
   const [password, setPassword] = useState('');
+  const [gameMode, setGameMode] = useState('STANDARD');
+  const [theme, setTheme] = useState('DEFAULT');
   
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,7 +109,7 @@ const BingoRoomLobby: React.FC = () => {
     
     try {
       if (!userId) return;
-      const room = await BingoRoomService.createRoom(parseInt(selectedBoardId), userId, maxPlayers, isPrivate, password);
+      const room = await BingoRoomService.createRoom(parseInt(selectedBoardId), userId, maxPlayers, isPrivate, password, gameMode, theme);
       navigate(`/bingo/room/${room.id}`);
     } catch (error) {
       console.error('Error creating room:', error);
@@ -115,13 +117,7 @@ const BingoRoomLobby: React.FC = () => {
   };
 
   const handleJoinClick = (room: BingoRoom) => {
-    if (room.is_private) {
-      setSelectedRoomId(room.id);
-      setJoinPassword('');
-      setJoinPasswordModalOpen(true);
-    } else {
-      handleJoinRoom(room.id);
-    }
+    handleJoinRoom(room.id);
   };
 
   const handleJoinRoom = async (roomId: string, roomPassword?: string) => {
@@ -134,9 +130,9 @@ const BingoRoomLobby: React.FC = () => {
       }
       await BingoRoomService.joinRoom(roomId, userId, roomPassword);
       navigate(`/bingo/room/${roomId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error joining room:', error);
-      alert('Failed to join room. Please check the password and try again.');
+      alert(error.response?.data?.error || 'Failed to join room.');
     }
   };
 
@@ -197,7 +193,7 @@ const BingoRoomLobby: React.FC = () => {
             variant={isUserInRoom ? "filled" : room.is_private ? "outline" : "filled"}
             color={isUserInRoom ? "green" : undefined}
           >
-            {isUserInRoom ? 'Enter Room' : room.is_private ? 'Join Private Room' : 'Join Room'}
+            {isUserInRoom ? 'Enter Room' : room.is_private ? 'Join Friends Only Room' : 'Join Room'}
           </Button>
         </Stack>
       </Card>
@@ -370,20 +366,36 @@ const BingoRoomLobby: React.FC = () => {
             onChange={(value) => setMaxPlayers(Number(value))}
           />
 
+          <Select
+            label="Game Mode"
+            data={[
+              { value: 'STANDARD', label: 'Standard (Row/Col/Diag)' },
+              { value: 'BLACKOUT', label: 'Blackout (Full Board)' },
+              { value: 'LOCKOUT', label: 'Lockout (Competitive)' },
+            ]}
+            value={gameMode}
+            onChange={(value) => setGameMode(value || 'STANDARD')}
+          />
+
+          <Select
+            label="Theme"
+            data={[
+              { value: 'DEFAULT', label: 'Default (Dark)' },
+              { value: 'ELDEN_RING', label: 'Elden Ring' },
+              { value: 'CYBERPUNK', label: 'Cyberpunk' },
+              { value: 'HALLOWEEN', label: 'Halloween 🎃' },
+              { value: 'CHRISTMAS', label: 'Christmas 🎄' },
+            ]}
+            value={theme}
+            onChange={(value) => setTheme(value || 'DEFAULT')}
+          />
+
           <Switch
-            label="Private Room"
+            label="Friends Only (Private)"
+            description="Only your friends can join this room"
             checked={isPrivate}
             onChange={(event) => setIsPrivate(event.currentTarget.checked)}
           />
-
-          {isPrivate && (
-            <PasswordInput
-              label="Room Password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(event) => setPassword(event.currentTarget.value)}
-            />
-          )}
 
           <Button 
             fullWidth 
@@ -391,30 +403,6 @@ const BingoRoomLobby: React.FC = () => {
             disabled={!selectedBoardId}
           >
             Create Room
-          </Button>
-        </Stack>
-      </Modal>
-
-      {/* Join Private Room Modal */}
-      <Modal
-        opened={joinPasswordModalOpen}
-        onClose={() => setJoinPasswordModalOpen(false)}
-        title="Enter Room Password"
-        size="sm"
-      >
-        <Stack gap="md">
-          <PasswordInput
-            label="Password"
-            placeholder="Enter room password"
-            value={joinPassword}
-            onChange={(event) => setJoinPassword(event.currentTarget.value)}
-            autoFocus
-          />
-          <Button 
-            fullWidth 
-            onClick={() => selectedRoomId && handleJoinRoom(selectedRoomId, joinPassword)}
-          >
-            Join Room
           </Button>
         </Stack>
       </Modal>

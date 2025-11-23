@@ -13,11 +13,14 @@ export interface SignInResponse {
 }
 
 type User = {
-   id: string
+  id: string
   username: string
-  role:string
+  role: string
   email: string
   avatar_url?: string
+  is_admin?: boolean
+  level?: number
+  total_xp?: number
 }
 
 export interface ResponseInfoObject {
@@ -31,7 +34,6 @@ export type SignUpResponse = SignInResponse
 export type SignUpCredential = {
   username: string
   password: string
-  email:string
+  email: string
   avatar_url?: string
 }
-

@@ -10,6 +10,7 @@ import confetti from 'canvas-confetti';
 import { useGameSounds } from '@/hooks/useGameSounds';
 import BingoHero from '@/components/Bingo/BingoHero';
 import BingoCell from '@/components/Bingo/BingoCell';
+import ChatBox from '@/components/Chat/ChatBox';
 
 const BingoGameView: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -126,6 +127,7 @@ const BingoGameView: React.FC = () => {
       if (cell.cell_id === cellId) {
         return {
           ...cell,
+          is_completed_by_me: true,
           completed_by_user_id: userId,
           completed_by_username: 'You',
           completed_by_avatar: undefined
@@ -162,8 +164,61 @@ const BingoGameView: React.FC = () => {
     rows.push(boardState.filter(cell => cell.row_index === i));
   }
 
+  // Theme Styles
+  const getThemeStyles = (theme: string) => {
+    switch (theme) {
+      case 'ELDEN_RING':
+        return {
+          bg: '#1a1a1a',
+          boardBg: 'linear-gradient(145deg, #2c2c2c, #1a1a1a)',
+          borderColor: '#cfb53b',
+          textColor: '#f0e6d2',
+          accentColor: '#cfb53b',
+          fontFamily: 'serif',
+        };
+      case 'CYBERPUNK':
+        return {
+          bg: '#050510',
+          boardBg: 'linear-gradient(145deg, #0a0a20, #050510)',
+          borderColor: '#00ffea',
+          textColor: '#ffffff',
+          accentColor: '#ff00ff',
+          fontFamily: 'monospace',
+        };
+      case 'HALLOWEEN':
+        return {
+          bg: '#1a0520',
+          boardBg: 'linear-gradient(145deg, #2d0a35, #1a0520)',
+          borderColor: '#ff6b00',
+          textColor: '#ffe0b2',
+          accentColor: '#ff6b00',
+          fontFamily: 'cursive',
+        };
+      case 'CHRISTMAS':
+        return {
+          bg: '#0b2e13',
+          boardBg: 'linear-gradient(145deg, #155724, #0b2e13)',
+          borderColor: '#d4af37',
+          textColor: '#ffffff',
+          accentColor: '#c82333',
+          fontFamily: 'sans-serif',
+        };
+      default:
+        return {
+          bg: undefined,
+          boardBg: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          textColor: undefined,
+          accentColor: undefined,
+          fontFamily: undefined,
+        };
+    }
+  };
+
+  const themeStyles = getThemeStyles(room?.theme || 'DEFAULT');
+
   return (
-    <Container size="xl" py="xl">
+    <Container size="xl" py="xl" style={{ fontFamily: themeStyles.fontFamily }}>
       <Group justify="space-between" mb="xl">
         <BingoHero 
           title={room?.board_title || 'Bingo Game'}
@@ -189,26 +244,33 @@ const BingoGameView: React.FC = () => {
               p={{ base: 'xs', md: 'xl' }}
               radius="md"
               style={{
-                background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: themeStyles.boardBg,
+                border: `1px solid ${themeStyles.borderColor}`,
               }}
             >
               <Stack gap={8}>
                 {rows.map((row, rowIndex) => (
                   <Group key={rowIndex} gap={8} grow wrap="nowrap">
                     {row.map((cell) => {
-                      const isCompleted = !!cell.completed_by_user_id;
-                      const isMyCompletion = cell.completed_by_user_id === userId;
+                      // Logic:
+                      // If I completed it -> Green/Theme Color
+                      // If someone else completed it:
+                      //    - Standard: I can still complete it (don't show as taken unless I want to see history)
+                      //    - Lockout: It is LOCKED (Red/Gray)
+                      
+                      const isMyCompletion = cell.is_completed_by_me;
+                      const isLocked = room?.game_mode === 'LOCKOUT' && !!cell.completed_by_user_id && !isMyCompletion;
                       
                       return (
                         <BingoCell
                           key={cell.cell_id}
                           task={cell.task}
-                          isCompleted={isCompleted}
-                          completedBy={!isMyCompletion ? cell.completed_by_username : undefined}
+                          isCompleted={isMyCompletion || isLocked}
+                          completedBy={isLocked ? cell.completed_by_username : undefined}
                           isMyCompletion={isMyCompletion}
-                          onClick={() => !isCompleted && handleCellClick(cell.cell_id)}
-                          disabled={!!winModalOpen}
+                          onClick={() => !isMyCompletion && !isLocked && handleCellClick(cell.cell_id)}
+                          disabled={!!winModalOpen || isLocked}
+                          style={isLocked ? { opacity: 0.5, filter: 'grayscale(1)' } : { borderColor: isMyCompletion ? themeStyles.accentColor : undefined }}
                         />
                       );
                     })}
@@ -218,45 +280,64 @@ const BingoGameView: React.FC = () => {
             </Paper>
           </Grid.Col>
 
-          {/* Sidebar - Game Info & Chat (Placeholder) */}
+          {/* Sidebar - Game Info & Chat */}
           <Grid.Col span={{ base: 12, md: 3 }}>
-             <Paper p="md" radius="md" withBorder>
-                <Title order={3} mb="md">Game Info</Title>
-                <Stack>
-                   <Group justify="space-between">
-                      <Text>Status:</Text>
-                      <Badge color={room?.status === 'IN_PROGRESS' ? 'green' : 'yellow'}>
-                        {room?.status}
-                      </Badge>
-                   </Group>
-                   <Text size="sm" c="dimmed">
-                      First to complete a row, column, or diagonal wins!
-                   </Text>
-                </Stack>
-             </Paper>
-
-             <Paper p="md" radius="md" withBorder mt="md">
-                <Title order={3} mb="md">Players</Title>
-                <Stack gap="sm">
-                  {room?.participants?.map((participant: any) => (
-                    <motion.div
-                      key={participant.user_id}
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                    >
+             <Stack gap="md" h="100%">
+                <Paper p="md" radius="md" withBorder>
+                   <Title order={3} mb="md">Game Info</Title>
+                   <Stack>
                       <Group justify="space-between">
-                        <Group gap="sm">
-                          <Avatar src={participant.avatar_url} radius="xl" />
-                          <Text fw={500}>{participant.username}</Text>
-                        </Group>
-                        {participant.user_id === room?.host_user_id && (
-                          <Badge color="yellow">Host</Badge>
-                        )}
+                         <Text>Status:</Text>
+                         <Badge color={room?.status === 'IN_PROGRESS' ? 'green' : 'yellow'}>
+                           {room?.status}
+                         </Badge>
                       </Group>
-                    </motion.div>
-                  ))}
-                </Stack>
-             </Paper>
+                      <Group justify="space-between">
+                         <Text>Mode:</Text>
+                         <Badge variant="outline" color="blue">{room?.game_mode}</Badge>
+                      </Group>
+                      <Group justify="space-between">
+                         <Text>Theme:</Text>
+                         <Badge variant="outline" color="pink">{room?.theme}</Badge>
+                      </Group>
+                      
+                      <Text size="sm" c="dimmed" mt="sm">
+                        {room?.game_mode === 'BLACKOUT' 
+                          ? 'Cover ALL cells to win!' 
+                          : room?.game_mode === 'LOCKOUT'
+                          ? 'Race to claim cells! Once taken, they are locked.'
+                          : 'First to complete a row, column, or diagonal wins!'}
+                      </Text>
+                   </Stack>
+                </Paper>
+
+                <Paper p="md" radius="md" withBorder style={{ flex: 1, minHeight: '400px' }}>
+                   <ChatBox roomId={roomId || ''} />
+                </Paper>
+
+                <Paper p="md" radius="md" withBorder>
+                   <Title order={3} mb="md">Players</Title>
+                   <Stack gap="sm">
+                     {room?.participants?.map((participant: any) => (
+                       <motion.div
+                         key={participant.user_id}
+                         initial={{ x: -20, opacity: 0 }}
+                         animate={{ x: 0, opacity: 1 }}
+                       >
+                         <Group justify="space-between">
+                           <Group gap="sm">
+                             <Avatar src={participant.avatar_url} radius="xl" />
+                             <Text fw={500}>{participant.username}</Text>
+                           </Group>
+                           {participant.user_id === room?.host_user_id && (
+                             <Badge color="yellow">Host</Badge>
+                           )}
+                         </Group>
+                       </motion.div>
+                     ))}
+                   </Stack>
+                </Paper>
+             </Stack>
           </Grid.Col>
         </Grid>
       </Container>
