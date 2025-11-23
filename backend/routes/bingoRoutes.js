@@ -17,8 +17,21 @@ const { getBingoLeaderboard, getUserBingoLeaderboardRanks } = require('../contro
 
 const router = express.Router();
 
+// Achievement routes (Must be before /:id)
+const { getAchievements, getUserAchievements } = require('../controllers/achievementController');
+router.get('/achievements', getAchievements);
+router.get('/achievements/user/:userId', getUserAchievements);
+
+// Leaderboard routes (Must be before /:id)
+router.get('/leaderboard/:type', getBingoLeaderboard);
+router.get('/leaderboard/user/:userId', getUserBingoLeaderboardRanks);
+
+// History and stats (Must be before /:id)
+router.get('/history/solo/:userId', getSoloHistory);
+router.get('/stats/:userId', getBingoStats);
+
+// General board routes
 router.get('/', getBoards);
-router.get('/:id', getBoardDetail);
 router.post('/', createNewBoard);
 router.post('/cell/:cellId/proof', upload.single('media'), submitProof);
 router.post('/cell/:cellId/complete', completeCellDirect);
@@ -27,12 +40,7 @@ router.post('/finish', finishBingoRun);
 router.post('/update-time', updateBingoRunTime);
 router.put('/progress/:progressId/approve', approveProof);
 
-// History and stats
-router.get('/history/solo/:userId', getSoloHistory);
-router.get('/stats/:userId', getBingoStats);
-
-// Leaderboard routes
-router.get('/leaderboard/:type', getBingoLeaderboard);
-router.get('/leaderboard/user/:userId', getUserBingoLeaderboardRanks);
+// Specific board detail (Must be last GET route)
+router.get('/:id', getBoardDetail);
 
 module.exports = router;

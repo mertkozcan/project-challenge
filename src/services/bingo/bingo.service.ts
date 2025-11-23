@@ -25,6 +25,7 @@ export interface BingoRun {
   is_finished: boolean;
   elapsed_time: number;
   finished_at: string | null;
+  new_achievements?: any[];
 }
 
 export interface BingoBoardDetail {

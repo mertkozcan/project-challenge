@@ -163,6 +163,18 @@ const finishBingoRun = async (req, res) => {
     try {
         const run = await finishRun(user_id, board_id, elapsed_time);
         console.log('finishRun result:', run);
+
+        // Check for achievements
+        try {
+            const { checkAndUnlockAchievements } = require('../models/achievementModel');
+            const unlocked = await checkAndUnlockAchievements(user_id, elapsed_time);
+            if (unlocked.length > 0) {
+                run.new_achievements = unlocked;
+            }
+        } catch (achError) {
+            console.error('Error checking achievements:', achError);
+        }
+
         res.json(run);
     } catch (error) {
         console.error('finishBingoRun error:', error);

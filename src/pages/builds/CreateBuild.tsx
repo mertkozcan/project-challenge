@@ -35,7 +35,7 @@ const CreateBuild: React.FC = () => {
 
   const form = useForm({
     initialValues: {
-      game_name: '',
+      game_name: 'Elden Ring',
       build_name: '',
       description: '',
       items_json: '{}',
@@ -163,17 +163,27 @@ const CreateBuild: React.FC = () => {
               ))}
             </Grid>
           </Paper>
+        ) : form.values.game_name ? (
+          <Paper withBorder p="xl" radius="md" mb="xl" bg="dark.8">
+            <Text size="lg" fw={500} mb="md">Manual Configuration</Text>
+            <Notification color="blue" title="Visual Editor Not Available" withCloseButton={false} mb="md">
+              The visual build editor is currently only available for <b>Elden Ring</b>. 
+              For {form.values.game_name}, please enter your build data in JSON format below.
+            </Notification>
+            <JsonInput
+              label="Items / Stats (JSON)"
+              placeholder="{ 'weapon': 'Rivers of Blood', 'level': 150 }"
+              validationError="Invalid JSON"
+              formatOnBlur
+              autosize
+              minRows={4}
+              {...form.getInputProps('items_json')}
+            />
+          </Paper>
         ) : (
-          <JsonInput
-            label="Items / Stats (JSON)"
-            placeholder="{ 'weapon': 'Rivers of Blood', 'level': 150 }"
-            validationError="Invalid JSON"
-            formatOnBlur
-            autosize
-            minRows={4}
-            {...form.getInputProps('items_json')}
-            mb="xl"
-          />
+          <Paper withBorder p="xl" radius="md" mb="xl" bg="dark.8" ta="center">
+            <Text c="dimmed">Please select a game to configure your build.</Text>
+          </Paper>
         )}
 
         <Group justify="flex-end">

@@ -56,7 +56,7 @@ export interface GameDetails {
 export const BingoHistoryService = {
   async getMyGameHistory(userId: string, limit: number = 20): Promise<GameHistory[]> {
     const res = await ApiService.fetchData<void, GameHistory[]>({
-      url: '/bingo/history/my-games',
+      url: '/multiplayer/history/my-games',
       method: 'GET',
       params: { user_id: userId, limit },
     });
@@ -81,7 +81,7 @@ export const BingoHistoryService = {
 
   async getGameDetails(roomId: string, userId: string): Promise<GameDetails> {
     const res = await ApiService.fetchData<void, GameDetails>({
-      url: `/bingo/history/${roomId}`,
+      url: `/multiplayer/history/${roomId}`,
       method: 'GET',
       params: { user_id: userId },
     });

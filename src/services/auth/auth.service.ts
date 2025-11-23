@@ -70,8 +70,21 @@ export const AuthService = {
   },
 
   async signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      // Check if session exists first to avoid 403 error
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+      }
+    } catch (error: any) {
+      // Ignore "Auth session missing" error as user is effectively logged out
+      if (error?.message?.includes('Auth session missing') || error?.status === 403) {
+        return;
+      }
+      console.error('Error signing out:', error);
+      throw error;
+    }
   },
 
   async getCurrentUser() {

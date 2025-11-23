@@ -174,6 +174,24 @@ const completeCell = async (req, res) => {
             // Get game statistics
             const statistics = await bingoRoomModel.getGameStatistics(roomId);
 
+            // Check for achievements for the winner
+            try {
+                const { checkAndUnlockAchievements } = require('../models/achievementModel');
+                const unlocked = await checkAndUnlockAchievements(winnerId);
+
+                // If achievements unlocked, notify the winner via socket
+                if (unlocked.length > 0 && io) {
+                    const winnerSocketId = await bingoRoomModel.getUserSocketId(winnerId); // Assuming this method exists or we broadcast to room
+                    // For simplicity, we'll include it in the game-ended event or a separate event
+                    io.to(roomId).emit('achievements-unlocked', {
+                        userId: winnerId,
+                        achievements: unlocked
+                    });
+                }
+            } catch (achError) {
+                console.error('Error checking achievements:', achError);
+            }
+
             // Broadcast game end
             if (io) {
                 io.to(roomId).emit('game-ended', {

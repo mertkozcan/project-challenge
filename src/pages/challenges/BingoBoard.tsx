@@ -18,6 +18,7 @@ import {
   PasswordInput,
   Card,
 } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { BingoService, type BingoCell as BingoCellType, type BingoBoard as BingoBoardType } from '@/services/bingo/bingo.service';
 import { BingoRoomService } from '@/services/bingo/bingoRoom.service';
 import { IconCheck, IconClock, IconArrowLeft, IconTrophy, IconUsers } from '@tabler/icons-react';
@@ -361,7 +362,21 @@ const BingoBoard: React.FC = () => {
     
     try {
       // Save finish state to database
-      await BingoService.finishRun(parseInt(id), userId, elapsedTime);
+      const result = await BingoService.finishRun(parseInt(id), userId, elapsedTime);
+      
+      // Check for new achievements
+      if (result.new_achievements && result.new_achievements.length > 0) {
+        result.new_achievements.forEach((achievement: any) => {
+          notifications.show({
+            title: 'Achievement Unlocked!',
+            message: `You unlocked: ${achievement.name} - ${achievement.description}`,
+            color: 'yellow',
+            icon: <IconTrophy size={20} />,
+            autoClose: 5000,
+          });
+          playSound('win'); // Play sound for each achievement
+        });
+      }
     } catch (error) {
       console.error('Failed to save finish state:', error);
     }

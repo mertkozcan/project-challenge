@@ -19,6 +19,7 @@ const gameRoutes = require('./routes/gameRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const bingoInvitationRoutes = require('./routes/bingoInvitationRoutes');
 const userStatsRoutes = require('./routes/userStatsRoutes');
+const runSessionRoutes = require('./routes/runSessionRoutes');
 const initializeSocket = require('./socket/bingoSocket');
 
 const app = express();
@@ -46,8 +47,10 @@ app.use('/uploads', express.static('uploads'));
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' })
 })
+
 // Routes
 app.use('/api/challenges', challengeRoutes);
+app.use('/api/login', loginRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userStatsRoutes); // User stats routes (must be before userRoutes to match specific paths first)
 app.use('/api/users', userRoutes);
@@ -59,8 +62,8 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/builds', buildRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/bingo', bingoInvitationRoutes);
-app.use('/api', loginRoutes);
+app.use('/api/bingo-invitations', bingoInvitationRoutes);
+app.use('/api/run-sessions', runSessionRoutes);
 
 // Server Başlat
 const PORT = process.env.PORT || 5000;
