@@ -11,6 +11,8 @@ export interface BingoRoom {
   completed_at?: string;
   created_at: string;
   is_private: boolean;
+  game_mode?: string;
+  theme?: string;
   // Joined data
   board_title?: string;
   game_name?: string;
@@ -45,6 +47,11 @@ export interface BingoCellState {
 export interface CompleteCellResponse {
   completion: any;
   gameWon: boolean;
+}
+
+export default {
+  async getAvailableRooms(): Promise<BingoRoom[]> {
+    const res = await ApiService.fetchData<void, BingoRoom[]>({
       url: '/multiplayer/rooms/available',
       method: 'GET',
     });
