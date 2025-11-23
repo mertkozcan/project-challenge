@@ -64,6 +64,8 @@ app.use('/api/games', gameRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/bingo-invitations', bingoInvitationRoutes);
 app.use('/api/run-sessions', runSessionRoutes);
+app.use('/api/proofs', proofRoutes); // Existing proof routes (upload etc)
+app.use('/api/proofs', require('./routes/proofReviewRoutes')); // New review routes (mounted on same path for now, or separate)
 
 // Server Başlat
 const PORT = process.env.PORT || 5000;

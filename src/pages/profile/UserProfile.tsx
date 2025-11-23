@@ -29,6 +29,7 @@ import ActivityTimeline from '@/components/Profile/ActivityTimeline';
 import { useNavigate } from 'react-router-dom';
 import { Tabs } from '@mantine/core';
 import AchievementsList from '@/components/Achievements/AchievementsList';
+import TrustBadge from '@/components/Trust/TrustBadge';
 
 const UserProfile: React.FC = () => {
   const { id } = useParams();
@@ -92,6 +93,7 @@ const UserProfile: React.FC = () => {
             <Stack gap="xs" style={{ flex: 1, paddingBottom: '1rem' }}>
               <Group>
                 <Title order={1} style={{ fontSize: '3rem' }}>{profile.username}</Title>
+                <TrustBadge level={profile.trust_level || 1} size="lg" />
                 {rank && rank <= 10 && (
                   <Badge 
                     size="xl" 

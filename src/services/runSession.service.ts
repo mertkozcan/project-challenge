@@ -8,10 +8,11 @@ export interface RunSession {
   bingo_board_id?: number;
   run_code: string;
   display_username: string;
-  status: 'ACTIVE' | 'COMPLETED' | 'ABANDONED';
+  challenge_type?: 'daily' | 'weekly' | 'permanent' | 'bingo';
+  status: 'ACTIVE' | 'COMPLETED' | 'ABANDONED' | 'EXPIRED';
   started_at: string;
   completed_at?: string;
-  expires_at: string;
+  expires_at?: string | null;
 }
 
 export interface StartRunSessionRequest {

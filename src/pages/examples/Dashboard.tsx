@@ -26,6 +26,7 @@ import { useAppSelector } from '@/store';
 import useAuth from '@/utils/hooks/useAuth';
 import { useTour } from '@/components/Tutorial/TourProvider';
 import TourButton from '@/components/Tutorial/TourButton';
+import ActiveRunList from '@/components/RunSession/ActiveRunList';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -238,6 +239,17 @@ const Dashboard: React.FC = () => {
           </Paper>
         )}
       </motion.div>
+
+      {/* Active Run Section - Only show if authenticated */}
+      {authenticated && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          <ActiveRunList />
+        </motion.div>
+      )}
 
       {/* Quick Actions Section */}
       <motion.div

@@ -6,6 +6,7 @@ export interface UserProfile {
   email: string;
   avatar_url: string;
   points: number;
+  trust_level: number;
   created_at: string;
 }
 

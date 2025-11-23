@@ -1,9 +1,12 @@
 const pool = require('../config/db');
 
-const createProof = async (userId, challengeId, mediaUrl, mediaType) => {
+const createProof = async (userId, challengeId, mediaUrl, mediaType, runCode, ocrResult, ocrExtractedText, videoUrl) => {
     const result = await pool.query(
-        'INSERT INTO proofs (user_id, challenge_id, media_url, media_type) VALUES ($1, $2, $3, $4) RETURNING *',
-        [userId, challengeId, mediaUrl, mediaType]
+        `INSERT INTO proofs 
+         (user_id, challenge_id, media_url, media_type, run_code, ocr_result, ocr_extracted_text, video_url, verification_status) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'PENDING') 
+         RETURNING *`,
+        [userId, challengeId, mediaUrl, mediaType, runCode, ocrResult, ocrExtractedText, videoUrl]
     );
     return result.rows[0];
 };

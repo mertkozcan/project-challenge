@@ -138,4 +138,16 @@ export const protectedRoutes = [
     component: lazy(() => import('@/pages/profile/UserProfile')),
     authority: [],
   },
+  {
+    key: 'proof-upload',
+    path: '/proofs/upload',
+    component: lazy(() => import('@/pages/proofs/ProofUpload')),
+    authority: [],
+  },
+  {
+    key: 'proof-review',
+    path: '/proofs/review',
+    component: lazy(() => import('@/pages/proofs/ProofReview')),
+    authority: [],
+  },
 ];

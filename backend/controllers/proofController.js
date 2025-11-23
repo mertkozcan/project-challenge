@@ -15,26 +15,6 @@ const storage = multer.diskStorage({
     },
 });
 
-const upload = multer({ storage });
-
-const submitProof = async (req, res) => {
-    const { user_id, challenge_id, media_type } = req.body;
-    const file = req.file;
-
-    if (!file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    const mediaUrl = `/uploads/${file.filename}`;
-
-    try {
-        const newProof = await createProof(user_id, challenge_id, mediaUrl, media_type || 'image');
-        res.status(201).json(newProof);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
-
 const getProofs = async (req, res) => {
     const { challengeId } = req.params;
     try {
