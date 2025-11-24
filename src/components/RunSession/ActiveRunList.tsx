@@ -5,6 +5,7 @@ import { RunSession, RunSessionService } from '@/services/runSession.service';
 import { notifications } from '@mantine/notifications';
 import ActiveRunCard from './ActiveRunCard';
 import { useAppSelector } from '@/store';
+import { useNavigate } from 'react-router-dom';
 
 interface ActiveRunListProps {
   compact?: boolean;
@@ -13,6 +14,7 @@ interface ActiveRunListProps {
 
 const ActiveRunList: React.FC<ActiveRunListProps> = ({ compact = false, onSessionCancelled }) => {
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
+  const navigate = useNavigate();
   const [session, setSession] = useState<RunSession | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -78,7 +80,8 @@ const ActiveRunList: React.FC<ActiveRunListProps> = ({ compact = false, onSessio
   return (
     <ActiveRunCard 
       session={session} 
-      onCancel={handleCancel} 
+      onCancel={handleCancel}
+      onClick={() => navigate(`/challenges/${session.challenge_id}`)}
       compact={compact}
     />
   );

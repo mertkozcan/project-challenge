@@ -8,10 +8,11 @@ interface ActiveRunCardProps {
   session: RunSession;
   onCancel?: (sessionId: string) => void;
   onComplete?: (session: RunSession) => void;
+  onClick?: () => void;
   compact?: boolean;
 }
 
-const ActiveRunCard: React.FC<ActiveRunCardProps> = ({ session, onCancel, onComplete, compact = false }) => {
+const ActiveRunCard: React.FC<ActiveRunCardProps> = ({ session, onCancel, onComplete, onClick, compact = false }) => {
   const getTimeRemaining = () => {
     // Permanent challenges don't expire
     if (!session.expires_at) {
@@ -53,7 +54,13 @@ const ActiveRunCard: React.FC<ActiveRunCardProps> = ({ session, onCancel, onComp
 
   if (compact) {
     return (
-      <Card withBorder padding="sm" radius="md">
+      <Card 
+        withBorder 
+        padding="sm" 
+        radius="md"
+        onClick={onClick}
+        style={{ cursor: onClick ? 'pointer' : 'default' }}
+      >
         <Group justify="space-between">
           <Group gap="xs">
             <ThemeIcon size="sm" variant="light" color="blue">
@@ -75,7 +82,10 @@ const ActiveRunCard: React.FC<ActiveRunCardProps> = ({ session, onCancel, onComp
                   size="sm"
                   variant="subtle"
                   color="red"
-                  onClick={() => onCancel(session.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancel(session.id);
+                  }}
                 >
                   <IconX size={14} />
                 </ActionIcon>
@@ -88,7 +98,14 @@ const ActiveRunCard: React.FC<ActiveRunCardProps> = ({ session, onCancel, onComp
   }
 
   return (
-    <Card withBorder shadow="sm" padding="lg" radius="md">
+    <Card 
+      withBorder 
+      shadow="sm" 
+      padding="lg" 
+      radius="md"
+      onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+    >
       <Stack gap="md">
         <Group justify="space-between">
           <Group gap="sm">
@@ -146,7 +163,10 @@ const ActiveRunCard: React.FC<ActiveRunCardProps> = ({ session, onCancel, onComp
               variant="light"
               color="red"
               leftSection={<IconX size={16} />}
-              onClick={() => onCancel(session.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onCancel(session.id);
+              }}
             >
               Cancel
             </Button>
@@ -157,7 +177,10 @@ const ActiveRunCard: React.FC<ActiveRunCardProps> = ({ session, onCancel, onComp
               variant="gradient"
               gradient={{ from: 'blue', to: 'cyan' }}
               leftSection={<IconTrophy size={16} />}
-              onClick={() => onComplete(session)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onComplete(session);
+              }}
             >
               Submit Proof
             </Button>

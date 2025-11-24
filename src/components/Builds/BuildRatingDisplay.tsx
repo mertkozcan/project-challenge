@@ -28,9 +28,9 @@ const BuildRatingDisplay = ({
 
   return (
     <Group gap="xs">
-      <Rating value={averageRating} fractions={2} readOnly size={size} />
+      <Rating value={averageRating || 0} fractions={2} readOnly size={size} />
       <Text size={textSize} fw={600}>
-        {averageRating.toFixed(1)}
+        {(averageRating || 0).toFixed(1)}
       </Text>
       {showCount && (
         <Text size={textSize} c="dimmed">
