@@ -6,31 +6,23 @@ import {
   Text,
   Paper,
   Button,
-  FileInput,
-  Group,
   LoadingOverlay,
-  Badge,
-  Notification,
   Grid,
   Box,
   Stack,
   Divider,
+  Group,
+  Badge,
 } from '@mantine/core';
 import { ChallengesService } from '@/services/challenges/challenges.service';
+import { RunSessionService } from '@/services/runSession.service';
 import { Challenge } from '@/@types/challenge';
-import {
-  IconUpload,
-  IconArrowLeft,
-  IconCheck,
-  IconX,
-  IconCoin,
-  IconCheckbox,
-} from '@tabler/icons-react';
-import ApiService from '@/services/ApiService';
-import { useAppSelector } from '@/store';
+import { IconArrowLeft, IconTrophy, IconCoin, IconCheck } from '@tabler/icons-react';
 import ChallengeHero from './ChallengeHero';
 import EnhancedLeaderboard from './EnhancedLeaderboard';
 import { getGameTheme } from '@/utils/gameThemes';
+import { notifications } from '@mantine/notifications';
+import { useAppSelector } from '@/store';
 
 interface ChallengeData extends Challenge {
   banner_url?: string;
@@ -48,9 +40,7 @@ const ChallengeDetail: React.FC = () => {
   const { authenticated } = useAuth();
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<'success' | 'error' | null>(null);
+  const [startingChallenge, setStartingChallenge] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -67,34 +57,44 @@ const ChallengeDetail: React.FC = () => {
     fetchChallenge();
   }, [id]);
 
-  const handleUpload = async () => {
-    if (!file || !id || !userId) return;
-    setUploading(true);
-    setUploadStatus(null);
+  const handleStartChallenge = async () => {
+    if (!id || !userId || !challenge) return;
 
-    const formData = new FormData();
-    formData.append('media', file);
-    formData.append('user_id', userId);
-    formData.append('challenge_id', id);
-    formData.append('media_type', file.type.startsWith('video') ? 'video' : 'image');
-
+    setStartingChallenge(true);
     try {
-      await ApiService.fetchData({
-        url: '/proofs',
-        method: 'POST',
-        data: formData,
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // Check if user already has an active session for this challenge
+      const activeSession = await RunSessionService.getActiveSession(userId);
+      
+      if (activeSession && activeSession.challenge_id === parseInt(id)) {
+        // User already has a session for this challenge, navigate to proof upload
+        navigate('/proof/upload', { state: { session: activeSession } });
+        return;
+      }
+
+      // Start a new run session
+      const session = await RunSessionService.startSession({
+        userId,
+        challengeId: parseInt(id),
+        gameName: challenge.game_name,
       });
-      setUploadStatus('success');
-      setFile(null);
-      // Refresh challenge data
-      const updatedData = await ChallengesService.getChallengeById(id);
-      setChallenge(updatedData);
-    } catch (error) {
-      console.error('Upload failed', error);
-      setUploadStatus('error');
+
+      notifications.show({
+        title: 'Challenge Started!',
+        message: `Your character name is: ${session.display_username}. Set this in-game before completing the challenge.`,
+        color: 'green',
+      });
+
+      // Navigate to proof upload with session data
+      navigate('/proof/upload', { state: { session } });
+    } catch (error: any) {
+      console.error('Failed to start challenge:', error);
+      notifications.show({
+        title: 'Error',
+        message: error.message || 'Failed to start challenge. Please try again.',
+        color: 'red',
+      });
     } finally {
-      setUploading(false);
+      setStartingChallenge(false);
     }
   };
 
@@ -166,7 +166,7 @@ const ChallengeDetail: React.FC = () => {
                 </Group>
               </Paper>
 
-              {/* Proof Upload Card */}
+              {/* Start Challenge Section */}
               <Paper
                 shadow="md"
                 p="xl"
@@ -176,8 +176,9 @@ const ChallengeDetail: React.FC = () => {
                   border: `1px solid ${theme.primary}20`,
                 }}
               >
-                <Group justify="space-between" mb="md">
-                  <Title order={4}>Submit Proof</Title>
+                <Stack gap="md">
+                  <Title order={4} c={theme.primary}>Ready to Start?</Title>
+                  
                   {challenge.user_participated && (
                     <Badge
                       color={challenge.user_proof_status === 'APPROVED' ? 'green' : 'yellow'}
@@ -187,72 +188,48 @@ const ChallengeDetail: React.FC = () => {
                       {challenge.user_proof_status || 'PENDING'}
                     </Badge>
                   )}
-                </Group>
 
-                {uploadStatus === 'success' && (
-                  <Notification
-                    icon={<IconCheck size="1.1rem" />}
-                    color="teal"
-                    title="Success"
-                    mb="md"
-                    onClose={() => setUploadStatus(null)}
-                  >
-                    Proof uploaded successfully! Awaiting approval.
-                  </Notification>
-                )}
-                {uploadStatus === 'error' && (
-                  <Notification
-                    icon={<IconX size="1.1rem" />}
-                    color="red"
-                    title="Error"
-                    mb="md"
-                    onClose={() => setUploadStatus(null)}
-                  >
-                    Failed to upload proof. Please try again.
-                  </Notification>
-                )}
+                  <Text size="sm" c="dimmed">
+                    Starting this challenge will:
+                  </Text>
+                  <Stack gap="xs">
+                    <Text size="sm">✓ Generate a unique character name for you</Text>
+                    <Text size="sm">✓ Track your progress</Text>
+                    <Text size="sm">✓ Enable OCR verification for your proof</Text>
+                    <Text size="sm">✓ Require video evidence of completion</Text>
+                  </Stack>
 
-                {authenticated ? (
-                  <Stack gap="md">
-                    <FileInput
-                      placeholder="Upload image or video proof"
-                      label="Proof Media"
-                      description="Upload a screenshot or video showing your completion"
-                      value={file}
-                      onChange={setFile}
-                      accept="image/*,video/*"
-                      leftSection={<IconUpload size={16} />}
-                    />
+                  {authenticated ? (
                     <Button
-                      onClick={handleUpload}
-                      loading={uploading}
-                      disabled={!file || !userId}
+                      onClick={handleStartChallenge}
+                      loading={startingChallenge}
                       fullWidth
                       size="lg"
+                      leftSection={<IconTrophy size={20} />}
                       style={{
                         background: theme.gradient,
                         boxShadow: `0 4px 20px ${theme.glow}`,
                       }}
                     >
-                      Submit Proof
+                      Start Challenge
                     </Button>
-                  </Stack>
-                ) : (
-                  <Stack align="center" py="md">
-                    <Text c="dimmed" ta="center">
-                      You need to be logged in to submit proof and participate in this challenge.
-                    </Text>
-                    <Button
-                      onClick={() => navigate('/sign-in', { state: { message: 'You need to be logged in to submit proof and participate in this challenge.' } })}
-                      fullWidth
-                      size="lg"
-                      variant="gradient"
-                      gradient={{ from: 'blue', to: 'cyan' }}
-                    >
-                      Sign in to Participate
-                    </Button>
-                  </Stack>
-                )}
+                  ) : (
+                    <Stack align="center" py="md">
+                      <Text c="dimmed" ta="center">
+                        You need to be logged in to start this challenge.
+                      </Text>
+                      <Button
+                        onClick={() => navigate('/sign-in', { state: { message: 'You need to be logged in to start challenges.' } })}
+                        fullWidth
+                        size="lg"
+                        variant="gradient"
+                        gradient={{ from: 'blue', to: 'cyan' }}
+                      >
+                        Sign in to Participate
+                      </Button>
+                    </Stack>
+                  )}
+                </Stack>
               </Paper>
             </Stack>
           </Grid.Col>
