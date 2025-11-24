@@ -9,9 +9,10 @@ import { formatDistanceToNow } from 'date-fns';
 
 interface BuildCommentsProps {
   buildId: number;
+  theme?: any; // Game theme object
 }
 
-const BuildComments = ({ buildId }: BuildCommentsProps) => {
+const BuildComments = ({ buildId, theme }: BuildCommentsProps) => {
   const user = useSelector((state: RootState) => state.auth.user);
   const [comments, setComments] = useState<BuildComment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -83,10 +84,20 @@ const BuildComments = ({ buildId }: BuildCommentsProps) => {
     }
   };
 
+  const primaryColor = theme?.primary || '#228be6';
+
   return (
-    <Paper withBorder p="md" radius="md">
+    <Paper 
+      shadow="md"
+      p="xl"
+      radius="md"
+      style={{
+        background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+        border: `1px solid ${primaryColor}20`,
+      }}
+    >
       <Stack gap="md">
-        <Title order={4}>Comments ({comments.length})</Title>
+        <Title order={4} c={primaryColor}>Comments ({comments.length})</Title>
 
         {/* Add Comment */}
         {user && (

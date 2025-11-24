@@ -12,7 +12,7 @@ router.get('/:id', getBuildDetail);
 
 // Rating endpoints
 router.post('/:buildId/rate', authenticateToken, rateBuild);
-router.get('/:buildId/rating', getUserRating);
+router.get('/:buildId/rating', authenticateToken, getUserRating);
 router.get('/:buildId/rating-stats', getRatingStats);
 
 // Comment endpoints

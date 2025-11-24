@@ -196,7 +196,7 @@ const BuildDetail: React.FC = () => {
               </Paper>
 
               {/* Comments Section */}
-              <BuildComments buildId={parseInt(id!)} />
+              <BuildComments buildId={parseInt(id!)} theme={theme} />
             </Stack>
           </Grid.Col>
 
@@ -217,16 +217,6 @@ const BuildDetail: React.FC = () => {
                   Build Statistics
                 </Title>
                 <Stack gap="md">
-                  <Box>
-                    <Text size="sm" c="dimmed" mb="xs">
-                      Rating
-                    </Text>
-                    <BuildRatingDisplay 
-                      averageRating={build.average_rating || 0} 
-                      ratingCount={build.rating_count || 0}
-                      size="md"
-                    />
-                  </Box>
                   <Box>
                     <Text size="sm" c="dimmed" mb="xs">
                       Creator
@@ -271,47 +261,12 @@ const BuildDetail: React.FC = () => {
                 buildId={parseInt(id!)} 
                 userRating={userRating}
                 onRatingSubmit={handleRatingUpdate}
+                averageRating={Number(build.average_rating) || 0}
+                ratingCount={Number(build.rating_count) || 0}
+                theme={theme}
               />
 
-              {/* Quick Actions Card */}
-              <Paper
-                shadow="md"
-                p="xl"
-                radius="md"
-                style={{
-                  background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
-                  border: `1px solid ${theme.primary}20`,
-                }}
-              >
-                <Title order={4} mb="md" c={theme.primary}>
-                  Community Rating
-                </Title>
-                <Group justify="center" mb="md">
-                  <IconStar size={32} color={theme.primary} fill={theme.primary} />
-                  <Text size="2rem" fw={700} c={theme.primary}>
-                    4.5
-                  </Text>
-                </Group>
-                <Text size="sm" c="dimmed" ta="center">
-                  Based on community feedback
-                </Text>
-                <Button
-                  fullWidth
-                  mt="md"
-                  variant="light"
-                  color="blue"
-                  style={{
-                    background: theme.gradient,
-                  }}
-                  onClick={() => {
-                    if (!localStorage.getItem('auth')) {
-                      navigate('/sign-in', { state: { message: 'You need to be logged in to rate a build.' } });
-                    }
-                  }}
-                >
-                  Rate This Build
-                </Button>
-              </Paper>
+
             </Stack>
           </Grid.Col>
         </Grid>
