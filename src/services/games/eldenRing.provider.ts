@@ -19,6 +19,7 @@ export class EldenRingProvider implements GameDataProvider {
     incantations: 'incantations',
     shields: 'shields',
     ashes: 'ashes',
+    consumables: 'items', // Items API filtered by type
   };
 
   async searchItems(query: string, category?: ItemCategory): Promise<GameItem[]> {
@@ -42,7 +43,14 @@ export class EldenRingProvider implements GameDataProvider {
         return [];
       }
 
-      return json.data.map((item: any) => this.mapToGameItem(item, category || 'weapons')); // Fallback category if mixed
+      let items = json.data;
+
+      // Filter consumables by type if category is consumables
+      if (category === 'consumables') {
+        items = items.filter((item: any) => item.type === 'Consumable');
+      }
+
+      return items.map((item: any) => this.mapToGameItem(item, category || 'weapons')); // Fallback category if mixed
     } catch (error) {
       console.error('Failed to search Elden Ring items:', error);
       return [];

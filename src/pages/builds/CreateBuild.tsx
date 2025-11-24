@@ -1,77 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Title, TextInput, Textarea, Button, Group, Select, JsonInput, Notification, Grid, Paper, Text, Divider } from '@mantine/core';
+import React, { useState } from 'react';
+import { Container, Title, TextInput, Textarea, Button, Group, Notification } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { BuildsService } from '@/services/builds/builds.service';
 import { useNavigate } from 'react-router-dom';
-import { IconCheck, IconX } from '@tabler/icons-react';
+import { IconX } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
-import ItemSlot from '@/components/Builds/ItemSlot';
-import ItemSearchModal from '@/components/Builds/ItemSearchModal';
-import { GameItem, ItemCategory } from '@/services/games/gameData.provider';
-
-const ELDEN_RING_SLOTS = [
-  { id: 'right_hand_1', label: 'Right Hand 1', category: 'weapons' },
-  { id: 'left_hand_1', label: 'Left Hand 1', category: 'weapons' },
-  { id: 'head', label: 'Head', category: 'armors' },
-  { id: 'chest', label: 'Chest', category: 'armors' },
-  { id: 'arms', label: 'Arms', category: 'armors' },
-  { id: 'legs', label: 'Legs', category: 'armors' },
-  { id: 'talisman_1', label: 'Talisman 1', category: 'talismans' },
-  { id: 'talisman_2', label: 'Talisman 2', category: 'talismans' },
-  { id: 'talisman_3', label: 'Talisman 3', category: 'talismans' },
-  { id: 'talisman_4', label: 'Talisman 4', category: 'talismans' },
-];
+import BuildEditor, { BuildSlots } from '@/components/Builds/BuildEditor';
 
 const CreateBuild: React.FC = () => {
   const navigate = useNavigate();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Visual Editor State
-  const [equipment, setEquipment] = useState<Record<string, GameItem>>({});
-  const [modalOpen, setModalOpen] = useState(false);
-  const [activeSlot, setActiveSlot] = useState<{ id: string; category: ItemCategory } | null>(null);
+  const [buildSlots, setBuildSlots] = useState<BuildSlots>({ spells: [], consumables: [] });
 
   const form = useForm({
     initialValues: {
       game_name: 'Elden Ring',
       build_name: '',
       description: '',
-      items_json: '{}',
     },
 
     validate: {
-      game_name: (value) => (value ? null : 'Game name is required'),
       build_name: (value) => (value ? null : 'Build name is required'),
-      items_json: (value) => {
-        try {
-          JSON.parse(value);
-          return null;
-        } catch (e) {
-          return 'Invalid JSON';
-        }
-      },
     },
   });
 
-  // Sync equipment state to form JSON when it changes
-  useEffect(() => {
-    if (form.values.game_name === 'Elden Ring') {
-      form.setFieldValue('items_json', JSON.stringify(equipment, null, 2));
+  const handleBuildSave = async (slots: BuildSlots) => {
+    if (!form.values.build_name) {
+      setError('Please enter a build name');
+      return;
     }
-  }, [equipment, form.values.game_name]);
 
-  const handleSubmit = async (values: typeof form.values) => {
     setLoading(true);
     setError(null);
     try {
       if (!userId) throw new Error('You must be logged in to create a build');
 
       await BuildsService.createBuild({
-        ...values,
+        ...form.values,
         user_id: userId,
-        items_json: JSON.parse(values.items_json),
+        items_json: slots,
       });
       navigate('/builds');
     } catch (err: any) {
@@ -81,30 +50,8 @@ const CreateBuild: React.FC = () => {
     }
   };
 
-  const handleSlotClick = (slotId: string, category: string) => {
-    setActiveSlot({ id: slotId, category: category as ItemCategory });
-    setModalOpen(true);
-  };
-
-  const handleItemSelect = (item: GameItem) => {
-    if (activeSlot) {
-      setEquipment(prev => ({
-        ...prev,
-        [activeSlot.id]: item
-      }));
-    }
-  };
-
-  const handleSlotClear = (slotId: string) => {
-    setEquipment(prev => {
-      const newState = { ...prev };
-      delete newState[slotId];
-      return newState;
-    });
-  };
-
   return (
-    <Container size="md" py="xl">
+    <Container size="xl" py="xl">
       <Title order={2} mb="xl">Create New Build</Title>
 
       {error && (
@@ -113,68 +60,35 @@ const CreateBuild: React.FC = () => {
         </Notification>
       )}
 
-      <form onSubmit={form.onSubmit(handleSubmit)}>
-        <Grid>
-          <Grid.Col span={12}>
-            <TextInput
-              label="Game"
-              value="Elden Ring"
-              disabled
-              mb="md"
-              description="Currently only Elden Ring builds are supported. More games coming soon!"
-            />
-          </Grid.Col>
+      <TextInput
+        label="Game"
+        value="Elden Ring"
+        disabled
+        mb="md"
+        description="Currently only Elden Ring builds are supported. More games coming soon!"
+      />
 
-          <Grid.Col span={12}>
-            <TextInput
-              withAsterisk
-              label="Build Name"
-              placeholder="Bleed Build, Tank, etc."
-              {...form.getInputProps('build_name')}
-              mb="md"
-            />
-          </Grid.Col>
+      <TextInput
+        withAsterisk
+        label="Build Name"
+        placeholder="Bleed Build, Tank, etc."
+        {...form.getInputProps('build_name')}
+        mb="md"
+      />
 
-          <Grid.Col span={12}>
-            <Textarea
-              label="Description"
-              placeholder="Describe your build strategy..."
-              minRows={3}
-              {...form.getInputProps('description')}
-              mb="md"
-            />
-          </Grid.Col>
-        </Grid>
+      <Textarea
+        label="Description"
+        placeholder="Describe your build strategy..."
+        minRows={3}
+        {...form.getInputProps('description')}
+        mb="xl"
+      />
 
-        <Paper withBorder p="md" radius="md" mb="xl" bg="dark.8">
-          <Text fw={700} mb="md" c="dimmed">Equipment</Text>
-          <Grid>
-            {ELDEN_RING_SLOTS.map((slot) => (
-              <Grid.Col key={slot.id} span={{ base: 6, sm: 4, md: 2.4 }}>
-                <ItemSlot
-                  label={slot.label}
-                  item={equipment[slot.id]}
-                  onClick={() => handleSlotClick(slot.id, slot.category)}
-                  onClear={() => handleSlotClear(slot.id)}
-                />
-              </Grid.Col>
-            ))}
-          </Grid>
-        </Paper>
-
-
-        <Group justify="flex-end">
-            <Button variant="default" onClick={() => navigate('/builds')}>Cancel</Button>
-            <Button type="submit" loading={loading}>Create Build</Button>
-        </Group>
-      </form>
-
-      <ItemSearchModal
-        opened={modalOpen}
-        onClose={() => setModalOpen(false)}
+      <BuildEditor
         gameName={form.values.game_name}
-        onSelect={handleItemSelect}
-        initialCategory={activeSlot?.category}
+        initialSlots={buildSlots}
+        onSave={handleBuildSave}
+        onCancel={() => navigate('/builds')}
       />
     </Container>
   );

@@ -24,6 +24,7 @@ import BuildRatingDisplay from '@/components/Builds/BuildRatingDisplay';
 import RateBuildSection from '@/components/Builds/RateBuildSection';
 import BuildComments from '@/components/Builds/BuildComments';
 import BuildRatingService from '@/services/buildRating.service';
+import ItemTooltip from '@/components/Builds/ItemTooltip';
 
 interface BuildData extends Build {
   banner_url?: string;
@@ -154,24 +155,46 @@ const BuildDetail: React.FC = () => {
                     Equipment & Items
                   </Title>
                   <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                    {Object.entries(items).map(([key, value]: [string, any]) => (
-                      <Card
-                        key={key}
-                        padding="md"
-                        radius="md"
-                        style={{
-                          background: 'rgba(0, 0, 0, 0.3)',
-                          border: `1px solid ${theme.primary}30`,
-                        }}
-                      >
-                        <Text size="sm" c="dimmed" tt="uppercase" fw={700} mb="xs">
-                          {key.replace(/_/g, ' ')}
-                        </Text>
-                        <Text size="md" c={theme.primary}>
-                          {typeof value === 'object' ? JSON.stringify(value) : value}
-                        </Text>
-                      </Card>
-                    ))}
+                    {Object.entries(items).map(([key, value]: [string, any]) => {
+                      const itemStats = typeof value === 'object' && value !== null ? value : undefined;
+                      const displayValue = typeof value === 'object' ? value.name || JSON.stringify(value) : value;
+
+                      return (
+                        <ItemTooltip
+                          key={key}
+                          itemName={displayValue}
+                          description={itemStats?.description}
+                          stats={itemStats}
+                          theme={theme}
+                        >
+                          <Card
+                            padding="md"
+                            radius="md"
+                            style={{
+                              background: 'rgba(0, 0, 0, 0.3)',
+                              border: `1px solid ${theme.primary}30`,
+                              cursor: 'help',
+                              transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.border = `1px solid ${theme.primary}60`;
+                              e.currentTarget.style.transform = 'translateY(-2px)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.border = `1px solid ${theme.primary}30`;
+                              e.currentTarget.style.transform = 'translateY(0)';
+                            }}
+                          >
+                            <Text size="sm" c="dimmed" tt="uppercase" fw={700} mb="xs">
+                              {key.replace(/_/g, ' ')}
+                            </Text>
+                            <Text size="md" c={theme.primary}>
+                              {displayValue}
+                            </Text>
+                          </Card>
+                        </ItemTooltip>
+                      );
+                    })}
                   </SimpleGrid>
                 </Paper>
               )}
