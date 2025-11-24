@@ -10,6 +10,7 @@ interface BingoCellProps {
   isMyCompletion?: boolean; // If true, shows green; if false (opponent), shows blue
   onClick?: () => void;
   disabled?: boolean;
+  style?: React.CSSProperties;
 }
 
 const BingoCell: React.FC<BingoCellProps> = ({
@@ -19,6 +20,7 @@ const BingoCell: React.FC<BingoCellProps> = ({
   isMyCompletion = true, // Default to true for solo mode
   onClick,
   disabled = false,
+  style,
 }) => {
   // Determine colors based on completion state
   const getBackgroundColor = () => {

@@ -111,6 +111,28 @@ const initializeSocket = (io) => {
             }
         });
 
+        // Send chat message
+        socket.on('send-message', async ({ roomId, userId, message, username }) => {
+            try {
+                const messageData = {
+                    id: Date.now(), // Temporary ID, should come from database
+                    roomId,
+                    userId,
+                    username,
+                    message,
+                    timestamp: new Date().toISOString()
+                };
+
+                // Broadcast message to all players in the room
+                io.to(roomId).emit('message-received', messageData);
+
+                console.log(`Message in room ${roomId} from ${username}: ${message}`);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                socket.emit('error', { message: error.message });
+            }
+        });
+
         // Disconnect
         socket.on('disconnect', async () => {
             if (socket.userId) {

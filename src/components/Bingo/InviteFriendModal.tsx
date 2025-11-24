@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Stack, Text, Button, Group, Avatar, ScrollArea, TextInput, Loader, Badge } from '@mantine/core';
+import { Modal, Stack, Text, Button, Group, Avatar, ScrollArea, TextInput, Loader } from '@mantine/core';
 import { IconSearch, IconSend, IconCheck } from '@tabler/icons-react';
-import { FriendService, FriendRequest } from '@/services/social/friend.service';
+import { FriendService, Friend } from '@/services/social/friend.service';
 import { BingoInvitationService } from '@/services/bingo/bingoInvitation.service';
 import { useAppSelector } from '@/store';
 import { notifications } from '@mantine/notifications';
@@ -14,23 +14,23 @@ interface InviteFriendModalProps {
 }
 
 const InviteFriendModal: React.FC<InviteFriendModalProps> = ({ opened, onClose, roomId, currentParticipants }) => {
-  const [friends, setFriends] = useState<FriendRequest[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [invitedUserIds, setInvitedUserIds] = useState<Set<string>>(new Set());
-  const user = useAppSelector((state) => state.auth.user);
+  const userId = useAppSelector((state) => state.auth.userInfo.userId);
 
   useEffect(() => {
-    if (opened && user) {
+    if (opened && userId) {
       fetchFriends();
     }
-  }, [opened, user]);
+  }, [opened, userId]);
 
   const fetchFriends = async () => {
-    if (!user) return;
+    if (!userId) return;
     setLoading(true);
     try {
-      const data = await FriendService.getFriends(user.id);
+      const data = await FriendService.getFriends();
       setFriends(data);
     } catch (error) {
       console.error('Error fetching friends:', error);
@@ -45,9 +45,9 @@ const InviteFriendModal: React.FC<InviteFriendModalProps> = ({ opened, onClose, 
   };
 
   const handleInvite = async (friendId: string) => {
-    if (!user) return;
+    if (!userId) return;
     try {
-      await BingoInvitationService.sendInvitation(roomId, friendId, user.id);
+      await BingoInvitationService.sendInvitation(roomId, friendId, userId);
       setInvitedUserIds(prev => new Set(prev).add(friendId));
       notifications.show({
         title: 'Invitation Sent',
@@ -65,9 +65,9 @@ const InviteFriendModal: React.FC<InviteFriendModalProps> = ({ opened, onClose, 
   };
 
   const filteredFriends = friends.filter(friend => {
-    const friendData = friend.user_id === user?.id ? friend.friend : friend.user;
-    const matchesSearch = friendData.username.toLowerCase().includes(searchQuery.toLowerCase());
-    const isAlreadyInRoom = currentParticipants.includes(friendData.id);
+    if (!friend || !friend.username) return false;
+    const matchesSearch = friend.username.toLowerCase().includes(searchQuery.toLowerCase());
+    const isAlreadyInRoom = currentParticipants.includes(friend.id);
     return matchesSearch && !isAlreadyInRoom;
   });
 
@@ -93,16 +93,14 @@ const InviteFriendModal: React.FC<InviteFriendModalProps> = ({ opened, onClose, 
           ) : (
             <Stack gap="sm">
               {filteredFriends.map((friend) => {
-                const friendData = friend.user_id === user?.id ? friend.friend : friend.user;
-                const isInvited = invitedUserIds.has(friendData.id);
+                const isInvited = invitedUserIds.has(friend.id);
 
                 return (
                   <Group key={friend.id} justify="space-between" p="xs" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                     <Group gap="sm">
-                      <Avatar src={friendData.avatar_url} radius="xl" />
+                      <Avatar src={friend.avatar_url} radius="xl" />
                       <Stack gap={0}>
-                        <Text size="sm" fw={500}>{friendData.username}</Text>
-                        {/* Could add online status here if available in friend object */}
+                        <Text size="sm" fw={500}>{friend.username}</Text>
                       </Stack>
                     </Group>
                     <Button
@@ -110,7 +108,7 @@ const InviteFriendModal: React.FC<InviteFriendModalProps> = ({ opened, onClose, 
                       variant={isInvited ? "light" : "filled"}
                       color={isInvited ? "green" : "blue"}
                       leftSection={isInvited ? <IconCheck size={14} /> : <IconSend size={14} />}
-                      onClick={() => !isInvited && handleInvite(friendData.id)}
+                      onClick={() => !isInvited && handleInvite(friend.id)}
                       disabled={isInvited}
                     >
                       {isInvited ? 'Sent' : 'Invite'}

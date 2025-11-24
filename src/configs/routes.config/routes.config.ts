@@ -112,6 +112,12 @@ export const publicRoutes: Routes = [
     authority: [],
   },
   {
+    key: 'friends',
+    path: '/friends',
+    component: lazy(() => import('@/pages/social/FriendsPage')),
+    authority: [],
+  },
+  {
     key: '404',
     path: '/404',
     component: lazy(() => import('@/pages/NotFound')),

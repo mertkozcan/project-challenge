@@ -24,8 +24,7 @@ const sendInvitation = async (req, res) => {
             toUserId,
             'GAME_INVITE',
             'New Bingo Invitation',
-            `You have been invited to play Bingo!`,
-            { roomId, invitationId: invitation.id }
+            `You have been invited to play Bingo!`
         );
 
         // Emit real-time notification via socket.io

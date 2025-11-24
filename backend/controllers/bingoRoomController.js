@@ -1,3 +1,26 @@
+const bingoRoomModel = require('../models/bingoRoomModel');
+const pool = require('../config/db');
+
+const createRoom = async (req, res) => {
+    const { board_id, host_user_id, max_players, is_private, password, game_mode, theme } = req.body;
+
+    try {
+        console.log('[CREATE ROOM] Request body:', req.body);
+        const room = await bingoRoomModel.createRoom(
+            board_id,
+            host_user_id,
+            max_players,
+            is_private,
+            password,
+            game_mode,
+            theme
+        );
+        console.log('[CREATE ROOM] Room created successfully:', room);
+        res.status(201).json(room);
+    } catch (error) {
+        console.error('Error creating room:', error);
+        res.status(500).json({ error: error.message });
+    }
 };
 
 const getRoomDetails = async (req, res) => {
@@ -128,19 +151,28 @@ const completeCell = async (req, res) => {
     }
 
     try {
-        // Check if cell is already completed (Shared Board Logic)
-        const isCompleted = await bingoRoomModel.isCellCompleted(roomId, cellId);
-        if (isCompleted) {
-            return res.status(400).json({ error: 'Cell already completed' });
-        }
-
+        // Model handles game mode logic (Lockout vs Standard) and concurrency
         const completion = await bingoRoomModel.completeCell(roomId, cellId, userId);
 
-        // Broadcast cell completion to all players
+        if (!completion) {
+            // Standard mode: already completed by user
+            return res.status(200).json({ alreadyCompleted: true });
+        }
+
+        // Get user info for the completion
+        const userResult = await pool.query(
+            'SELECT username, avatar_url FROM users WHERE id = $1',
+            [userId]
+        );
+        const user = userResult.rows[0];
+
+        // Broadcast cell completion to all players with user info
         if (io) {
             io.to(roomId).emit('cell-completed', {
                 cellId: parseInt(cellId),
                 userId,
+                username: user?.username,
+                avatarUrl: user?.avatar_url,
                 completedAt: new Date().toISOString()
             });
         }
@@ -162,8 +194,6 @@ const completeCell = async (req, res) => {
 
                 // If achievements unlocked, notify the winner via socket
                 if (unlocked.length > 0 && io) {
-                    const winnerSocketId = await bingoRoomModel.getUserSocketId(winnerId); // Assuming this method exists or we broadcast to room
-                    // For simplicity, we'll include it in the game-ended event or a separate event
                     io.to(roomId).emit('achievements-unlocked', {
                         userId: winnerId,
                         achievements: unlocked
@@ -194,67 +224,91 @@ const completeCell = async (req, res) => {
         res.json({ completion, gameWon: false });
     } catch (error) {
         console.error('Error completing cell:', error);
+
+        // Handle "already locked" error gracefully
+        if (error.message && error.message.includes('locked')) {
+            return res.status(200).json({
+                error: error.message,
+                alreadyCompleted: true
+            });
+        }
+
         res.status(500).json({ error: error.message });
-        // ==================== GAME HISTORY ====================
+    }
+};
 
-        const getUserGameHistory = async (req, res) => {
-            const userId = req.user?.id || req.query.user_id;
-            const limit = parseInt(req.query.limit) || 20;
+// ==================== GAME HISTORY ====================
 
-            if (!userId) {
-                return res.status(401).json({ error: 'Authentication required' });
-            }
+const getUserGameHistory = async (req, res) => {
+    const userId = req.user?.id || req.query.user_id;
+    const limit = parseInt(req.query.limit) || 20;
 
-            try {
-                const games = await bingoRoomModel.getUserGameHistory(userId, limit);
-                res.json(games);
-            } catch (error) {
-                console.error('Error getting game history:', error);
-                res.status(500).json({ error: error.message });
-            }
-        };
+    if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
 
-        const getGameDetails = async (req, res) => {
-            const { roomId } = req.params;
-            const userId = req.user?.id || req.query.user_id;
+    try {
+        const games = await bingoRoomModel.getUserGameHistory(userId, limit);
+        res.json(games);
+    } catch (error) {
+        console.error('Error getting game history:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
 
-            if (!userId) {
-                return res.status(401).json({ error: 'Authentication required' });
-            }
+const getGameDetails = async (req, res) => {
+    const { roomId } = req.params;
+    const userId = req.user?.id || req.query.user_id;
 
-            try {
-                const details = await bingoRoomModel.getGameDetails(roomId, userId);
-                res.json(details);
-            } catch (error) {
-                console.error('Error getting game details:', error);
-                res.status(500).json({ error: error.message });
-            }
-        };
+    if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
 
-        const getGameStatistics = async (req, res) => {
-            const { roomId } = req.params;
+    try {
+        const details = await bingoRoomModel.getGameDetails(roomId, userId);
+        res.json(details);
+    } catch (error) {
+        console.error('Error getting game details:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
 
-            try {
-                const statistics = await bingoRoomModel.getGameStatistics(roomId);
-                res.json(statistics);
-            } catch (error) {
-                console.error('Error getting game statistics:', error);
-                res.status(500).json({ error: error.message });
-            }
-        };
+const getGameStatistics = async (req, res) => {
+    const { roomId } = req.params;
 
-        module.exports = {
-            createRoom,
-            getRoomDetails,
-            getAvailableRooms,
-            getUserRooms,
-            joinRoom,
-            leaveRoom,
-            toggleReady,
-            startGame,
-            completeCell,
-            getBoardState,
-            getUserGameHistory,
-            getGameDetails,
-            getGameStatistics,
-        };
+    try {
+        const statistics = await bingoRoomModel.getGameStatistics(roomId);
+        res.json(statistics);
+    } catch (error) {
+        console.error('Error getting game statistics:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const getBoardState = async (req, res) => {
+    const { roomId } = req.params;
+
+    try {
+        const boardState = await bingoRoomModel.getBoardState(roomId);
+        res.json(boardState);
+    } catch (error) {
+        console.error('Error getting board state:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = {
+    createRoom,
+    getRoomDetails,
+    getAvailableRooms,
+    getUserRooms,
+    joinRoom,
+    leaveRoom,
+    toggleReady,
+    startGame,
+    completeCell,
+    getBoardState,
+    getUserGameHistory,
+    getGameDetails,
+    getGameStatistics,
+};

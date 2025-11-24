@@ -6,7 +6,7 @@ const {
     listFriends,
     listPendingRequests
 } = require('../controllers/friendController');
-const authenticateToken = require('../middleware/authMiddleware');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 

@@ -122,6 +122,10 @@ class SocketService {
     this.socket?.emit('join-user-room', { userId });
   }
 
+  sendMessage(roomId: string, userId: string, username: string, message: string, type: 'TEXT' | 'QUICK' = 'TEXT'): void {
+    this.socket?.emit('send-message', { roomId, userId, username, message, type });
+  }
+
   on(event: string, callback: (...args: any[]) => void): void {
     this.socket?.on(event, callback);
   }

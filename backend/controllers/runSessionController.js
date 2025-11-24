@@ -53,7 +53,8 @@ const runSessionController = {
             const session = await RunSessionModel.getActiveSession(userId);
 
             if (!session) {
-                return res.status(404).json({
+                return res.status(200).json({
+                    session: null,
                     message: 'No active session found'
                 });
             }

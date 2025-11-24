@@ -77,16 +77,21 @@ const BingoGameView: React.FC = () => {
     }
   };
 
-  const handleCellCompleted = async (data: { cellId: number; userId: string }) => {
+  const handleCellCompleted = async (data: { cellId: number; userId: string; username?: string; avatarUrl?: string }) => {
     playSound('complete');
-    // Refresh board state to show the completed cell
-    if (!roomId) return;
-    try {
-      const cells = await BingoRoomService.getBoardState(roomId);
-      setBoardState(cells);
-    } catch (error) {
-      console.error('Error refreshing board state:', error);
-    }
+    
+    setBoardState(prev => prev.map(cell => {
+      if (cell.cell_id === data.cellId) {
+        return {
+          ...cell,
+          is_completed_by_me: data.userId === userId,
+          completed_by_user_id: data.userId,
+          completed_by_username: data.username,
+          completed_by_avatar: data.avatarUrl
+        };
+      }
+      return cell;
+    }));
   };
 
   const handleGameEnded = (data: { winnerId: string; winType: string; winIndex: number; statistics: any }) => {

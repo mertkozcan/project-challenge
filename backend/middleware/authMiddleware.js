@@ -8,12 +8,14 @@ const authenticateToken = (req, res, next) => {
     // Try to extract from Authorization header (Bearer token)
     if (!userId && req.headers.authorization) {
         const authHeader = req.headers.authorization;
+        console.log('[AUTH] Authorization header:', authHeader);
         // Extract token from "Bearer <token>" format
         const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
 
         // For now, treat the token as userId if it's not "null" or empty
         if (token && token !== 'null' && token !== 'undefined') {
             userId = token;
+            console.log('[AUTH] Extracted userId from token:', userId);
         }
     }
 

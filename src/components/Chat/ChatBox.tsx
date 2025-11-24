@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Paper, TextInput, ScrollArea, Text, Group, ActionIcon, Button, Stack, Avatar, Tooltip } from '@mantine/core';
 import { IconSend, IconMoodSmile } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
+import SocketService from '@/services/socket.service';
 
 interface ChatMessage {
   id: string;
@@ -22,8 +23,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ roomId }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const viewport = useRef<HTMLDivElement>(null);
-  const user = useAppSelector((state) => state.auth.user);
-  const socket = (window as any).socket;
+  const user = useAppSelector((state) => state.auth.userInfo);
 
   const scrollToBottom = () => {
     if (viewport.current) {
@@ -36,32 +36,21 @@ const ChatBox: React.FC<ChatBoxProps> = ({ roomId }) => {
   }, [messages]);
 
   useEffect(() => {
-    if (!socket) return;
-
     const handleReceiveMessage = (message: ChatMessage) => {
       setMessages((prev) => [...prev, message]);
     };
 
-    socket.on('receive-message', handleReceiveMessage);
-
-    // System messages for join/leave could also be handled here if backend emits them as chat messages
-    // For now, we rely on the specific 'receive-message' event
+    SocketService.on('message-received', handleReceiveMessage);
 
     return () => {
-      socket.off('receive-message', handleReceiveMessage);
+      SocketService.off('message-received', handleReceiveMessage);
     };
-  }, [socket]);
+  }, []);
 
   const handleSendMessage = (content: string, type: 'TEXT' | 'QUICK' = 'TEXT') => {
-    if (!content.trim() || !user || !socket) return;
+    if (!content.trim() || !user || !user.userId) return;
 
-    socket.emit('send-message', {
-      roomId,
-      userId: user.id,
-      username: user.username,
-      content,
-      type
-    });
+    SocketService.sendMessage(roomId, user.userId, user.username || 'Anonymous', content, type);
 
     if (type === 'TEXT') {
       setInputValue('');
@@ -82,7 +71,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ roomId }) => {
       <ScrollArea flex={1} viewportRef={viewport} type="always" mb="xs" style={{ height: '300px' }}>
         <Stack gap="xs">
           {messages.map((msg) => {
-            const isMe = msg.userId === user?.id;
+            const isMe = msg.userId === user?.userId;
             const isSystem = msg.type === 'SYSTEM';
 
             if (isSystem) {

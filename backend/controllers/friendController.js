@@ -2,7 +2,7 @@ const FriendModel = require('../models/friendModel');
 const { getUserIdByUsername } = require('../models/userModel');
 
 const sendFriendRequest = async (req, res) => {
-    const { userId } = req.user; // From auth middleware
+    const { id: userId } = req.user; // From auth middleware
     const { username } = req.body;
 
     try {
@@ -39,7 +39,7 @@ const acceptFriendRequest = async (req, res) => {
 };
 
 const removeFriend = async (req, res) => {
-    const { userId } = req.user;
+    const { id: userId } = req.user;
     const { friendId } = req.params;
     try {
         await FriendModel.removeFriend(userId, friendId);
@@ -50,7 +50,7 @@ const removeFriend = async (req, res) => {
 };
 
 const listFriends = async (req, res) => {
-    const { userId } = req.user;
+    const { id: userId } = req.user;
     try {
         const friends = await FriendModel.getFriends(userId);
         res.json(friends);
@@ -60,7 +60,7 @@ const listFriends = async (req, res) => {
 };
 
 const listPendingRequests = async (req, res) => {
-    const { userId } = req.user;
+    const { id: userId } = req.user;
     try {
         const requests = await FriendModel.getPendingRequests(userId);
         res.json(requests);

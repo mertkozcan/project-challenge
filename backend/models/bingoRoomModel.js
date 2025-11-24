@@ -183,26 +183,21 @@ const completeCell = async (roomId, cellId, userId) => {
     return result.rows[0];
 };
 
-const getBoardState = async (roomId, userId) => {
-    const room = await getRoomById(roomId);
-    if (!room) throw new Error('Room not found');
 
-    const query = `
-        SELECT bc.*,
-        EXISTS(SELECT 1 FROM bingo_cell_completions WHERE room_id = $1 AND cell_id = bc.id AND user_id = $2) as is_completed_by_me,
-        (SELECT user_id FROM bingo_cell_completions WHERE room_id = $1 AND cell_id = bc.id LIMIT 1) as completed_by_user_id,
-        (SELECT u.username FROM bingo_cell_completions bcc JOIN users u ON bcc.user_id = u.id WHERE bcc.room_id = $1 AND bcc.cell_id = bc.id LIMIT 1) as completed_by_username
-        FROM bingo_cells bc
-        WHERE bc.board_id = $3
-        ORDER BY bc.row_index, bc.col_index
-    `;
 
-    const cells = await pool.query(query, [roomId, userId, room.board_id]);
-
-    return {
-        ...room,
-        cells: cells.rows
-    };
+const getBoardState = async (roomId) => {
+    const result = await pool.query(
+        `SELECT bc.id as cell_id, bc.row_index, bc.col_index, bc.task,
+         bcc.user_id as completed_by_user_id, u.username as completed_by_username, u.avatar_url as completed_by_avatar
+         FROM bingo_cells bc
+         JOIN bingo_rooms r ON r.board_id = bc.board_id
+         LEFT JOIN bingo_cell_completions bcc ON bc.id = bcc.cell_id AND bcc.room_id = r.id
+         LEFT JOIN users u ON bcc.user_id = u.id
+         WHERE r.id = $1
+         ORDER BY bc.row_index, bc.col_index`,
+        [roomId]
+    );
+    return result.rows;
 };
 
 const isCellCompleted = async (roomId, cellId, userId) => {
@@ -308,21 +303,7 @@ const endGame = async (roomId, winnerUserId, winType, winIndex) => {
     return result.rows[0];
 };
 
-module.exports = {
-    createRoom,
-    getRoomById,
-    getRoomParticipants,
-    getAvailableRooms,
-    getUserRooms,
-    joinRoom,
-    leaveRoom,
-    toggleReady,
-    startGame,
-    completeCell,
-    getBoardState,
-    checkWinConditions,
-    endGame,
-};
+
 
 // ==================== GAME STATISTICS ====================
 
@@ -472,6 +453,10 @@ const getGameDetails = async (roomId, userId) => {
     };
 };
 
+const getUserSocketId = async (userId) => {
+    return null; // Placeholder
+};
+
 module.exports = {
     createRoom,
     getRoomById,
@@ -486,8 +471,9 @@ module.exports = {
     getBoardState,
     checkWinConditions,
     endGame,
-    isCellCompleted,
     getGameStatistics,
     getUserGameHistory,
     getGameDetails,
+    getUserSocketId,
+    isCellCompleted,
 };

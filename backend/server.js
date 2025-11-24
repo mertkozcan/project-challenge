@@ -64,7 +64,7 @@ app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/builds', buildRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/bingo-invitations', bingoInvitationRoutes);
+app.use('/api/bingo', bingoInvitationRoutes);
 app.use('/api/run-sessions', runSessionRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/proofs', require('./routes/proofReviewRoutes')); // New review routes

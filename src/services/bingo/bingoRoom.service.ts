@@ -47,9 +47,11 @@ export interface BingoCellState {
 export interface CompleteCellResponse {
   completion: any;
   gameWon: boolean;
+  winType?: string;
+  winIndex?: number;
 }
 
-export default {
+export const BingoRoomService = {
   async getAvailableRooms(): Promise<BingoRoom[]> {
     const res = await ApiService.fetchData<void, BingoRoom[]>({
       url: '/multiplayer/rooms/available',
@@ -63,6 +65,39 @@ export default {
       url: '/multiplayer/rooms/my-rooms',
       method: 'GET',
       params: { user_id: userId },
+    });
+    return res.data;
+  },
+
+  async createRoom(
+    boardId: number,
+    hostUserId: string,
+    maxPlayers: number = 4,
+    isPrivate: boolean = false,
+    password: string = '',
+    gameMode: string = 'STANDARD',
+    theme: string = 'DEFAULT'
+  ): Promise<BingoRoom> {
+    const res = await ApiService.fetchData<{
+      board_id: number;
+      host_user_id: string;
+      max_players: number;
+      is_private: boolean;
+      password?: string;
+      game_mode: string;
+      theme: string;
+    }, BingoRoom>({
+      url: '/multiplayer/rooms/create',
+      method: 'POST',
+      data: {
+        board_id: boardId,
+        host_user_id: hostUserId,
+        max_players: maxPlayers,
+        is_private: isPrivate,
+        password: isPrivate ? password : undefined,
+        game_mode: gameMode,
+        theme: theme,
+      },
     });
     return res.data;
   },
@@ -128,3 +163,4 @@ export default {
     return res.data;
   },
 };
+

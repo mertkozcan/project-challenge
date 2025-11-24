@@ -1,7 +1,7 @@
 const express = require('express');
 const { addBuild, getBuilds, getBuildDetail } = require('../controllers/buildController');
 const { rateBuild, getUserRating, getRatingStats, addComment, getComments, deleteComment } = require('../controllers/buildRatingController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
