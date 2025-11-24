@@ -112,14 +112,15 @@ const initializeSocket = (io) => {
         });
 
         // Send chat message
-        socket.on('send-message', async ({ roomId, userId, message, username }) => {
+        socket.on('send-message', async ({ roomId, userId, message, username, type }) => {
             try {
                 const messageData = {
                     id: Date.now(), // Temporary ID, should come from database
                     roomId,
                     userId,
                     username,
-                    message,
+                    content: message,
+                    type: type || 'TEXT',
                     timestamp: new Date().toISOString()
                 };
 

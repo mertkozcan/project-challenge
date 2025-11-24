@@ -26,6 +26,9 @@ const BingoGameView: React.FC = () => {
   const [winModalOpen, setWinModalOpen] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
   const [statistics, setStatistics] = useState<any>(null);
+  
+  // Timer State
+  const [elapsedTime, setElapsedTime] = useState<string>('00:00');
 
   useEffect(() => {
     if (!roomId || !userId) return;
@@ -52,6 +55,23 @@ const BingoGameView: React.FC = () => {
       SocketService.off('player-left', handlePlayerLeft);
     };
   }, [roomId, userId]);
+
+  // Timer Effect
+  useEffect(() => {
+    if (!room?.started_at || room.status !== 'PLAYING') return;
+
+    const interval = setInterval(() => {
+      const start = new Date(room.started_at!).getTime();
+      const now = new Date().getTime();
+      const diff = Math.floor((now - start) / 1000);
+      
+      const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+      const seconds = (diff % 60).toString().padStart(2, '0');
+      setElapsedTime(`${minutes}:${seconds}`);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [room?.started_at, room?.status]);
 
   const fetchGameData = async () => {
     if (!roomId) return;
@@ -180,6 +200,7 @@ const BingoGameView: React.FC = () => {
           textColor: '#f0e6d2',
           accentColor: '#cfb53b',
           fontFamily: 'serif',
+          glow: '0 0 15px rgba(207, 181, 59, 0.3)',
         };
       case 'CYBERPUNK':
         return {
@@ -189,6 +210,7 @@ const BingoGameView: React.FC = () => {
           textColor: '#ffffff',
           accentColor: '#ff00ff',
           fontFamily: 'monospace',
+          glow: '0 0 15px rgba(0, 255, 234, 0.4)',
         };
       case 'HALLOWEEN':
         return {
@@ -198,6 +220,7 @@ const BingoGameView: React.FC = () => {
           textColor: '#ffe0b2',
           accentColor: '#ff6b00',
           fontFamily: 'cursive',
+          glow: '0 0 15px rgba(255, 107, 0, 0.4)',
         };
       case 'CHRISTMAS':
         return {
@@ -207,6 +230,7 @@ const BingoGameView: React.FC = () => {
           textColor: '#ffffff',
           accentColor: '#c82333',
           fontFamily: 'sans-serif',
+          glow: '0 0 15px rgba(212, 175, 55, 0.4)',
         };
       default:
         return {
@@ -216,6 +240,7 @@ const BingoGameView: React.FC = () => {
           textColor: undefined,
           accentColor: undefined,
           fontFamily: undefined,
+          glow: 'none',
         };
     }
   };
@@ -228,17 +253,24 @@ const BingoGameView: React.FC = () => {
         <BingoHero 
           title={room?.board_title || 'Bingo Game'}
           gameName={room?.game_name || 'Multiplayer'}
-          description={`Host: ${room?.host_username || 'Unknown'} • Players: ${room?.player_count || 0}/${room?.max_players || 0}`}
+          description={`Host: ${room?.host_username || 'Unknown'} • Players: ${room?.player_count || room?.participants?.length || 0}/${room?.max_players || 0}`}
           size={gridSize}
         />
-        <Button 
-          color="red" 
-          variant="light" 
-          leftSection={<IconDoorExit size={16} />}
-          onClick={() => navigate('/multiplayer/rooms')}
-        >
-          Leave Game
-        </Button>
+        <Group>
+          {room?.status === 'PLAYING' && (
+             <Badge size="xl" variant="gradient" gradient={{ from: 'orange', to: 'red' }}>
+               {elapsedTime}
+             </Badge>
+          )}
+          <Button 
+            color="red" 
+            variant="light" 
+            leftSection={<IconDoorExit size={16} />}
+            onClick={() => navigate('/multiplayer/rooms')}
+          >
+            Leave Game
+          </Button>
+        </Group>
       </Group>
 
       <Container size="xl" mt="xl">
@@ -251,18 +283,13 @@ const BingoGameView: React.FC = () => {
               style={{
                 background: themeStyles.boardBg,
                 border: `1px solid ${themeStyles.borderColor}`,
+                boxShadow: themeStyles.glow,
               }}
             >
               <Stack gap={8}>
                 {rows.map((row, rowIndex) => (
                   <Group key={rowIndex} gap={8} grow wrap="nowrap">
                     {row.map((cell) => {
-                      // Logic:
-                      // If I completed it -> Green/Theme Color
-                      // If someone else completed it:
-                      //    - Standard: I can still complete it (don't show as taken unless I want to see history)
-                      //    - Lockout: It is LOCKED (Red/Gray)
-                      
                       const isMyCompletion = cell.is_completed_by_me;
                       const isLocked = room?.game_mode === 'LOCKOUT' && !!cell.completed_by_user_id && !isMyCompletion;
                       
@@ -275,7 +302,10 @@ const BingoGameView: React.FC = () => {
                           isMyCompletion={isMyCompletion}
                           onClick={() => !isMyCompletion && !isLocked && handleCellClick(cell.cell_id)}
                           disabled={!!winModalOpen || isLocked}
-                          style={isLocked ? { opacity: 0.5, filter: 'grayscale(1)' } : { borderColor: isMyCompletion ? themeStyles.accentColor : undefined }}
+                          style={isLocked ? { opacity: 0.5, filter: 'grayscale(1)' } : { 
+                            borderColor: isMyCompletion ? themeStyles.accentColor : undefined,
+                            backgroundColor: isMyCompletion ? `${themeStyles.accentColor}20` : undefined
+                          }}
                         />
                       );
                     })}
@@ -285,28 +315,22 @@ const BingoGameView: React.FC = () => {
             </Paper>
           </Grid.Col>
 
-          {/* Sidebar - Game Info & Chat */}
+          {/* Sidebar */}
           <Grid.Col span={{ base: 12, md: 3 }}>
-             <Stack gap="md" h="100%">
-                <Paper p="md" radius="md" withBorder>
-                   <Title order={3} mb="md">Game Info</Title>
-                   <Stack>
+             <Stack>
+                <Paper p="md" radius="md" withBorder style={{ background: themeStyles.bg ? `${themeStyles.bg}80` : undefined }}>
+                   <Stack gap="xs">
+                      <Title order={4} style={{ color: themeStyles.textColor }}>Game Info</Title>
                       <Group justify="space-between">
-                         <Text>Status:</Text>
-                         <Badge color={room?.status === 'IN_PROGRESS' ? 'green' : 'yellow'}>
-                           {room?.status}
-                         </Badge>
+                         <Text style={{ color: themeStyles.textColor }}>Mode:</Text>
+                         <Badge variant="filled" color="blue">{room?.game_mode}</Badge>
                       </Group>
                       <Group justify="space-between">
-                         <Text>Mode:</Text>
-                         <Badge variant="outline" color="blue">{room?.game_mode}</Badge>
-                      </Group>
-                      <Group justify="space-between">
-                         <Text>Theme:</Text>
+                         <Text style={{ color: themeStyles.textColor }}>Theme:</Text>
                          <Badge variant="outline" color="pink">{room?.theme}</Badge>
                       </Group>
                       
-                      <Text size="sm" c="dimmed" mt="sm">
+                      <Text size="sm" c="dimmed" mt="sm" style={{ color: themeStyles.textColor ? `${themeStyles.textColor}99` : undefined }}>
                         {room?.game_mode === 'BLACKOUT' 
                           ? 'Cover ALL cells to win!' 
                           : room?.game_mode === 'LOCKOUT'
@@ -320,8 +344,8 @@ const BingoGameView: React.FC = () => {
                    <ChatBox roomId={roomId || ''} />
                 </Paper>
 
-                <Paper p="md" radius="md" withBorder>
-                   <Title order={3} mb="md">Players</Title>
+                <Paper p="md" radius="md" withBorder style={{ background: themeStyles.bg ? `${themeStyles.bg}80` : undefined }}>
+                   <Title order={3} mb="md" style={{ color: themeStyles.textColor }}>Players</Title>
                    <Stack gap="sm">
                      {room?.participants?.map((participant: any) => (
                        <motion.div
@@ -332,7 +356,7 @@ const BingoGameView: React.FC = () => {
                          <Group justify="space-between">
                            <Group gap="sm">
                              <Avatar src={participant.avatar_url} radius="xl" />
-                             <Text fw={500}>{participant.username}</Text>
+                             <Text fw={500} style={{ color: themeStyles.textColor }}>{participant.username}</Text>
                            </Group>
                            {participant.user_id === room?.host_user_id && (
                              <Badge color="yellow">Host</Badge>

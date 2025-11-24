@@ -6,6 +6,9 @@ export interface UserState {
   email?: string
   role?: string
   avatar_url?: string
+  userId?: string
+  level?: number
+  total_xp?: number
 }
 
 const initialState: UserState = {
@@ -24,6 +27,9 @@ const userSlice = createSlice({
       state.username = action.payload?.username
       state.role = action.payload?.role
       state.avatar_url = action.payload?.avatar_url
+      state.userId = action.payload?.userId
+      state.level = action.payload?.level
+      state.total_xp = action.payload?.total_xp
     },
     setUserRole(state,action){
       state.role = action.payload.role

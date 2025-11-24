@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Paper, TextInput, ScrollArea, Text, Group, ActionIcon, Button, Stack, Avatar, Tooltip } from '@mantine/core';
+import { Paper, TextInput, ScrollArea, Text, Group, ActionIcon, Button, Stack, Avatar, Tooltip, Popover, SimpleGrid } from '@mantine/core';
 import { IconSend, IconMoodSmile } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
 import SocketService from '@/services/socket.service';
@@ -18,10 +18,12 @@ interface ChatBoxProps {
 }
 
 const QUICK_CHATS = ['GG', 'GLHF', 'Nice!', 'So close!', 'Bingo?', 'Wait...'];
+const EMOJIS = ['😀', '😂', '😍', '😎', '🤔', '😭', '😡', '👍', '👎', '🔥', '✨', '🎉', '❤️', '💯', '🎱', '🎯'];
 
 const ChatBox: React.FC<ChatBoxProps> = ({ roomId }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const [emojiOpen, setEmojiOpen] = useState(false);
   const viewport = useRef<HTMLDivElement>(null);
   const user = useAppSelector((state) => state.auth.userInfo);
 
@@ -50,11 +52,18 @@ const ChatBox: React.FC<ChatBoxProps> = ({ roomId }) => {
   const handleSendMessage = (content: string, type: 'TEXT' | 'QUICK' = 'TEXT') => {
     if (!content.trim() || !user || !user.userId) return;
 
-    SocketService.sendMessage(roomId, user.userId, user.username || 'Anonymous', content, type);
+    const username = user.username || user.email?.split('@')[0] || 'Guest';
+
+    SocketService.sendMessage(roomId, user.userId, username, content, type);
 
     if (type === 'TEXT') {
       setInputValue('');
+      setEmojiOpen(false);
     }
+  };
+
+  const handleEmojiClick = (emoji: string) => {
+    setInputValue((prev) => prev + emoji);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -128,9 +137,22 @@ const ChatBox: React.FC<ChatBoxProps> = ({ roomId }) => {
             onKeyDown={handleKeyDown}
             style={{ flex: 1 }}
             rightSection={
-              <ActionIcon variant="subtle" color="gray" size="sm">
-                <IconMoodSmile size={16} />
-              </ActionIcon>
+              <Popover opened={emojiOpen} onChange={setEmojiOpen} width={200} position="top-end" withArrow shadow="md">
+                <Popover.Target>
+                  <ActionIcon variant="subtle" color="gray" size="sm" onClick={() => setEmojiOpen((o) => !o)}>
+                    <IconMoodSmile size={16} />
+                  </ActionIcon>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <SimpleGrid cols={4} spacing="xs">
+                    {EMOJIS.map((emoji) => (
+                      <ActionIcon key={emoji} variant="subtle" size="lg" onClick={() => handleEmojiClick(emoji)}>
+                        <Text size="xl">{emoji}</Text>
+                      </ActionIcon>
+                    ))}
+                  </SimpleGrid>
+                </Popover.Dropdown>
+              </Popover>
             }
           />
           <ActionIcon 

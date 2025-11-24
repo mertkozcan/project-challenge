@@ -1,4 +1,4 @@
-import ApiService from '../ApiService';
+import ApiService from './ApiService';
 
 export interface BuildRating {
   id: number;

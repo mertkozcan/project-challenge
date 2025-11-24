@@ -10,6 +10,10 @@ export interface UserInfoState {
   role: string,
   googleLogin?: boolean,
   notificationCount?: number
+  // Extended fields for UI
+  id?: string // Alias for userId
+  level?: number
+  total_xp?: number
 }
 
 const initialState: UserInfoState = {

@@ -147,7 +147,7 @@ const BuildComments = ({ buildId }: BuildCommentsProps) => {
                       </Text>
                     </div>
                   </Group>
-                  {user?.id === comment.user_id && (
+                  {user?.userId === comment.user_id && (
                     <ActionIcon
                       variant="subtle"
                       color="red"

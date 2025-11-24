@@ -22,7 +22,8 @@ const createRoom = async (boardId, hostUserId, maxPlayers = 4, isPrivate = false
 
 const getRoomById = async (roomId) => {
     const result = await pool.query(
-        `SELECT r.*, bb.title as board_title, bb.game_name, u.username as host_username, u.avatar_url as host_avatar
+        `SELECT r.*, bb.title as board_title, bb.game_name, u.username as host_username, u.avatar_url as host_avatar,
+         (SELECT COUNT(*) FROM bingo_room_participants WHERE room_id = r.id) as player_count
          FROM bingo_rooms r
          JOIN bingo_boards bb ON r.board_id = bb.id
          JOIN users u ON r.host_user_id = u.id

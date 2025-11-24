@@ -19,7 +19,7 @@ import { IconSearch, IconUserPlus, IconCheck, IconX, IconTrash, IconUser } from 
 import { notifications } from '@mantine/notifications';
 import ApiService from '@/services/ApiService';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
+import { RootState } from '@/store';
 
 interface Friend {
   id: string;
