@@ -13,7 +13,7 @@ const TourButton: React.FC<TourButtonProps> = ({ tourType, position = 'bottom-ri
   const { startTour } = useTour();
 
   const positionStyles: Record<string, React.CSSProperties> = {
-    'bottom-right': { bottom: 20, right: 20 },
+    'bottom-right': { bottom: 20, right: 140 },
     'bottom-left': { bottom: 20, left: 20 },
     'top-right': { top: 80, right: 20 },
     'top-left': { top: 80, left: 20 },

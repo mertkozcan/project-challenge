@@ -180,7 +180,7 @@ const FriendsWidget: React.FC = () => {
   const onlineCount = friends.filter(f => onlineUsers.has(f.id)).length;
 
   return (
-    <div style={{ position: 'fixed', bottom: 20, right: 100, zIndex: 1000 }}>
+    <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}>
       <Transition transition="slide-up" mounted={opened}>
         {(styles) => (
           <Paper 
