@@ -140,6 +140,45 @@ const BuildDetail: React.FC = () => {
                 </Text>
               </Paper>
 
+              {/* Video Showcase Card */}
+              {build.video_url && (
+                <Paper
+                  shadow="md"
+                  p="xl"
+                  radius="md"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+                    border: `1px solid ${theme.primary}20`,
+                  }}
+                >
+                  <Title order={3} mb="md" c={theme.primary}>
+                    Video Showcase
+                  </Title>
+                  <Box style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '8px' }}>
+                    <iframe
+                      src={(() => {
+                        const url = build.video_url;
+                        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                          const videoId = url.includes('v=') 
+                            ? url.split('v=')[1].split('&')[0] 
+                            : url.split('/').pop();
+                          return `https://www.youtube.com/embed/${videoId}`;
+                        }
+                        if (url.includes('twitch.tv')) {
+                          const channel = url.split('/').pop();
+                          return `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname}`;
+                        }
+                        return url;
+                      })()}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                      frameBorder="0"
+                      allowFullScreen
+                      title="Build Showcase"
+                    />
+                  </Box>
+                </Paper>
+              )}
+
               {/* Items/Equipment Card */}
               {Object.keys(items).length > 0 && (
                 <Paper
@@ -156,8 +195,62 @@ const BuildDetail: React.FC = () => {
                   </Title>
                   <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                     {Object.entries(items).map(([key, value]: [string, any]) => {
+                      // Handle array items (spells, incantations, consumables)
+                      if (Array.isArray(value)) {
+                        if (value.length === 0) return null;
+                        return (
+                          <Card
+                            key={key}
+                            padding="md"
+                            radius="md"
+                            style={{
+                              background: 'rgba(0, 0, 0, 0.3)',
+                              border: `1px solid ${theme.primary}30`,
+                              gridColumn: '1 / -1', // Span full width
+                            }}
+                          >
+                            <Text size="sm" c="dimmed" tt="uppercase" fw={700} mb="xs">
+                              {key.replace(/_/g, ' ')}
+                            </Text>
+                            <Group gap="xs">
+                              {value.map((item: any, index: number) => (
+                                <ItemTooltip
+                                  key={`${key}-${index}`}
+                                  itemName={item.name}
+                                  description={item.description}
+                                  stats={item.stats}
+                                  theme={theme}
+                                >
+                                  <Badge
+                                    size="lg"
+                                    variant="light"
+                                    color={theme.primary}
+                                    style={{ cursor: 'help' }}
+                                  >
+                                    {item.name}
+                                  </Badge>
+                                </ItemTooltip>
+                              ))}
+                            </Group>
+                          </Card>
+                        );
+                      }
+
+                      // Skip Ash of War entries as they are handled within their parent weapon card
+                      if (key.endsWith('Ash')) return null;
+
+                      // Skip special keys that are handled separately
+                      if (['stats', 'startingClass', 'greatRune'].includes(key)) return null;
+
+                      // Handle single items
                       const itemStats = typeof value === 'object' && value !== null ? value : undefined;
                       const displayValue = typeof value === 'object' ? value.name || JSON.stringify(value) : value;
+
+                      if (!displayValue) return null;
+
+                      // Check for associated Ash of War
+                      const ashKey = `${key}Ash`;
+                      const ashItem = items[ashKey];
 
                       return (
                         <ItemTooltip
@@ -188,9 +281,26 @@ const BuildDetail: React.FC = () => {
                             <Text size="sm" c="dimmed" tt="uppercase" fw={700} mb="xs">
                               {key.replace(/_/g, ' ')}
                             </Text>
-                            <Text size="md" c={theme.primary}>
+                            <Text size="md" c={theme.primary} fw={600}>
                               {displayValue}
                             </Text>
+
+                            {/* Display Ash of War if present */}
+                            {ashItem && (
+                              <Group gap="xs" mt="sm" style={{ borderTop: `1px solid ${theme.primary}20`, paddingTop: 8 }}>
+                                <Badge 
+                                  size="sm" 
+                                  variant="outline" 
+                                  color="gray" 
+                                  style={{ borderColor: theme.primary, color: theme.primary }}
+                                >
+                                  Ash of War
+                                </Badge>
+                                <Text size="sm" c="dimmed">
+                                  {ashItem.name}
+                                </Text>
+                              </Group>
+                            )}
                           </Card>
                         </ItemTooltip>
                       );
@@ -278,6 +388,76 @@ const BuildDetail: React.FC = () => {
                   </Box>
                 </Stack>
               </Paper>
+
+              {/* Character Stats Card */}
+              {items.stats && (
+                <Paper
+                  shadow="md"
+                  p="xl"
+                  radius="md"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+                    border: `1px solid ${theme.primary}20`,
+                  }}
+                >
+                  <Title order={4} mb="xl" c={theme.primary}>
+                    Character Attributes
+                  </Title>
+                  
+                  {items.startingClass && (
+                    <Box mb="md">
+                      <Text size="sm" c="dimmed" tt="uppercase" fw={700}>Starting Class</Text>
+                      <Text size="lg" fw={600}>{items.startingClass.name}</Text>
+                    </Box>
+                  )}
+
+                  {items.greatRune && (
+                    <Box mb="xl">
+                      <Text size="sm" c="dimmed" tt="uppercase" fw={700}>Great Rune</Text>
+                      <Text size="lg" fw={600} c={theme.primary}>{items.greatRune.name}</Text>
+                    </Box>
+                  )}
+
+                  <SimpleGrid cols={2} spacing="xs">
+                    <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                      <Text size="xs" c="dimmed">Level</Text>
+                      <Text fw={700}>{items.stats.level}</Text>
+                    </Box>
+                    <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                      <Text size="xs" c="dimmed">Vigor</Text>
+                      <Text fw={700}>{items.stats.vigor}</Text>
+                    </Box>
+                    <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                      <Text size="xs" c="dimmed">Mind</Text>
+                      <Text fw={700}>{items.stats.mind}</Text>
+                    </Box>
+                    <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                      <Text size="xs" c="dimmed">Endurance</Text>
+                      <Text fw={700}>{items.stats.endurance}</Text>
+                    </Box>
+                    <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                      <Text size="xs" c="dimmed">Strength</Text>
+                      <Text fw={700}>{items.stats.strength}</Text>
+                    </Box>
+                    <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                      <Text size="xs" c="dimmed">Dexterity</Text>
+                      <Text fw={700}>{items.stats.dexterity}</Text>
+                    </Box>
+                    <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                      <Text size="xs" c="dimmed">Intelligence</Text>
+                      <Text fw={700}>{items.stats.intelligence}</Text>
+                    </Box>
+                    <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                      <Text size="xs" c="dimmed">Faith</Text>
+                      <Text fw={700}>{items.stats.faith}</Text>
+                    </Box>
+                    <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                      <Text size="xs" c="dimmed">Arcane</Text>
+                      <Text fw={700}>{items.stats.arcane}</Text>
+                    </Box>
+                  </SimpleGrid>
+                </Paper>
+              )}
 
               {/* Rate Build Section */}
               <RateBuildSection 

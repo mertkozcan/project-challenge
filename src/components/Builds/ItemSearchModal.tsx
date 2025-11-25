@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Modal, TextInput, Stack, ScrollArea, Card, Group, Text, Image, LoadingOverlay, Box } from '@mantine/core';
+import { Modal, TextInput, Stack, ScrollArea, Card, Group, Text, Image, LoadingOverlay, Box, SimpleGrid } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import { GameItem, ItemCategory } from '@/services/games/gameData.provider';
 import { EldenRingProvider } from '@/services/games/eldenRing.provider';
+import ItemTooltip from './ItemTooltip';
 
 interface ItemSearchModalProps {
   opened: boolean;
@@ -73,7 +74,7 @@ const ItemSearchModal = ({ opened, onClose, category, onSelect, theme }: ItemSea
       opened={opened}
       onClose={onClose}
       title={`Select ${getCategoryLabel(category)}`}
-      size="lg"
+      size="xl"
       styles={{
         title: {
           fontSize: '1.25rem',
@@ -91,61 +92,94 @@ const ItemSearchModal = ({ opened, onClose, category, onSelect, theme }: ItemSea
           autoFocus
         />
 
-        <ScrollArea h={400} style={{ position: 'relative' }}>
+        <ScrollArea h={600} style={{ position: 'relative' }}>
           <LoadingOverlay visible={loading} />
-          <Stack gap="xs">
-            {items.length > 0 ? (
-              items.map((item) => (
-                <Card
+          {items.length > 0 ? (
+            <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing="md">
+              {items.map((item) => (
+                <ItemTooltip
                   key={item.id}
-                  padding="md"
-                  radius="md"
-                  style={{
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    border: `1px solid rgba(255, 255, 255, 0.1)`,
-                  }}
-                  onClick={() => handleSelect(item)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.border = `1px solid ${primaryColor}`;
-                    e.currentTarget.style.transform = 'translateX(4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }}
+                  itemName={item.name}
+                  description={item.description}
+                  stats={item.stats}
+                  theme={theme}
                 >
-                  <Group>
-                    {item.image && (
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        width={50}
-                        height={50}
-                        fit="contain"
-                      />
-                    )}
-                    <Stack gap={4} style={{ flex: 1 }}>
-                      <Text fw={600} c={primaryColor}>
-                        {item.name}
-                      </Text>
-                      {item.description && (
-                        <Text size="xs" c="dimmed" lineClamp={2}>
-                          {item.description}
-                        </Text>
+                  <Card
+                    padding="md"
+                    radius="md"
+                    style={{
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      border: `1px solid rgba(255, 255, 255, 0.1)`,
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                    }}
+                    onClick={() => handleSelect(item)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.border = `1px solid ${primaryColor}`;
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = `0 4px 12px ${primaryColor}20`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <Box 
+                      mb="sm" 
+                      style={{ 
+                        width: 80, 
+                        height: 80, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center' 
+                      }}
+                    >
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          width={80}
+                          height={80}
+                          fit="contain"
+                        />
+                      ) : (
+                        <Box 
+                          style={{ 
+                            width: 60, 
+                            height: 60, 
+                            background: 'rgba(255,255,255,0.05)', 
+                            borderRadius: '50%' 
+                          }} 
+                        />
                       )}
-                    </Stack>
-                  </Group>
-                </Card>
-              ))
-            ) : (
-              <Box ta="center" py="xl">
-                <Text c="dimmed">
-                  {query ? 'No items found' : `Start typing to search ${getCategoryLabel(category).toLowerCase()}`}
-                </Text>
-              </Box>
-            )}
-          </Stack>
+                    </Box>
+                    
+                    <Text 
+                      fw={600} 
+                      c={primaryColor} 
+                      ta="center" 
+                      size="sm"
+                      lineClamp={2}
+                      style={{ width: '100%' }}
+                    >
+                      {item.name}
+                    </Text>
+                  </Card>
+                </ItemTooltip>
+              ))}
+            </SimpleGrid>
+          ) : (
+            <Box ta="center" py="xl">
+              <Text c="dimmed">
+                {query ? 'No items found' : `Start typing to search ${getCategoryLabel(category).toLowerCase()}`}
+              </Text>
+            </Box>
+          )}
         </ScrollArea>
       </Stack>
     </Modal>

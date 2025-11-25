@@ -1,7 +1,7 @@
 const { createBuild, getBuildsByGame, getBuildById, getAllBuilds } = require('../models/buildModel');
 
 const addBuild = async (req, res) => {
-    const { user_id, game_name, build_name, description, items_json } = req.body;
+    const { user_id, game_name, build_name, description, items_json, video_url } = req.body;
 
     // Basic validation
     if (!user_id || !game_name || !build_name) {
@@ -9,7 +9,7 @@ const addBuild = async (req, res) => {
     }
 
     try {
-        const newBuild = await createBuild(user_id, game_name, build_name, description, items_json);
+        const newBuild = await createBuild(user_id, game_name, build_name, description, items_json, video_url);
         res.status(201).json(newBuild);
     } catch (error) {
         res.status(500).json({ error: error.message });

@@ -20,6 +20,9 @@ export class EldenRingProvider implements GameDataProvider {
     shields: 'shields',
     ashes: 'ashes',
     consumables: 'items', // Items API filtered by type
+    classes: 'classes',
+    spirits: 'spirits',
+    ammos: 'ammos',
   };
 
   async searchItems(query: string, category?: ItemCategory): Promise<GameItem[]> {
@@ -30,7 +33,7 @@ export class EldenRingProvider implements GameDataProvider {
       }
 
       // The API supports ?name=... parameter
-      const url = `${this.baseUrl}${endpoint}?name=${encodeURIComponent(query)}&limit=20`;
+      const url = `${this.baseUrl}${endpoint}?name=${encodeURIComponent(query)}&limit=100`;
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -46,8 +49,11 @@ export class EldenRingProvider implements GameDataProvider {
       let items = json.data;
 
       // Filter consumables by type if category is consumables
+      // Relaxed filter to include more items, or remove if API handles it well
       if (category === 'consumables') {
-        items = items.filter((item: any) => item.type === 'Consumable');
+         // Include Consumable, Tool, and other usable items if needed
+         // For now, let's trust the /items endpoint but maybe filter out key items if possible
+         // items = items.filter((item: any) => item.type === 'Consumable'); 
       }
 
       return items.map((item: any) => this.mapToGameItem(item, category || 'weapons')); // Fallback category if mixed

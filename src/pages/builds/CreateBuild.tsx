@@ -12,13 +12,29 @@ const CreateBuild: React.FC = () => {
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [buildSlots, setBuildSlots] = useState<BuildSlots>({ spells: [], consumables: [] });
+  const [buildSlots, setBuildSlots] = useState<BuildSlots>({
+    stats: {
+      level: 1,
+      vigor: 10,
+      mind: 10,
+      endurance: 10,
+      strength: 10,
+      dexterity: 10,
+      intelligence: 10,
+      faith: 10,
+      arcane: 10,
+    },
+    spells: [],
+    incantations: [],
+    consumables: [],
+  });
 
   const form = useForm({
     initialValues: {
       game_name: 'Elden Ring',
       build_name: '',
       description: '',
+      video_url: '',
     },
 
     validate: {
@@ -81,6 +97,14 @@ const CreateBuild: React.FC = () => {
         placeholder="Describe your build strategy..."
         minRows={3}
         {...form.getInputProps('description')}
+        mb="md"
+      />
+
+      <TextInput
+        label="Video URL (Optional)"
+        placeholder="YouTube or Twitch video URL"
+        description="Add a video showcasing your build in action"
+        {...form.getInputProps('video_url')}
         mb="xl"
       />
 

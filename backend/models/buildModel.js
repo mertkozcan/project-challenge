@@ -1,9 +1,9 @@
 const pool = require('../config/db');
 
-const createBuild = async (userId, gameName, buildName, description, itemsJson) => {
+const createBuild = async (userId, gameName, buildName, description, itemsJson, videoUrl = null) => {
     const result = await pool.query(
-        'INSERT INTO builds (user_id, game_name, build_name, description, items_json) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [userId, gameName, buildName, description, itemsJson]
+        'INSERT INTO builds (user_id, game_name, build_name, description, items_json, video_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [userId, gameName, buildName, description, itemsJson, videoUrl]
     );
     return result.rows[0];
 };

@@ -9,4 +9,5 @@ export interface Build {
   username?: string;
   is_official?: boolean;
   banner_url?: string;
+  video_url?: string;
 }
