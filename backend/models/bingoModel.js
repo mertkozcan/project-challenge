@@ -55,10 +55,10 @@ const approveCellProof = async (progressId) => {
     return result.rows[0];
 };
 
-const createBoard = async (gameName, title, description, size = 5) => {
+const createBoard = async (gameName, title, description, size = 5, type = 'Normal', theme = 'Standard') => {
     const result = await pool.query(
-        'INSERT INTO bingo_boards (game_name, title, description, size) VALUES ($1, $2, $3, $4) RETURNING *',
-        [gameName, title, description, size]
+        'INSERT INTO bingo_boards (game_name, title, description, size, type, theme) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [gameName, title, description, size, type, theme]
     );
     return result.rows[0];
 };
@@ -69,6 +69,39 @@ const addCell = async (boardId, rowIndex, colIndex, task) => {
         [boardId, rowIndex, colIndex, task]
     );
     return result.rows[0];
+};
+
+// Bingo Tasks Functions
+const createBingoTask = async (gameName, task, difficulty = 'Normal', type = 'Standard') => {
+    const result = await pool.query(
+        'INSERT INTO bingo_tasks (game_name, task, difficulty, type) VALUES ($1, $2, $3, $4) RETURNING *',
+        [gameName, task, difficulty, type]
+    );
+    return result.rows[0];
+};
+
+const getBingoTasks = async (gameName) => {
+    const result = await pool.query(
+        'SELECT * FROM bingo_tasks WHERE game_name = $1 ORDER BY created_at DESC',
+        [gameName]
+    );
+    return result.rows;
+};
+
+const deleteBingoTask = async (id) => {
+    const result = await pool.query(
+        'DELETE FROM bingo_tasks WHERE id = $1 RETURNING *',
+        [id]
+    );
+    return result.rows[0];
+};
+
+const getRandomBingoTasks = async (gameName, count) => {
+    const result = await pool.query(
+        'SELECT * FROM bingo_tasks WHERE game_name = $1 ORDER BY RANDOM() LIMIT $2',
+        [gameName, count]
+    );
+    return result.rows;
 };
 
 // User Bingo Runs functions
@@ -125,4 +158,8 @@ module.exports = {
     updateRunTime,
     finishRun,
     resetRun,
+    createBingoTask,
+    getBingoTasks,
+    deleteBingoTask,
+    getRandomBingoTasks,
 };

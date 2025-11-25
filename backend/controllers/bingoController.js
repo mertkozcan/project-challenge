@@ -11,6 +11,10 @@ const {
     updateRunTime,
     finishRun,
     resetRun,
+    createBingoTask,
+    getBingoTasks,
+    deleteBingoTask,
+    getRandomBingoTasks,
 } = require('../models/bingoModel');
 const multer = require('multer');
 const path = require('path');
@@ -102,10 +106,10 @@ const approveProof = async (req, res) => {
 };
 
 const createNewBoard = async (req, res) => {
-    const { game_name, title, description, size, cells } = req.body;
+    const { game_name, title, description, size, type, theme, cells } = req.body;
 
     try {
-        const board = await createBoard(game_name, title, description, size);
+        const board = await createBoard(game_name, title, description, size, type, theme);
 
         // Add cells if provided
         if (cells && Array.isArray(cells)) {
@@ -219,6 +223,52 @@ const getBingoStats = async (req, res) => {
     }
 };
 
+// --- Bingo Task Management ---
+
+const addTask = async (req, res) => {
+    const { game_name, task, difficulty, type } = req.body;
+    try {
+        const newTask = await createBingoTask(game_name, task, difficulty, type);
+        res.status(201).json(newTask);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const getTasks = async (req, res) => {
+    const { game } = req.query;
+    if (!game) return res.status(400).json({ error: 'Game name is required' });
+
+    try {
+        const tasks = await getBingoTasks(game);
+        res.json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const deleteTask = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await deleteBingoTask(id);
+        res.json({ message: 'Task deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const getRandomTasks = async (req, res) => {
+    const { game, count } = req.query;
+    if (!game) return res.status(400).json({ error: 'Game name is required' });
+
+    try {
+        const tasks = await getRandomBingoTasks(game, parseInt(count) || 25);
+        res.json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getBoards,
     getBoardDetail,
@@ -232,4 +282,8 @@ module.exports = {
     updateBingoRunTime,
     getSoloHistory,
     getBingoStats,
+    addTask,
+    getTasks,
+    deleteTask,
+    getRandomTasks,
 };

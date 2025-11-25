@@ -156,4 +156,10 @@ export const protectedRoutes = [
     component: lazy(() => import('@/pages/proofs/ProofReview')),
     authority: [],
   },
+  {
+    key: 'create-bingo',
+    path: '/bingo/create',
+    component: lazy(() => import('@/pages/bingo/CreateBingo')),
+    authority: [],
+  },
 ];

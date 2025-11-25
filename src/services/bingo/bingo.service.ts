@@ -101,4 +101,47 @@ export const BingoService = {
     });
     return res.data;
   },
+  async createBoard(data: any): Promise<BingoBoard> {
+    const res = await ApiService.fetchData<any, BingoBoard>({
+      url: '/bingo',
+      method: 'POST',
+      data,
+    });
+    return res.data;
+  },
+
+  // Task Management
+  async createTask(data: any): Promise<any> {
+    const res = await ApiService.fetchData<any, any>({
+      url: '/bingo/tasks',
+      method: 'POST',
+      data,
+    });
+    return res.data;
+  },
+
+  async getTasks(game: string): Promise<any[]> {
+    const res = await ApiService.fetchData<void, any[]>({
+      url: '/bingo/tasks',
+      method: 'GET',
+      params: { game },
+    });
+    return res.data;
+  },
+
+  async deleteTask(id: number): Promise<void> {
+    await ApiService.fetchData<void, void>({
+      url: `/bingo/tasks/${id}`,
+      method: 'DELETE',
+    });
+  },
+
+  async getRandomTasks(game: string, count: number): Promise<any[]> {
+    const res = await ApiService.fetchData<void, any[]>({
+      url: '/bingo/tasks/random',
+      method: 'GET',
+      params: { game, count },
+    });
+    return res.data;
+  },
 };

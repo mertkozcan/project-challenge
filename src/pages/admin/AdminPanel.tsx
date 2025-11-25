@@ -18,15 +18,19 @@ import {
   SimpleGrid,
   Stack,
   Select,
+  Image,
 } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
 import { AdminService, type Game } from '@/services/admin/admin.service';
 import { ChallengesService } from '@/services/challenges/challenges.service';
 import { BuildsService } from '@/services/builds/builds.service';
 import ProofService, { type Proof } from '@/services/proof/proof.service';
+import { BingoService } from '@/services/bingo/bingo.service';
 import { Challenge } from '@/@types/challenge';
 import { Build } from '@/@types/build';
-import { IconPlus, IconTrash, IconDeviceGamepad2, IconFileCheck, IconCheck, IconX, IconTarget, IconSword, IconFilter } from '@tabler/icons-react';
-import { useForm } from '@mantine/form';
+import { IconPlus, IconTrash, IconDeviceGamepad2, IconFileCheck, IconCheck, IconX, IconTarget, IconSword, IconGridDots } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
 
 const AdminPanel: React.FC = () => {
@@ -35,10 +39,18 @@ const AdminPanel: React.FC = () => {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [builds, setBuilds] = useState<Build[]>([]);
   const [proofs, setProofs] = useState<Proof[]>([]);
+  
+  // Bingo Tasks State
+  const [bingoTasks, setBingoTasks] = useState<any[]>([]);
+  const [taskGameFilter, setTaskGameFilter] = useState<string>('Elden Ring');
+  
+  // Modals
   const [challengeModalOpened, setChallengeModalOpened] = useState(false);
   const [buildModalOpened, setBuildModalOpened] = useState(false);
   const [modalOpened, setModalOpened] = useState(false);
-  const [buildFilter, setBuildFilter] = useState('all'); // 'all', 'official', 'community'
+  const [newTaskOpened, { open: openNewTask, close: closeNewTask }] = useDisclosure(false);
+
+  const [buildFilter, setBuildFilter] = useState('all');
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
 
   const form = useForm({
@@ -69,17 +81,26 @@ const AdminPanel: React.FC = () => {
     },
   });
 
-  useEffect(() => {
-    if (activeTab === 'games' && userId) {
-      fetchGames();
-    } else if (activeTab === 'challenges') {
-      fetchChallenges();
-    } else if (activeTab === 'builds') {
-      fetchBuilds();
-    } else if (activeTab === 'proofs') {
-      fetchProofs();
+  const taskForm = useForm({
+    initialValues: {
+        game_name: 'Elden Ring',
+        task: '',
+        difficulty: 'Normal',
+        type: 'Standard'
+    },
+    validate: {
+        task: (value) => (value.length < 3 ? 'Task must be at least 3 characters' : null),
     }
-  }, [activeTab, userId, buildFilter]);
+  });
+
+  useEffect(() => {
+    if (!userId) return;
+    if (activeTab === 'games') fetchGames();
+    else if (activeTab === 'challenges') fetchChallenges();
+    else if (activeTab === 'builds') fetchBuilds();
+    else if (activeTab === 'proofs') fetchProofs();
+    else if (activeTab === 'bingo-tasks') fetchBingoTasks();
+  }, [activeTab, userId, buildFilter, taskGameFilter]);
 
   const fetchGames = async () => {
     if (!userId) return;
@@ -111,14 +132,20 @@ const AdminPanel: React.FC = () => {
 
   const fetchBuilds = async () => {
     try {
-      // Pass 'official' or 'community' if filter is set, otherwise undefined for all (if backend supports it)
-      // If backend only supports 'official' or 'community', we might need to adjust logic.
-      // Assuming backend getAllBuilds handles optional contentType.
       const contentType = buildFilter === 'all' ? undefined : buildFilter;
       const data = await BuildsService.getBuilds(contentType);
       setBuilds(data);
     } catch (error) {
       console.error('Failed to fetch builds', error);
+    }
+  };
+
+  const fetchBingoTasks = async () => {
+    try {
+        const tasks = await BingoService.getTasks(taskGameFilter);
+        setBingoTasks(tasks);
+    } catch (error) {
+        console.error('Failed to fetch bingo tasks', error);
     }
   };
 
@@ -202,32 +229,48 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleAddTask = async (values: typeof taskForm.values) => {
+    try {
+        await BingoService.createTask(values);
+        notifications.show({ title: 'Success', message: 'Task added successfully', color: 'green' });
+        closeNewTask();
+        taskForm.reset();
+        fetchBingoTasks();
+    } catch (error) {
+        notifications.show({ title: 'Error', message: 'Failed to add task', color: 'red' });
+    }
+  };
+
+  const handleDeleteTask = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    try {
+        await BingoService.deleteTask(id);
+        notifications.show({ title: 'Success', message: 'Task deleted successfully', color: 'green' });
+        fetchBingoTasks();
+    } catch (error) {
+        notifications.show({ title: 'Error', message: 'Failed to delete task', color: 'red' });
+    }
+  };
+
   return (
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
-        <Title order={2}>Admin Dashboard</Title>
+        <div>
+          <Title order={2}>Admin Control Panel</Title>
+          <Text c="dimmed">Manage system resources and content</Text>
+        </div>
         <Badge size="lg" variant="dot" color="green">System Online</Badge>
       </Group>
 
       <Tabs value={activeTab} onChange={setActiveTab} variant="pills" radius="md">
         <Tabs.List mb="lg">
-          <Tabs.Tab value="games" leftSection={<IconDeviceGamepad2 size={18} />}>
-            Games
-          </Tabs.Tab>
-          <Tabs.Tab value="challenges" leftSection={<IconTarget size={18} />}>
-            Challenges
-          </Tabs.Tab>
-          <Tabs.Tab value="builds" leftSection={<IconSword size={18} />}>
-            Builds
-          </Tabs.Tab>
-          <Tabs.Tab value="proofs" leftSection={<IconFileCheck size={18} />}>
-            Proofs
-            {proofs.length > 0 && (
-              <Badge size="xs" circle color="red" style={{ marginLeft: 8 }}>
-                {proofs.length}
-              </Badge>
-            )}
-          </Tabs.Tab>
+          <Tabs.Tab value="games" leftSection={<IconDeviceGamepad2 size={18} />}>Games</Tabs.Tab>
+          <Tabs.Tab value="challenges" leftSection={<IconTarget size={18} />}>Challenges</Tabs.Tab>
+          <Tabs.Tab value="builds" leftSection={<IconSword size={18} />}>Builds</Tabs.Tab>
+          <Tabs.Tab value="proofs" leftSection={<IconFileCheck size={18} />} rightSection={
+            proofs.length > 0 && <Badge size="xs" circle color="red">{proofs.length}</Badge>
+          }>Proofs</Tabs.Tab>
+          <Tabs.Tab value="bingo-tasks" leftSection={<IconGridDots size={18} />}>Bingo Tasks</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="games">
@@ -241,7 +284,10 @@ const AdminPanel: React.FC = () => {
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
               {games.map((game) => (
                 <Card key={game.id} shadow="sm" padding="lg" radius="md" withBorder>
-                  <Group justify="space-between" mb="xs">
+                  <Card.Section>
+                     <Image src={game.icon_url || 'https://placehold.co/600x400'} height={160} alt={game.name} fallbackSrc="https://placehold.co/600x400" />
+                  </Card.Section>
+                  <Group justify="space-between" mt="md" mb="xs">
                     <Text fw={700} size="lg">{game.name}</Text>
                     <ActionIcon color="red" variant="subtle" onClick={() => handleDeleteGame(game.id)}>
                       <IconTrash size={18} />
@@ -250,9 +296,6 @@ const AdminPanel: React.FC = () => {
                   <Text size="sm" c="dimmed" mb="md" lineClamp={2}>
                     {game.description}
                   </Text>
-                  {game.icon_url && (
-                    <Badge variant="outline" color="gray">Has Icon</Badge>
-                  )}
                 </Card>
               ))}
             </SimpleGrid>
@@ -431,9 +474,54 @@ const AdminPanel: React.FC = () => {
             </SimpleGrid>
           </Paper>
         </Tabs.Panel>
+
+        <Tabs.Panel value="bingo-tasks">
+            <Stack gap="md">
+                <Group justify="space-between">
+                    <Select 
+                        data={['Elden Ring']}
+                        value={taskGameFilter}
+                        onChange={(val) => setTaskGameFilter(val || 'Elden Ring')}
+                        allowDeselect={false}
+                    />
+                    <Button leftSection={<IconPlus size={16} />} onClick={openNewTask}>Add Task</Button>
+                </Group>
+
+            <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
+                    <Table striped highlightOnHover>
+                        <Table.Thead>
+                            <Table.Tr>
+                                <Table.Th>Task Description</Table.Th>
+                                <Table.Th w={120}>Difficulty</Table.Th>
+                                <Table.Th w={120}>Type</Table.Th>
+                                <Table.Th w={80}>Action</Table.Th>
+                            </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                            {bingoTasks.map((task) => (
+                                <Table.Tr key={task.id}>
+                                    <Table.Td>{task.task}</Table.Td>
+                                    <Table.Td><Badge variant="light" color={task.difficulty === 'Hard' ? 'red' : 'blue'}>{task.difficulty}</Badge></Table.Td>
+                                    <Table.Td>{task.type}</Table.Td>
+                                    <Table.Td>
+                                        <ActionIcon color="red" variant="subtle" onClick={() => handleDeleteTask(task.id)}>
+                                            <IconTrash size={16} />
+                                        </ActionIcon>
+                                    </Table.Td>
+                                </Table.Tr>
+                            ))}
+                            {bingoTasks.length === 0 && (
+                                <Table.Tr>
+                                    <Table.Td colSpan={4} ta="center" py="xl" c="dimmed">No tasks found for this game.</Table.Td>
+                                </Table.Tr>
+                            )}
+                        </Table.Tbody>
+                    </Table>
+                </Paper>
+            </Stack>
+        </Tabs.Panel>
       </Tabs>
 
-      {/* Modals remain mostly the same but could be styled better if needed */}
       <Modal opened={modalOpened} onClose={() => setModalOpened(false)} title="Add New Game" centered>
         <form onSubmit={form.onSubmit(handleCreateGame)}>
           <Stack gap="md">
@@ -537,6 +625,43 @@ const AdminPanel: React.FC = () => {
               Create Build
             </Button>
           </Stack>
+        </form>
+      </Modal>
+
+      <Modal opened={newTaskOpened} onClose={closeNewTask} title="Add Bingo Task" centered>
+        <form onSubmit={taskForm.onSubmit(handleAddTask)}>
+            <Stack>
+                <Select 
+                    label="Game" 
+                    data={['Elden Ring']} 
+                    required 
+                    {...taskForm.getInputProps('game_name')} 
+                />
+                <Textarea 
+                    label="Task Description" 
+                    placeholder="e.g. Defeat Margit only using daggers" 
+                    required 
+                    minRows={3}
+                    {...taskForm.getInputProps('task')} 
+                />
+                <Group grow>
+                    <Select 
+                        label="Difficulty" 
+                        data={['Easy', 'Normal', 'Hard', 'Expert']} 
+                        required 
+                        {...taskForm.getInputProps('difficulty')} 
+                    />
+                    <Select 
+                        label="Type" 
+                        data={['Standard', 'Boss', 'Item', 'Area']} 
+                        required 
+                        {...taskForm.getInputProps('type')} 
+                    />
+                </Group>
+                <Button type="submit" fullWidth mt="md">
+                    Add Task
+                </Button>
+            </Stack>
         </form>
       </Modal>
     </Container>

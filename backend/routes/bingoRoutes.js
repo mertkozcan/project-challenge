@@ -11,7 +11,11 @@ const {
     finishBingoRun,
     updateBingoRunTime,
     getSoloHistory,
-    getBingoStats
+    getBingoStats,
+    addTask,
+    getTasks,
+    deleteTask,
+    getRandomTasks
 } = require('../controllers/bingoController');
 const { getBingoLeaderboard, getUserBingoLeaderboardRanks } = require('../controllers/bingoLeaderboardController');
 
@@ -29,6 +33,12 @@ router.get('/leaderboard/user/:userId', getUserBingoLeaderboardRanks);
 // History and stats (Must be before /:id)
 router.get('/history/solo/:userId', getSoloHistory);
 router.get('/stats/:userId', getBingoStats);
+
+// Bingo Task Management (Must be before /:id)
+router.post('/tasks', addTask);
+router.get('/tasks', getTasks);
+router.get('/tasks/random', getRandomTasks);
+router.delete('/tasks/:id', deleteTask);
 
 // General board routes
 router.get('/', getBoards);
