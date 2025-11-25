@@ -19,7 +19,7 @@ const upload = multer({ storage: storage });
 
 const submitProof = async (req, res) => {
     try {
-        const { challengeId, userId, run_code, video_url } = req.body;
+        const { challenge_id, user_id, run_code, video_url } = req.body;
         const file = req.file;
 
         // Validation
@@ -38,8 +38,8 @@ const submitProof = async (req, res) => {
         }
 
         const newProof = await createProof({
-            challenge_id: challengeId,
-            user_id: userId,
+            challenge_id,
+            user_id,
             image_url: file ? `/uploads/${file.filename}` : null,
             video_url: video_url,
             run_code: run_code,
