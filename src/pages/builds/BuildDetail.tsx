@@ -309,25 +309,6 @@ const BuildDetail: React.FC = () => {
                 </Paper>
               )}
 
-              {/* Strategy/Tips Card */}
-              <Paper
-                shadow="md"
-                p="xl"
-                radius="md"
-                style={{
-                  background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
-                  border: `1px solid ${theme.primary}20`,
-                }}
-              >
-                <Title order={3} mb="md" c={theme.primary}>
-                  Playstyle & Strategy
-                </Title>
-                <Text c="dimmed" size="md">
-                  This build focuses on maximizing effectiveness through careful equipment selection
-                  and strategic gameplay. Follow the item recommendations above for optimal performance.
-                </Text>
-              </Paper>
-
               {/* Comments Section */}
               <BuildComments buildId={parseInt(id!)} theme={theme} />
             </Stack>
