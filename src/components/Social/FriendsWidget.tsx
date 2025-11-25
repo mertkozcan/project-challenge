@@ -180,7 +180,7 @@ const FriendsWidget: React.FC = () => {
   const onlineCount = friends.filter(f => onlineUsers.has(f.id)).length;
 
   return (
-    <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1000 }}>
+    <div style={{ position: 'fixed', bottom: 20, right: 100, zIndex: 1000 }}>
       <Transition transition="slide-up" mounted={opened}>
         {(styles) => (
           <Paper 
@@ -319,16 +319,21 @@ const FriendsWidget: React.FC = () => {
         disabled={requests.length === 0} 
         offset={4}
       >
-        <ActionIcon 
-          size={48} 
-          radius="xl" 
-          variant="filled" 
-          color="blue" 
+        <Button
+          size="md"
+          radius="xl"
+          color="blue"
           onClick={() => setOpened((o) => !o)}
-          style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
+          style={{ 
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            height: 48,
+            paddingLeft: 20,
+            paddingRight: 20
+          }}
+          leftSection={opened ? <IconChevronDown size={20} /> : <IconUsers size={20} />}
         >
-          {opened ? <IconChevronDown size={24} /> : <IconUsers size={24} />}
-        </ActionIcon>
+          Friends
+        </Button>
       </Indicator>
     </div>
   );
