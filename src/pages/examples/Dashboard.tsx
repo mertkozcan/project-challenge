@@ -8,6 +8,7 @@ import { ChallengesService } from '@/services/challenges/challenges.service';
 import { UserStatsService } from '@/services/userStats/userStats.service';
 import { BuildsService } from '@/services/builds/builds.service';
 import { BingoRoomService } from '@/services/bingo/bingoRoom.service';
+import { LeaderboardService } from '@/services/leaderboard/leaderboard.service';
 import {
   ChallengeSpotlightWidget,
   UserProgressWidget,
@@ -15,7 +16,10 @@ import {
   QuickBingoWidget,
   LivePulseWidget,
   StatsOverviewWidget,
-  FeaturedBuildWidget
+  FeaturedBuildWidget,
+  TrendingBuildsWidget,
+  SoloBingoWidget,
+  LeaderboardPodiumWidget
 } from '@/components/Dashboard/DashboardWidgets';
 
 const Dashboard: React.FC = () => {
@@ -27,6 +31,8 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [challengeOfTheDay, setChallengeOfTheDay] = useState<any>(null);
   const [featuredBuild, setFeaturedBuild] = useState<any>(null);
+  const [trendingBuilds, setTrendingBuilds] = useState<any[]>([]);
+  const [topPlayers, setTopPlayers] = useState<any[]>([]);
   const [userStats, setUserStats] = useState<any>({
     completedChallenges: 0,
     activeChallenges: 0,
@@ -58,18 +64,21 @@ const Dashboard: React.FC = () => {
             }
         }
         
-        // Total Challenges Count (for Quick Create)
+        // Total Challenges Count
         const allChallenges = await ChallengesService.getChallenges();
         setTotalChallenges(allChallenges.length);
 
-        // 2. Featured Build (Random Official Build)
+        // 2. Featured Build (Random Official) & Trending Builds (Community)
         const officialBuilds = await BuildsService.getBuilds('official');
         if (officialBuilds.length > 0) {
             const randomBuild = officialBuilds[Math.floor(Math.random() * officialBuilds.length)];
             setFeaturedBuild(randomBuild);
         }
 
-        // 3. User Stats
+        const communityBuilds = await BuildsService.getBuilds('community');
+        setTrendingBuilds(communityBuilds.slice(0, 4)); // Take top 4 for now
+
+        // 3. User Stats & Leaderboard
         if (userId && authenticated) {
           try {
             const stats = await UserStatsService.getUserStats(userId);
@@ -77,6 +86,13 @@ const Dashboard: React.FC = () => {
           } catch (e) {
             console.error("Failed to fetch user stats", e);
           }
+        }
+
+        try {
+            const leaderboard = await LeaderboardService.getGlobalRankings('points');
+            setTopPlayers(leaderboard.slice(0, 3));
+        } catch (e) {
+            console.error("Failed to fetch leaderboard", e);
         }
 
         // 4. Active Bingo Rooms
@@ -87,17 +103,16 @@ const Dashboard: React.FC = () => {
             console.error("Failed to fetch bingo rooms", e);
         }
 
-        // 5. Live Activity (Real Data: Latest Challenges + Builds)
+        // 5. Live Activity
         const latestChallenges = await ChallengesService.getLatestChallenges();
-        const latestBuilds = await BuildsService.getBuilds(); // Assuming this returns latest first or we sort
+        const latestBuilds = await BuildsService.getBuilds();
         
-        // Normalize and merge
         const activityItems = [
             ...latestChallenges.slice(0, 3).map((c: any) => ({
                 type: 'challenge',
                 title: c.challenge_name,
                 user: c.creator_username || 'Unknown',
-                time: new Date(c.created_at).toLocaleDateString(), // Simplified time
+                time: new Date(c.created_at).toLocaleDateString(),
                 timestamp: new Date(c.created_at).getTime()
             })),
             ...latestBuilds.slice(0, 3).map((b: any) => ({
@@ -196,12 +211,27 @@ const Dashboard: React.FC = () => {
              </Box>
           )}
           
-           {/* 6. Featured Build (1x1) - Replaces Quick Create if authenticated, or added elsewhere */}
+           {/* 6. Featured Build (1x1) */}
            {authenticated && (
               <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
                 <FeaturedBuildWidget build={featuredBuild} />
               </Box>
            )}
+
+           {/* 7. Trending Builds (2x1) */}
+           <Box style={{ gridColumn: 'span 2', gridRow: 'span 1' }}>
+                <TrendingBuildsWidget builds={trendingBuilds} />
+           </Box>
+
+           {/* 8. Solo Bingo (1x1) */}
+           <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
+                <SoloBingoWidget />
+           </Box>
+
+           {/* 9. Leaderboard Podium (1x1) */}
+           <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
+                <LeaderboardPodiumWidget topPlayers={topPlayers} />
+           </Box>
 
         </Box>
       </Container>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Text, Title, Group, ThemeIcon, Button, RingProgress, Stack, Badge, Avatar, ActionIcon, Progress } from '@mantine/core';
+import { Paper, Text, Title, Group, ThemeIcon, Button, RingProgress, Stack, Badge, Avatar, ActionIcon, Progress, SimpleGrid } from '@mantine/core';
 import { IconTrophy, IconFlame, IconClock, IconArrowRight, IconTarget, IconUsers, IconStar, IconRocket, IconPlus, IconDeviceGamepad2, IconSword } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -98,7 +98,7 @@ export const UserProgressWidget = ({ stats, user }: any) => {
   const progress = (xp / nextLevelXp) * 100;
 
   return (
-    <WidgetWrapper onClick={() => navigate(`/profile/${user?.userId}`)} delay={0.1}>
+    <WidgetWrapper onClick={() => navigate(`/profile/${user?.username}`)} delay={0.1}>
       <Group justify="space-between" mb="xs">
         <Text fw={700} c="dimmed" size="xs" tt="uppercase">My Rank</Text>
         <ThemeIcon variant="light" color="blue" radius="md">
@@ -247,4 +247,90 @@ export const StatsOverviewWidget = ({ stats }: any) => {
       </Group>
     </WidgetWrapper>
   );
+};
+
+// --- 8. Trending Builds Widget (2x1) ---
+export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
+    const navigate = useNavigate();
+    // Simple carousel effect or just display 2 side by side
+    const displayBuilds = builds.slice(0, 2);
+
+    return (
+        <WidgetWrapper style={{ gridColumn: 'span 2' }} delay={0.35}>
+            <Group justify="space-between" mb="sm">
+                <Group gap="xs">
+                    <ThemeIcon color="orange" variant="light" size="md">
+                        <IconFlame size={16} />
+                    </ThemeIcon>
+                    <Text fw={700} size="sm" tt="uppercase">Trending Builds</Text>
+                </Group>
+                <Button variant="subtle" size="xs" onClick={() => navigate('/builds')}>View All</Button>
+            </Group>
+            <SimpleGrid cols={2} spacing="xs">
+                {displayBuilds.map((build) => (
+                    <Paper 
+                        key={build.id} 
+                        p="xs" 
+                        radius="md" 
+                        style={{ background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                        onClick={() => navigate(`/builds/${build.id}`)}
+                    >
+                        <Group gap="xs" mb={4}>
+                             <Avatar src={build.game_icon} size="xs" />
+                             <Text size="xs" fw={700} lineClamp={1}>{build.build_name}</Text>
+                        </Group>
+                        <Text size="xs" c="dimmed" lineClamp={1}>by {build.username}</Text>
+                    </Paper>
+                ))}
+                {displayBuilds.length === 0 && <Text size="xs" c="dimmed">No trending builds yet.</Text>}
+            </SimpleGrid>
+        </WidgetWrapper>
+    );
+};
+
+// --- 9. Solo Bingo Widget (1x1) ---
+export const SoloBingoWidget = () => {
+    const navigate = useNavigate();
+    return (
+        <WidgetWrapper onClick={() => navigate('/bingo-challenges')} delay={0.4}>
+             <Stack justify="space-between" h="100%">
+                <ThemeIcon size={40} radius="md" variant="gradient" gradient={{ from: 'teal', to: 'lime' }}>
+                    <IconDeviceGamepad2 size={24} />
+                </ThemeIcon>
+                <div>
+                    <Text fw={700} size="lg">Solo Bingo</Text>
+                    <Text size="xs" c="dimmed">Quick Play</Text>
+                </div>
+            </Stack>
+        </WidgetWrapper>
+    );
+};
+
+// --- 10. Leaderboard Podium Widget (1x1) ---
+export const LeaderboardPodiumWidget = ({ topPlayers }: { topPlayers: any[] }) => {
+    const navigate = useNavigate();
+    const top1 = topPlayers[0];
+
+    return (
+        <WidgetWrapper onClick={() => navigate('/leaderboard')} delay={0.45}>
+             <Stack justify="space-between" h="100%">
+                <Group justify="space-between">
+                     <ThemeIcon size="md" radius="xl" color="yellow" variant="filled">
+                        <IconTrophy size={14} />
+                     </ThemeIcon>
+                     <Text size="xs" fw={700} c="yellow">#1 Leader</Text>
+                </Group>
+                
+                {top1 ? (
+                    <Stack gap={4} align="center">
+                        <Avatar src={top1.avatar_url} size="md" radius="xl" style={{ border: '2px solid #FFD700' }} />
+                        <Text fw={700} size="sm" lineClamp={1}>{top1.username}</Text>
+                        <Text size="xs" c="dimmed">{top1.points} pts</Text>
+                    </Stack>
+                ) : (
+                    <Text size="xs" c="dimmed">No data</Text>
+                )}
+            </Stack>
+        </WidgetWrapper>
+    );
 };
