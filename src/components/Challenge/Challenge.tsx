@@ -67,7 +67,7 @@ const ChallengeDetail: React.FC = () => {
       
       if (activeSession && activeSession.challenge_id === parseInt(id)) {
         // User already has a session for this challenge, navigate to proof upload
-        navigate('/proof/upload', { state: { session: activeSession } });
+        navigate('/proofs/upload', { state: { session: activeSession } });
         return;
       }
 
@@ -85,7 +85,7 @@ const ChallengeDetail: React.FC = () => {
       });
 
       // Navigate to proof upload with session data
-      navigate('/proof/upload', { state: { session } });
+      navigate('/proofs/upload', { state: { session } });
     } catch (error: any) {
       console.error('Failed to start challenge:', error);
       notifications.show({
