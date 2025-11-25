@@ -6,44 +6,49 @@ import { useAppSelector } from '@/store';
 import useAuth from '@/utils/hooks/useAuth';
 import { ChallengesService } from '@/services/challenges/challenges.service';
 import { UserStatsService } from '@/services/userStats/userStats.service';
+import { BuildsService } from '@/services/builds/builds.service';
+import { BingoRoomService } from '@/services/bingo/bingoRoom.service';
 import {
   ChallengeSpotlightWidget,
   UserProgressWidget,
   QuickCreateWidget,
   QuickBingoWidget,
   LivePulseWidget,
-  StatsOverviewWidget
+  StatsOverviewWidget,
+  FeaturedBuildWidget
 } from '@/components/Dashboard/DashboardWidgets';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { authenticated } = useAuth();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
-  const user = useAppSelector((state) => state.auth.userInfo); // Assuming userInfo has level/xp
+  const user = useAppSelector((state) => state.auth.userInfo);
 
   const [loading, setLoading] = useState(true);
   const [challengeOfTheDay, setChallengeOfTheDay] = useState<any>(null);
+  const [featuredBuild, setFeaturedBuild] = useState<any>(null);
   const [userStats, setUserStats] = useState<any>({
     completedChallenges: 0,
     activeChallenges: 0,
     points: 0,
   });
   const [liveActivity, setLiveActivity] = useState<any[]>([]);
+  const [activeRoomCount, setActiveRoomCount] = useState<number>(0);
+  const [totalChallenges, setTotalChallenges] = useState<number>(0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // 1. Challenge of the Day (Random or specific logic)
+        // 1. Challenge of the Day
         const challenges = await ChallengesService.getChallenges('daily', 'official');
         if (challenges.length > 0) {
           setChallengeOfTheDay({
              ...challenges[0],
-             gameImage: challenges[0].banner_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80' // Placeholder if no image
+             gameImage: challenges[0].banner_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80'
           });
         } else {
-            // Fallback to any challenge
             const all = await ChallengesService.getChallenges();
             if (all.length > 0) {
                  setChallengeOfTheDay({
@@ -52,8 +57,19 @@ const Dashboard: React.FC = () => {
                  });
             }
         }
+        
+        // Total Challenges Count (for Quick Create)
+        const allChallenges = await ChallengesService.getChallenges();
+        setTotalChallenges(allChallenges.length);
 
-        // 2. User Stats
+        // 2. Featured Build (Random Official Build)
+        const officialBuilds = await BuildsService.getBuilds('official');
+        if (officialBuilds.length > 0) {
+            const randomBuild = officialBuilds[Math.floor(Math.random() * officialBuilds.length)];
+            setFeaturedBuild(randomBuild);
+        }
+
+        // 3. User Stats
         if (userId && authenticated) {
           try {
             const stats = await UserStatsService.getUserStats(userId);
@@ -63,12 +79,37 @@ const Dashboard: React.FC = () => {
           }
         }
 
-        // 3. Mock Live Activity (Replace with real socket data later)
-        setLiveActivity([
-          { user: 'DarkSoul99', action: 'Completed "No Hit Run"', time: '2m ago', avatar: null },
-          { user: 'EldenLord', action: 'Joined Bingo Room #42', time: '5m ago', avatar: null },
-          { user: 'MageBuilds', action: 'Created "Glass Cannon"', time: '12m ago', avatar: null },
-        ]);
+        // 4. Active Bingo Rooms
+        try {
+            const rooms = await BingoRoomService.getAvailableRooms();
+            setActiveRoomCount(rooms.length);
+        } catch (e) {
+            console.error("Failed to fetch bingo rooms", e);
+        }
+
+        // 5. Live Activity (Real Data: Latest Challenges + Builds)
+        const latestChallenges = await ChallengesService.getLatestChallenges();
+        const latestBuilds = await BuildsService.getBuilds(); // Assuming this returns latest first or we sort
+        
+        // Normalize and merge
+        const activityItems = [
+            ...latestChallenges.slice(0, 3).map((c: any) => ({
+                type: 'challenge',
+                title: c.challenge_name,
+                user: c.creator_username || 'Unknown',
+                time: new Date(c.created_at).toLocaleDateString(), // Simplified time
+                timestamp: new Date(c.created_at).getTime()
+            })),
+            ...latestBuilds.slice(0, 3).map((b: any) => ({
+                type: 'build',
+                title: b.build_name,
+                user: b.username || 'Unknown',
+                time: new Date(b.created_at).toLocaleDateString(),
+                timestamp: new Date(b.created_at).getTime()
+            }))
+        ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+
+        setLiveActivity(activityItems);
 
       } catch (error) {
         console.error('Dashboard data fetch error:', error);
@@ -124,11 +165,6 @@ const Dashboard: React.FC = () => {
             gap: '24px',
           }}
         >
-          {/* Mobile/Tablet adjustments handled via media queries in CSS or simple conditional rendering if needed. 
-              For simplicity, we assume a responsive grid container or use Mantine's SimpleGrid for mobile fallback if strictly needed, 
-              but CSS Grid is robust. Here we use inline styles for the grid structure.
-          */}
-          
           {/* 1. Challenge Spotlight (2x2) */}
           <Box style={{ gridColumn: 'span 2', gridRow: 'span 2' }}>
              <ChallengeSpotlightWidget challenge={challengeOfTheDay} loading={loading} />
@@ -139,13 +175,13 @@ const Dashboard: React.FC = () => {
             {authenticated ? (
               <UserProgressWidget stats={userStats} user={user} />
             ) : (
-               <QuickCreateWidget /> // Fallback for guest
+               <QuickCreateWidget totalChallenges={totalChallenges} />
             )}
           </Box>
 
           {/* 3. Quick Action: Bingo (1x1) */}
           <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
-            <QuickBingoWidget />
+            <QuickBingoWidget activeRooms={activeRoomCount} />
           </Box>
 
           {/* 4. Live Pulse (1x2) */}
@@ -160,10 +196,10 @@ const Dashboard: React.FC = () => {
              </Box>
           )}
           
-           {/* 6. Quick Action: Create (1x1) - If not shown above */}
+           {/* 6. Featured Build (1x1) - Replaces Quick Create if authenticated, or added elsewhere */}
            {authenticated && (
               <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
-                <QuickCreateWidget />
+                <FeaturedBuildWidget build={featuredBuild} />
               </Box>
            )}
 

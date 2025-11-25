@@ -1,6 +1,6 @@
 import React from 'react';
 import { Paper, Text, Title, Group, ThemeIcon, Button, RingProgress, Stack, Badge, Avatar, ActionIcon, Progress } from '@mantine/core';
-import { IconTrophy, IconFlame, IconClock, IconArrowRight, IconTarget, IconUsers, IconStar, IconRocket, IconPlus, IconDeviceGamepad2 } from '@tabler/icons-react';
+import { IconTrophy, IconFlame, IconClock, IconArrowRight, IconTarget, IconUsers, IconStar, IconRocket, IconPlus, IconDeviceGamepad2, IconSword } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -126,7 +126,7 @@ export const UserProgressWidget = ({ stats, user }: any) => {
 };
 
 // --- 3. Quick Action: Create (1x1) ---
-export const QuickCreateWidget = () => {
+export const QuickCreateWidget = ({ totalChallenges }: { totalChallenges?: number }) => {
   const navigate = useNavigate();
   return (
     <WidgetWrapper onClick={() => navigate('/challenges/create')} delay={0.15}>
@@ -137,6 +137,9 @@ export const QuickCreateWidget = () => {
         <div>
           <Text fw={700} size="lg">Create</Text>
           <Text size="xs" c="dimmed">New Challenge</Text>
+          {totalChallenges !== undefined && (
+             <Badge size="xs" variant="light" color="blue" mt={4}>{totalChallenges}+ Challenges</Badge>
+          )}
         </div>
       </Stack>
     </WidgetWrapper>
@@ -144,7 +147,7 @@ export const QuickCreateWidget = () => {
 };
 
 // --- 4. Quick Action: Bingo (1x1) ---
-export const QuickBingoWidget = () => {
+export const QuickBingoWidget = ({ activeRooms }: { activeRooms?: number }) => {
   const navigate = useNavigate();
   return (
     <WidgetWrapper onClick={() => navigate('/bingo/rooms')} delay={0.2}>
@@ -155,6 +158,9 @@ export const QuickBingoWidget = () => {
         <div>
           <Text fw={700} size="lg">Bingo</Text>
           <Text size="xs" c="dimmed">Join Room</Text>
+          {activeRooms !== undefined && (
+            <Badge size="xs" variant="dot" color="green" mt={4}>{activeRooms} Live Rooms</Badge>
+          )}
         </div>
       </Stack>
     </WidgetWrapper>
@@ -166,19 +172,21 @@ export const LivePulseWidget = ({ activities }: any) => {
   return (
     <WidgetWrapper style={{ gridRow: 'span 2' }} delay={0.25}>
       <Group justify="space-between" mb="md">
-        <Text fw={700} c="dimmed" size="xs" tt="uppercase">Live Activity</Text>
+        <Text fw={700} c="dimmed" size="xs" tt="uppercase">Community Pulse</Text>
         <Badge size="xs" variant="dot" color="green">Live</Badge>
       </Group>
       
       <Stack gap="md" style={{ overflow: 'hidden' }}>
         {activities.map((activity: any, index: number) => (
-          <Group key={index} wrap="nowrap">
-            <Avatar src={activity.avatar} size="sm" radius="xl" />
+          <Group key={index} wrap="nowrap" align="flex-start">
+            <ThemeIcon size="sm" radius="xl" variant="light" color={activity.type === 'challenge' ? 'orange' : 'blue'}>
+                {activity.type === 'challenge' ? <IconTarget size={12} /> : <IconSword size={12} />}
+            </ThemeIcon>
             <div style={{ flex: 1, overflow: 'hidden' }}>
-              <Text size="xs" fw={700} truncate>{activity.user}</Text>
-              <Text size="xs" c="dimmed" truncate>{activity.action}</Text>
+              <Text size="xs" fw={700} truncate>{activity.title}</Text>
+              <Text size="xs" c="dimmed" truncate>by {activity.user}</Text>
             </div>
-            <Text size="xs" c="dimmed">{activity.time}</Text>
+            <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>{activity.time}</Text>
           </Group>
         ))}
         {activities.length === 0 && <Text size="sm" c="dimmed">No recent activity.</Text>}
@@ -187,7 +195,30 @@ export const LivePulseWidget = ({ activities }: any) => {
   );
 };
 
-// --- 6. Stats Widget (2x1) ---
+// --- 6. Featured Build Widget (1x1) ---
+export const FeaturedBuildWidget = ({ build }: any) => {
+    const navigate = useNavigate();
+    if (!build) return null;
+
+    return (
+        <WidgetWrapper onClick={() => navigate(`/builds/${build.id}`)} delay={0.3}>
+             <Stack justify="space-between" h="100%">
+                <Group justify="space-between">
+                    <ThemeIcon size="lg" radius="md" variant="light" color="red">
+                        <IconSword size={20} />
+                    </ThemeIcon>
+                    <Badge size="xs" color="yellow">Featured</Badge>
+                </Group>
+                <div>
+                    <Text fw={700} size="md" lineClamp={1}>{build.build_name}</Text>
+                    <Text size="xs" c="dimmed" lineClamp={1}>{build.game_name}</Text>
+                </div>
+            </Stack>
+        </WidgetWrapper>
+    );
+};
+
+// --- 7. Stats Widget (2x1) ---
 export const StatsOverviewWidget = ({ stats }: any) => {
   return (
     <WidgetWrapper style={{ gridColumn: 'span 2' }} delay={0.3}>
