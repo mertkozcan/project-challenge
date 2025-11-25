@@ -1,4 +1,4 @@
-const { createBuild, getBuildsByGame, getBuildById, getAllBuilds } = require('../models/buildModel');
+const { createBuild, getBuildsByGame, getBuildById, getAllBuilds, deleteBuildById } = require('../models/buildModel');
 
 const addBuild = async (req, res) => {
     const { user_id, game_name, build_name, description, items_json, video_url } = req.body;
