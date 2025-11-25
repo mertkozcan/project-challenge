@@ -65,6 +65,9 @@ const ItemSearchModal = ({ opened, onClose, category, onSelect, theme }: ItemSea
       shields: 'Shields',
       ashes: 'Ashes of War',
       consumables: 'Consumables',
+      classes: 'Starting Classes',
+      spirits: 'Spirit Ashes',
+      ammos: 'Ammo',
     };
     return labels[cat];
   };
