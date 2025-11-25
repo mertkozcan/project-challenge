@@ -31,4 +31,10 @@ export const BuildsService = {
     });
     return res.data;
   },
+  async deleteBuild(id: number): Promise<void> {
+    await ApiService.fetchData<void, void>({
+      url: `/builds/${id}`,
+      method: 'DELETE',
+    });
+  },
 };

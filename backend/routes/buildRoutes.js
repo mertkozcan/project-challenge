@@ -1,5 +1,5 @@
 const express = require('express');
-const { addBuild, getBuilds, getBuildDetail } = require('../controllers/buildController');
+const { addBuild, getBuilds, getBuildDetail, deleteBuild } = require('../controllers/buildController');
 const { rateBuild, getUserRating, getRatingStats, addComment, getComments, deleteComment } = require('../controllers/buildRatingController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
@@ -9,6 +9,7 @@ const router = express.Router();
 router.post('/', addBuild);
 router.get('/', getBuilds);
 router.get('/:id', getBuildDetail);
+router.delete('/:id', authenticateToken, deleteBuild);
 
 // Rating endpoints
 router.post('/:buildId/rate', authenticateToken, rateBuild);

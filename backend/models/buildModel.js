@@ -54,4 +54,12 @@ const getAllBuilds = async (contentType) => {
     return result.rows;
 }
 
-module.exports = { createBuild, getBuildsByGame, getBuildById, getAllBuilds };
+const deleteBuildById = async (id) => {
+    const result = await pool.query(
+        'DELETE FROM builds WHERE id = $1 RETURNING *',
+        [id]
+    );
+    return result.rows[0];
+};
+
+module.exports = { createBuild, getBuildsByGame, getBuildById, getAllBuilds, deleteBuildById };

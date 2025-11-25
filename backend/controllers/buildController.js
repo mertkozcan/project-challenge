@@ -44,4 +44,17 @@ const getBuildDetail = async (req, res) => {
     }
 }
 
-module.exports = { addBuild, getBuilds, getBuildDetail };
+const deleteBuild = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const deletedBuild = await deleteBuildById(id);
+        if (!deletedBuild) {
+            return res.status(404).json({ error: 'Build not found' });
+        }
+        res.json({ message: 'Build deleted successfully', build: deletedBuild });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { addBuild, getBuilds, getBuildDetail, deleteBuild };
