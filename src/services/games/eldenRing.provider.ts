@@ -92,8 +92,15 @@ export class EldenRingProvider implements GameDataProvider {
         endpoint = `/${this.categoryMap[category]}`;
       }
 
+      // Special handling for Crystal Tears initial load
+      // The API doesn't have a dedicated endpoint, so we search for "Tear" if query is empty
+      let searchQuery = query;
+      if (category === 'crystalTears' && !searchQuery) {
+          searchQuery = 'Tear';
+      }
+
       // The API supports ?name=... parameter
-      const url = `${this.baseUrl}${endpoint}?name=${encodeURIComponent(query)}&limit=100`;
+      const url = `${this.baseUrl}${endpoint}?name=${encodeURIComponent(searchQuery)}&limit=100`;
       
       const response = await fetch(url);
       if (!response.ok) {

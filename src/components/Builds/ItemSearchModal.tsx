@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, TextInput, Stack, ScrollArea, Card, Group, Text, Image, LoadingOverlay, Box, SimpleGrid } from '@mantine/core';
+import { Modal, TextInput, Stack, ScrollArea, Card, Group, Text, Image, LoadingOverlay, Box, SimpleGrid, Divider } from '@mantine/core';
 import { IconSearch } from '@tabler/icons-react';
 import { GameItem, ItemCategory } from '@/services/games/gameData.provider';
 import { EldenRingProvider } from '@/services/games/eldenRing.provider';
@@ -174,6 +174,48 @@ const ItemSearchModal = ({ opened, onClose, category, onSelect, theme }: ItemSea
                     >
                       {item.name}
                     </Text>
+
+                    {/* Stats for Sorceries/Incantations/Spirits */}
+                    {(item.stats?.cost || item.stats?.fpCost || item.stats?.requirements) && (
+                        <Stack gap={2} mt="xs" w="100%">
+                            <Divider color="rgba(255,255,255,0.1)" />
+                            
+                            {/* FP Cost */}
+                            {(item.stats?.cost || item.stats?.fpCost) && (
+                                <Group justify="space-between">
+                                    <Text size="xs" c="dimmed">FP</Text>
+                                    <Text size="xs" c="blue.3">{item.stats?.cost || item.stats?.fpCost}</Text>
+                                </Group>
+                            )}
+
+                            {/* HP Cost (Spirits) */}
+                            {item.stats?.hpCost && item.stats.hpCost !== "0" && (
+                                <Group justify="space-between">
+                                    <Text size="xs" c="dimmed">HP</Text>
+                                    <Text size="xs" c="red.3">{item.stats.hpCost}</Text>
+                                </Group>
+                            )}
+
+                            {/* Slots */}
+                            {item.stats?.slots && (
+                                <Group justify="space-between">
+                                    <Text size="xs" c="dimmed">Slots</Text>
+                                    <Text size="xs">{item.stats.slots}</Text>
+                                </Group>
+                            )}
+
+                            {/* Requirements */}
+                            {item.stats?.requirements && (
+                                <Group gap={4} justify="center" mt={2}>
+                                    {item.stats.requirements.map((r: any, i: number) => (
+                                        <Text key={i} size="xs" c="dimmed" style={{ fontSize: 10 }}>
+                                            {r.name.substring(0,3)} {r.value}
+                                        </Text>
+                                    ))}
+                                </Group>
+                            )}
+                        </Stack>
+                    )}
                   </Card>
                 </ItemTooltip>
               ))}
