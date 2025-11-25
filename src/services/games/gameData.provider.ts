@@ -1,4 +1,4 @@
-export type ItemCategory = 'weapons' | 'armors' | 'talismans' | 'sorceries' | 'incantations' | 'shields' | 'ashes' | 'consumables' | 'classes' | 'spirits' | 'ammos';
+export type ItemCategory = 'weapons' | 'armors' | 'talismans' | 'sorceries' | 'incantations' | 'shields' | 'ashes' | 'consumables' | 'classes' | 'spirits' | 'ammos' | 'greatRunes' | 'crystalTears';
 
 export interface GameItem {
   id: string;

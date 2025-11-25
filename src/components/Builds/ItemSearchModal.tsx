@@ -68,6 +68,8 @@ const ItemSearchModal = ({ opened, onClose, category, onSelect, theme }: ItemSea
       classes: 'Starting Classes',
       spirits: 'Spirit Ashes',
       ammos: 'Ammo',
+      greatRunes: 'Great Runes',
+      crystalTears: 'Crystal Tears',
     };
     return labels[cat];
   };

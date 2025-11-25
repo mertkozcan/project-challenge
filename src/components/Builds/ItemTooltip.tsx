@@ -4,8 +4,8 @@ import { ReactNode } from 'react';
 interface ItemStats {
   attack?: Array<{ name: string; amount: number }>;
   defence?: Array<{ name: string; amount: number }>;
-  scalesWith?: Array<{ name: string; scaling: string }>;
-  requiredAttributes?: Array<{ name: string; amount: number }>;
+  scaling?: Array<{ name: string; scaling: string }>;
+  requirements?: Array<{ name: string; amount: number }>;
   effects?: string;
   weight?: number;
   category?: string;
@@ -81,11 +81,11 @@ const ItemTooltip = ({ itemName, description, stats, children, theme }: ItemTool
         </>
       )}
 
-      {stats.scalesWith && stats.scalesWith.length > 0 && (
+      {stats.scaling && stats.scaling.length > 0 && (
         <>
           <Text size="xs" fw={600} c={primaryColor}>Scaling</Text>
           <Group gap="xs">
-            {stats.scalesWith.map((scale, idx) => (
+            {stats.scaling.map((scale: any, idx: number) => (
               <Badge key={idx} size="xs" variant="outline">
                 {scale.name}: {scale.scaling}
               </Badge>
@@ -94,11 +94,11 @@ const ItemTooltip = ({ itemName, description, stats, children, theme }: ItemTool
         </>
       )}
 
-      {stats.requiredAttributes && stats.requiredAttributes.length > 0 && (
+      {stats.requirements && stats.requirements.length > 0 && (
         <>
           <Text size="xs" fw={600} c={primaryColor}>Requirements</Text>
           <Group gap="xs">
-            {stats.requiredAttributes.map((req, idx) => (
+            {stats.requirements.map((req: any, idx: number) => (
               <Text key={idx} size="xs" c="dimmed">
                 {req.name}: {req.amount}
               </Text>
@@ -124,6 +124,19 @@ const ItemTooltip = ({ itemName, description, stats, children, theme }: ItemTool
       w={300}
       position="top"
       transitionProps={{ transition: 'fade', duration: 200 }}
+      styles={{
+        tooltip: {
+          backgroundColor: 'rgba(25, 25, 35, 0.98)',
+          border: `1px solid ${primaryColor}30`,
+          color: '#e0e0e0',
+          boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
+          padding: '12px',
+        },
+        arrow: {
+          border: `1px solid ${primaryColor}30`,
+          backgroundColor: 'rgba(25, 25, 35, 0.98)',
+        }
+      }}
     >
       {children}
     </Tooltip>

@@ -201,7 +201,7 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
                 <ItemSlot
                   label="Great Rune"
                   item={slots.greatRune}
-                  onSelect={() => openModal('greatRune', 'items')} // Great Runes might be under items
+                  onSelect={() => openModal('greatRune', 'greatRunes')}
                   onClear={() => clearSlot('greatRune')}
                   theme={theme}
                 />
@@ -402,14 +402,14 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
                   <ItemSlot
                     label="Crystal Tear 1"
                     item={slots.physick1}
-                    onSelect={() => openModal('physick1', 'consumables')}
+                    onSelect={() => openModal('physick1', 'crystalTears')}
                     onClear={() => clearSlot('physick1')}
                     theme={theme}
                   />
                   <ItemSlot
                     label="Crystal Tear 2"
                     item={slots.physick2}
-                    onSelect={() => openModal('physick2', 'consumables')}
+                    onSelect={() => openModal('physick2', 'crystalTears')}
                     onClear={() => clearSlot('physick2')}
                     theme={theme}
                   />

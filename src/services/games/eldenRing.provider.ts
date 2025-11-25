@@ -23,6 +23,8 @@ export class EldenRingProvider implements GameDataProvider {
     classes: 'classes',
     spirits: 'spirits',
     ammos: 'ammos',
+    greatRunes: 'items', // Search in general items
+    crystalTears: 'items',
   };
 
   async searchItems(query: string, category?: ItemCategory): Promise<GameItem[]> {
@@ -54,6 +56,15 @@ export class EldenRingProvider implements GameDataProvider {
          // Include Consumable, Tool, and other usable items if needed
          // For now, let's trust the /items endpoint but maybe filter out key items if possible
          // items = items.filter((item: any) => item.type === 'Consumable'); 
+      }
+
+      if (category === 'crystalTears') {
+        items = items.filter((item: any) => 
+          item.name.includes('Crystal Tear') || 
+          item.name.includes('Ruptured Tear') || 
+          item.name.includes('Cracked Tear') ||
+          item.name.includes('Bubbletear')
+        );
       }
 
       return items.map((item: any) => this.mapToGameItem(item, category || 'weapons')); // Fallback category if mixed
