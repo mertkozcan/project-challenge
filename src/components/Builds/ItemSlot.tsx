@@ -165,8 +165,10 @@ const ItemSlot = ({
                        <>
                         <Text size="xs" fw={700} c="dimmed" mt={4}>Requires</Text>
                         <Group gap="xs">
-                           {item.stats.requirements.map((r: any, i: number) => (
-                              <Text key={i} size="xs">{r.name}: {r.value}</Text>
+                           {item.stats.requirements
+                               .filter((r: any) => r.amount > 0 || r.value > 0)
+                               .map((r: any, i: number) => (
+                              <Text key={i} size="xs">{r.name}: {r.amount || r.value}</Text>
                            ))}
                         </Group>
                        </>

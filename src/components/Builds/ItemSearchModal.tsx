@@ -207,9 +207,11 @@ const ItemSearchModal = ({ opened, onClose, category, onSelect, theme }: ItemSea
                             {/* Requirements */}
                             {item.stats?.requirements && (
                                 <Group gap={4} justify="center" mt={2}>
-                                    {item.stats.requirements.map((r: any, i: number) => (
+                                    {item.stats.requirements
+                                        .filter((r: any) => r.amount > 0 || r.value > 0) // Filter out 0 requirements
+                                        .map((r: any, i: number) => (
                                         <Text key={i} size="xs" c="dimmed" style={{ fontSize: 10 }}>
-                                            {r.name.substring(0,3)} {r.value}
+                                            {r.name.substring(0,3)} {r.amount || r.value}
                                         </Text>
                                     ))}
                                 </Group>

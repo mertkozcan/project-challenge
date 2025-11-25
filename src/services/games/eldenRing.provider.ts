@@ -167,6 +167,7 @@ export class EldenRingProvider implements GameDataProvider {
     if (apiItem.defence) stats.defence = apiItem.defence;
     if (apiItem.scalesWith) stats.scaling = apiItem.scalesWith;
     if (apiItem.requiredAttributes) stats.requirements = apiItem.requiredAttributes;
+    if (apiItem.requires) stats.requirements = apiItem.requires; // Sorceries/Incantations use 'requires'
     if (apiItem.effects) stats.effects = apiItem.effects; // Talismans often have this
     
     // Armor specific

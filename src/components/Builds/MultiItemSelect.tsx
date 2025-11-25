@@ -67,8 +67,10 @@ const MultiItemSelect = ({ label, items, onAdd, onRemove, theme, maxItems }: Mul
                             {item.stats?.requirements && (
                                 <Group gap={4}>
                                     <Text size="xs" c="dimmed" fw={700}>Req:</Text>
-                                    {item.stats.requirements.map((r: any, i: number) => (
-                                        <Text key={i} size="xs" c="dimmed">{r.name.substring(0,3)} {r.value}</Text>
+                                    {item.stats.requirements
+                                        .filter((r: any) => r.amount > 0 || r.value > 0)
+                                        .map((r: any, i: number) => (
+                                        <Text key={i} size="xs" c="dimmed">{r.name.substring(0,3)} {r.amount || r.value}</Text>
                                     ))}
                                 </Group>
                             )}
