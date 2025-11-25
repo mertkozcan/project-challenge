@@ -160,14 +160,30 @@ export class EldenRingProvider implements GameDataProvider {
     if (apiItem.defence) stats.defence = apiItem.defence;
     if (apiItem.scalesWith) stats.scaling = apiItem.scalesWith;
     if (apiItem.requiredAttributes) stats.requirements = apiItem.requiredAttributes;
-    if (apiItem.effects) stats.effects = apiItem.effects;
+    if (apiItem.effects) stats.effects = apiItem.effects; // Talismans often have this
+    
+    // Armor specific
+    if (apiItem.dmgNegation) stats.negation = apiItem.dmgNegation;
+    if (apiItem.resistance) stats.resistance = apiItem.resistance;
+    if (apiItem.weight) stats.weight = apiItem.weight;
+    
+    // Spells/Incantations specific
+    if (apiItem.cost) stats.cost = apiItem.cost;
+    if (apiItem.slots) stats.slots = apiItem.slots;
+
+    // Spirit Ashes specific
+    if (apiItem.fpCost) stats.fpCost = apiItem.fpCost;
+    if (apiItem.hpCost) stats.hpCost = apiItem.hpCost;
+
+    // Some items have 'effect' string instead of array
+    if (apiItem.effect) stats.effect = apiItem.effect;
 
     return {
       id: apiItem.id,
       name: apiItem.name,
       image: apiItem.image,
       description: apiItem.description,
-      category: category, // Ideally we infer this from the item data if possible
+      category: category, 
       stats: stats
     };
   }

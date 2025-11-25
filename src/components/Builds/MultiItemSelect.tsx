@@ -1,4 +1,4 @@
-import { Stack, Text, Group, Badge, ActionIcon, Button, Box } from '@mantine/core';
+import { Stack, Text, Group, Badge, ActionIcon, Button, Box, Paper } from '@mantine/core';
 import { IconX, IconPlus } from '@tabler/icons-react';
 import { GameItem } from '@/services/games/gameData.provider';
 
@@ -29,32 +29,72 @@ const MultiItemSelect = ({ label, items, onAdd, onRemove, theme, maxItems }: Mul
       </Group>
 
       {items.length > 0 ? (
-        <Group gap="xs">
+        <Stack gap="xs">
           {items.map((item, index) => (
-            <Badge
-              key={`${item.id}-${index}`}
-              size="lg"
-              variant="light"
-              color={primaryColor}
-              pr={3}
-              style={{
-                paddingRight: 3,
-              }}
+            <Paper 
+                key={`${item.id}-${index}`} 
+                p="xs" 
+                withBorder 
+                style={{ 
+                    backgroundColor: 'rgba(0,0,0,0.2)',
+                    borderColor: 'rgba(255,255,255,0.1)'
+                }}
             >
-              <Group gap={4}>
-                <Text size="sm">{item.name}</Text>
-                <ActionIcon
-                  size="xs"
-                  color="red"
-                  variant="transparent"
-                  onClick={() => onRemove(index)}
-                >
-                  <IconX size={12} />
-                </ActionIcon>
-              </Group>
-            </Badge>
+                <Group wrap="nowrap" align="flex-start">
+                    {/* Image */}
+                    {item.image ? (
+                        <img src={item.image} alt={item.name} style={{ width: 40, height: 40, objectFit: 'contain' }} />
+                    ) : (
+                        <Box w={40} h={40} bg="rgba(255,255,255,0.05)" style={{ borderRadius: 4 }} />
+                    )}
+                    
+                    <Stack gap={2} style={{ flex: 1 }}>
+                        <Group justify="space-between">
+                            <Text size="sm" fw={600}>{item.name}</Text>
+                            <ActionIcon
+                              size="xs"
+                              color="red"
+                              variant="subtle"
+                              onClick={() => onRemove(index)}
+                            >
+                              <IconX size={14} />
+                            </ActionIcon>
+                        </Group>
+                        
+                        {/* Stats Row */}
+                        <Group gap="md">
+                            {/* Requirements */}
+                            {item.stats?.requirements && (
+                                <Group gap={4}>
+                                    <Text size="xs" c="dimmed" fw={700}>Req:</Text>
+                                    {item.stats.requirements.map((r: any, i: number) => (
+                                        <Text key={i} size="xs" c="dimmed">{r.name.substring(0,3)} {r.value}</Text>
+                                    ))}
+                                </Group>
+                            )}
+                            
+                            {/* Cost */}
+                            {item.stats?.cost && (
+                                <Text size="xs" c="dimmed">FP: {item.stats.cost}</Text>
+                            )}
+                            
+                            {/* Slots */}
+                            {item.stats?.slots && (
+                                <Text size="xs" c="dimmed">Slots: {item.stats.slots}</Text>
+                            )}
+                        </Group>
+                        
+                        {/* Effect/Description */}
+                        {(item.stats?.effects || item.stats?.effect) && (
+                             <Text size="xs" c="dimmed" lineClamp={1}>
+                                {Array.isArray(item.stats?.effects) ? item.stats.effects.join(', ') : item.stats?.effect}
+                             </Text>
+                        )}
+                    </Stack>
+                </Group>
+            </Paper>
           ))}
-        </Group>
+        </Stack>
       ) : (
         <Box
           style={{

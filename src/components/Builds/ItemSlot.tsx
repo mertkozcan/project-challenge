@@ -1,4 +1,4 @@
-import { Card, Text, Image, ActionIcon, Stack, Box, Tooltip } from '@mantine/core';
+import { Card, Text, Image, ActionIcon, Stack, Box, Tooltip, Divider, SimpleGrid, Group } from '@mantine/core';
 import { IconX, IconPlus } from '@tabler/icons-react';
 import { GameItem } from '@/services/games/gameData.provider';
 
@@ -91,7 +91,92 @@ const ItemSlot = ({
                   fit="contain"
                 />
               )}
-              <Tooltip label={item.name} withArrow>
+              <Tooltip 
+                label={
+                  <Stack gap={2} p={4}>
+                    <Text size="sm" fw={700}>{item.name}</Text>
+                    
+                    {/* Armor Stats */}
+                    {item.stats?.negation && (
+                      <>
+                        <Divider my={4} color="gray.7" />
+                        <Text size="xs" fw={700} c="dimmed">Damage Negation</Text>
+                        <SimpleGrid cols={2} spacing="xs">
+                           {item.stats.negation.map((n: any, i: number) => (
+                              <Text key={i} size="xs">{n.name}: {n.amount}</Text>
+                           ))}
+                        </SimpleGrid>
+                      </>
+                    )}
+                    
+                    {item.stats?.weight && (
+                       <Text size="xs" mt={4} c="dimmed">Weight: {item.stats.weight}</Text>
+                    )}
+
+                    {/* Armor Description (often contains passive effects) */}
+                    {item.category && ['Helm', 'Chest Armor', 'Gauntlets', 'Leg Armor'].includes(item.category) && item.description && (
+                        <>
+                            <Divider my={4} color="gray.7" />
+                            <Text size="xs" c="dimmed" style={{ whiteSpace: 'normal', maxWidth: 250 }}>
+                                {item.description}
+                            </Text>
+                        </>
+                    )}
+
+                    {/* Spirit Ash Costs */}
+                    {(item.stats?.fpCost || item.stats?.hpCost) && (
+                        <>
+                            <Divider my={4} color="gray.7" />
+                            <Group gap="xs">
+                                {item.stats.fpCost && <Text size="xs" c="blue.3">FP Cost: {item.stats.fpCost}</Text>}
+                                {item.stats.hpCost && <Text size="xs" c="red.3">HP Cost: {item.stats.hpCost}</Text>}
+                            </Group>
+                        </>
+                    )}
+
+                    {/* Talisman/Item Effects */}
+                    {(item.stats?.effects || item.stats?.effect) && (
+                      <>
+                        <Divider my={4} color="gray.7" />
+                        <Text size="xs" fw={700} c="dimmed">Effect</Text>
+                        {Array.isArray(item.stats?.effects) ? (
+                           item.stats.effects.map((e: any, i: number) => (
+                             <Text key={i} size="xs" style={{ whiteSpace: 'normal', maxWidth: 250 }}>{e}</Text>
+                           ))
+                        ) : (
+                           <Text size="xs" style={{ whiteSpace: 'normal', maxWidth: 250 }}>{item.stats?.effect}</Text>
+                        )}
+                      </>
+                    )}
+                    
+                    {/* Weapon Scaling/Reqs */}
+                    {item.stats?.scaling && (
+                       <>
+                        <Divider my={4} color="gray.7" />
+                        <Text size="xs" fw={700} c="dimmed">Scaling</Text>
+                        <Group gap="xs">
+                           {item.stats.scaling.map((s: any, i: number) => (
+                              <Text key={i} size="xs">{s.name}: {s.scaling}</Text>
+                           ))}
+                        </Group>
+                       </>
+                    )}
+                     {item.stats?.requirements && (
+                       <>
+                        <Text size="xs" fw={700} c="dimmed" mt={4}>Requires</Text>
+                        <Group gap="xs">
+                           {item.stats.requirements.map((r: any, i: number) => (
+                              <Text key={i} size="xs">{r.name}: {r.value}</Text>
+                           ))}
+                        </Group>
+                       </>
+                    )}
+                  </Stack>
+                } 
+                withArrow
+                multiline
+                w={300}
+              >
                 <Text
                   size="sm"
                   fw={600}

@@ -319,18 +319,7 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
                 pointsRemaining={pointsRemaining}
               />
               
-              <Divider />
-              
-              <Title order={4} c={theme.primary}>Origin</Title>
-              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                <ItemSlot
-                  label="Great Rune"
-                  item={slots.greatRune}
-                  onSelect={() => openModal('greatRune', 'greatRunes')}
-                  onClear={() => clearSlot('greatRune')}
-                  theme={theme}
-                />
-              </SimpleGrid>
+
             </Stack>
           </Tabs.Panel>
 
@@ -398,6 +387,25 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
                     secondaryItem={slots.leftHand3Ash}
                     onSecondarySelect={() => openModal('leftHand3Ash', 'ashes')}
                     onSecondaryClear={() => clearSlot('leftHand3Ash')}
+                    theme={theme}
+                  />
+                </SimpleGrid>
+              </Stack>
+
+              <Divider />
+
+              {/* Armor Section */}
+              <Divider />
+
+              {/* Great Rune Section */}
+              <Stack gap="md">
+                <Title order={4} c={theme.primary}>Great Rune</Title>
+                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                  <ItemSlot
+                    label="Great Rune"
+                    item={slots.greatRune}
+                    onSelect={() => openModal('greatRune', 'greatRunes')}
+                    onClear={() => clearSlot('greatRune')}
                     theme={theme}
                   />
                 </SimpleGrid>
