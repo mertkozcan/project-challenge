@@ -111,12 +111,7 @@ export const publicRoutes: Routes = [
     component: lazy(() => import('@/pages/bingo/GameView')),
     authority: [],
   },
-  {
-    key: 'friends',
-    path: '/friends',
-    component: lazy(() => import('@/pages/social/FriendsPage')),
-    authority: [],
-  },
+
   {
     key: '404',
     path: '/404',
