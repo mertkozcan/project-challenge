@@ -32,7 +32,7 @@ import AchievementsList from '@/components/Achievements/AchievementsList';
 import TrustBadge from '@/components/Trust/TrustBadge';
 
 const UserProfile: React.FC = () => {
-  const { id } = useParams();
+  const { username } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState<ProfileData | null>(null);
   const [builds, setBuilds] = useState<UserBuild[]>([]);
@@ -40,16 +40,16 @@ const UserProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!username) return;
     fetchData();
-  }, [id]);
+  }, [username]);
 
   const fetchData = async () => {
     try {
       const [profileData, buildsData, activityData] = await Promise.all([
-        UserService.getProfile(id!),
-        UserStatsService.getUserBuilds(id!),
-        UserStatsService.getUserActivity(id!),
+        UserService.getProfile(username!),
+        UserStatsService.getUserBuilds(username!),
+        UserStatsService.getUserActivity(username!),
       ]);
       setData(profileData);
       setBuilds(buildsData);

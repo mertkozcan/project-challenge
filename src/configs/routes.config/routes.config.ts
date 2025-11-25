@@ -140,7 +140,7 @@ export const protectedRoutes = [
   },
   {
     key: 'profile',
-    path: '/profile/:id',
+    path: '/profile/:username',
     component: lazy(() => import('@/pages/profile/UserProfile')),
     authority: [],
   },
