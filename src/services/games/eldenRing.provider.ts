@@ -7,6 +7,24 @@ interface EldenRingApiResponse {
   data: any[];
 }
 
+export interface EldenRingClass {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  stats: {
+    level: string;
+    vigor: string;
+    mind: string;
+    endurance: string;
+    strength: string;
+    dexterity: string;
+    intelligence: string;
+    faith: string;
+    arcane: string;
+  };
+}
+
 export class EldenRingProvider implements GameDataProvider {
   gameName = 'Elden Ring';
   private baseUrl = 'https://eldenring.fanapis.com/api';
@@ -26,6 +44,46 @@ export class EldenRingProvider implements GameDataProvider {
     greatRunes: 'items', // Search in general items
     crystalTears: 'items',
   };
+
+  async getClasses(): Promise<EldenRingClass[]> {
+    try {
+      const url = `${this.baseUrl}/classes?limit=100`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Elden Ring API error: ${response.statusText}`);
+      }
+
+      const json: EldenRingApiResponse = await response.json();
+      
+      if (!json.success || !json.data) {
+        return [];
+      }
+
+      // Filter out Network Test classes and duplicates
+      const excludedClasses = ['Enchanted Knight', 'Bloody Wolf', 'Champion'];
+      const uniqueClasses = new Map();
+
+      json.data.forEach((cls: any) => {
+        if (!excludedClasses.includes(cls.name)) {
+          // Use name as key to deduplicate (e.g. Warrior appears twice)
+          if (!uniqueClasses.has(cls.name)) {
+            uniqueClasses.set(cls.name, {
+              id: cls.id,
+              name: cls.name,
+              image: cls.image,
+              description: cls.description,
+              stats: cls.stats
+            });
+          }
+        }
+      });
+
+      return Array.from(uniqueClasses.values());
+    } catch (error) {
+      console.error('Failed to fetch Elden Ring classes:', error);
+      return [];
+    }
+  }
 
   async searchItems(query: string, category?: ItemCategory): Promise<GameItem[]> {
     try {

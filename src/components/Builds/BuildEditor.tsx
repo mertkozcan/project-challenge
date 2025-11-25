@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Stack, Title, Paper, SimpleGrid, Divider, Button, Group, Tabs, Text } from '@mantine/core';
+import { useState, useEffect } from 'react';
+import { Stack, Title, Paper, SimpleGrid, Divider, Button, Group, Tabs, Text, Select, NumberInput } from '@mantine/core';
+import { EldenRingProvider, EldenRingClass } from '@/services/games/eldenRing.provider';
 import { IconUser, IconSword, IconSparkles } from '@tabler/icons-react';
 import { GameItem } from '@/services/games/gameData.provider';
 import ItemSlot from './ItemSlot';
@@ -134,7 +135,76 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
     }));
   };
 
+  const [classes, setClasses] = useState<EldenRingClass[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<EldenRingClass | null>(null);
+  const [targetLevel, setTargetLevel] = useState<number>(150); // Default meta level
+
+  useEffect(() => {
+    const fetchClasses = async () => {
+      setLoadingClasses(true);
+      try {
+        const provider = new EldenRingProvider();
+        const fetchedClasses = await provider.getClasses();
+        setClasses(fetchedClasses);
+      } catch (error) {
+        console.error("Failed to fetch classes", error);
+      } finally {
+        setLoadingClasses(false);
+      }
+    };
+    fetchClasses();
+  }, []);
+
+  // Helper to calculate total attribute points
+  const calculateTotalAttributes = (s: CharacterStats) => {
+      return s.vigor + s.mind + s.endurance + s.strength + s.dexterity + s.intelligence + s.faith + s.arcane;
+  };
+  
+  // Helper to calculate class base attribute sum
+  const calculateClassBaseAttributes = (c: EldenRingClass) => {
+      return Number(c.stats.vigor) + Number(c.stats.mind) + Number(c.stats.endurance) + Number(c.stats.strength) + Number(c.stats.dexterity) + Number(c.stats.intelligence) + Number(c.stats.faith) + Number(c.stats.arcane);
+  };
+
+  const currentAttributeSum = calculateTotalAttributes(slots.stats);
+  const baseAttributeSum = selectedClass ? calculateClassBaseAttributes(selectedClass) : 0;
+  const pointsSpent = currentAttributeSum - baseAttributeSum;
+  
+  // Points available based on Target Level
+  // Formula: At level L, you have (L - BaseLevel) points to spend.
+  const pointsAvailable = selectedClass ? (targetLevel - Number(selectedClass.stats.level)) : 0;
+  const pointsRemaining = pointsAvailable - pointsSpent;
+
+  const handleClassChange = (className: string | null) => {
+      const newClass = classes.find(c => c.name === className) || null;
+      setSelectedClass(newClass);
+      
+      if (newClass) {
+          // Reset stats to class base
+          const newStats: CharacterStats = {
+              level: targetLevel, 
+              vigor: Number(newClass.stats.vigor),
+              mind: Number(newClass.stats.mind),
+              endurance: Number(newClass.stats.endurance),
+              strength: Number(newClass.stats.strength),
+              dexterity: Number(newClass.stats.dexterity),
+              intelligence: Number(newClass.stats.intelligence),
+              faith: Number(newClass.stats.faith),
+              arcane: Number(newClass.stats.arcane),
+          };
+          setSlots(prev => ({ ...prev, stats: newStats }));
+          
+          // Ensure target level is at least class level
+          const classLevel = Number(newClass.stats.level);
+          if (targetLevel < classLevel) {
+              setTargetLevel(classLevel);
+          }
+      }
+  };
+
   const handleStatsChange = (newStats: CharacterStats) => {
+    // Validation logic is handled in StatsInput or here?
+    // Let's pass minStats and pointsRemaining to StatsInput to handle UI limits
     setSlots(prev => ({
       ...prev,
       stats: newStats,
@@ -184,20 +254,75 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
 
           <Tabs.Panel value="character">
             <Stack gap="xl">
+              <Group grow align="flex-start">
+                  <Stack>
+                      <Select
+                        label="Starting Class"
+                        placeholder={loadingClasses ? "Loading classes..." : "Select a class"}
+                        data={classes.map(c => c.name)}
+                        value={selectedClass?.name || null}
+                        onChange={handleClassChange}
+                        allowDeselect={false}
+                        disabled={loadingClasses}
+                      />
+                      <NumberInput
+                        label="Target Level"
+                        description={`Points Remaining: ${pointsRemaining}`}
+                        min={selectedClass ? Number(selectedClass.stats.level) : 1}
+                        max={713}
+                        value={targetLevel}
+                        onChange={(val) => setTargetLevel(Number(val))}
+                        error={pointsRemaining < 0 ? "Negative points remaining!" : null}
+                      />
+                  </Stack>
+                  <Paper withBorder p="md" radius="md">
+                      <Text fw={700} mb="xs">Class Base Stats</Text>
+                      {selectedClass ? (
+                          <Stack gap="xs">
+                            <Group align="flex-start" wrap="nowrap">
+                                {selectedClass.image && (
+                                    <img 
+                                        src={selectedClass.image} 
+                                        alt={selectedClass.name} 
+                                        style={{ width: 60, height: 60, objectFit: 'contain', borderRadius: 8, background: 'rgba(0,0,0,0.3)' }} 
+                                    />
+                                )}
+                                <Text size="xs" c="dimmed" lineClamp={3}>{selectedClass.description}</Text>
+                            </Group>
+                            <Divider />
+                            <SimpleGrid cols={2} spacing="xs">
+                                <Text size="sm">Level: {selectedClass.stats.level}</Text>
+                                <Text size="sm">Vigor: {selectedClass.stats.vigor}</Text>
+                                <Text size="sm">Mind: {selectedClass.stats.mind}</Text>
+                                <Text size="sm">Endurance: {selectedClass.stats.endurance}</Text>
+                                <Text size="sm">Strength: {selectedClass.stats.strength}</Text>
+                                <Text size="sm">Dexterity: {selectedClass.stats.dexterity}</Text>
+                                <Text size="sm">Int: {selectedClass.stats.intelligence}</Text>
+                                <Text size="sm">Faith: {selectedClass.stats.faith}</Text>
+                                <Text size="sm">Arcane: {selectedClass.stats.arcane}</Text>
+                            </SimpleGrid>
+                          </Stack>
+                      ) : (
+                          <Text size="sm" c="dimmed">Select a class to view base stats</Text>
+                      )}
+                  </Paper>
+              </Group>
+
+              <Divider />
+
               <Title order={4} c={theme.primary}>Attributes</Title>
-              <StatsInput stats={slots.stats} onChange={handleStatsChange} theme={theme} />
+              <StatsInput 
+                stats={slots.stats} 
+                onChange={handleStatsChange} 
+                theme={theme} 
+                minStats={selectedClass || undefined}
+                pointsRemaining={pointsRemaining}
+              />
               
               <Divider />
               
-              <Title order={4} c={theme.primary}>Class & Origin</Title>
+              <Title order={4} c={theme.primary}>Origin</Title>
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                <ItemSlot
-                  label="Starting Class"
-                  item={slots.startingClass}
-                  onSelect={() => openModal('startingClass', 'classes')}
-                  onClear={() => clearSlot('startingClass')}
-                  theme={theme}
-                />
                 <ItemSlot
                   label="Great Rune"
                   item={slots.greatRune}
