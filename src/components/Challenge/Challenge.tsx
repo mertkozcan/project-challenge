@@ -61,13 +61,16 @@ const ChallengeDetail: React.FC = () => {
       console.log('Debug: Current Challenge ID:', id);
 
       if (session) {
-        // Handle potential type mismatch or casing issues
+        // Handle potential type mismatch, casing issues, or backend mapping errors
+        // Debug logs showed challenge_id was null but challenge_type contained the ID "2"
         const sessionId = session.challenge_id || (session as any).challengeId;
-        if (sessionId == id) {
+        
+        // Check if session matches directly or via the anomalous challenge_type field
+        if (sessionId == id || (sessionId === null && session.challenge_type == id)) {
           console.log('Debug: Session matches current challenge');
           setActiveSession(session);
         } else {
-          console.log(`Debug: Session ID ${sessionId} does not match current challenge ${id}`);
+          console.log(`Debug: Session ID ${sessionId} (type: ${session.challenge_type}) does not match current challenge ${id}`);
         }
       }
     } catch (error) {
@@ -93,7 +96,7 @@ const ChallengeDetail: React.FC = () => {
       const existingSession = await RunSessionService.getActiveSession(userId);
       
       const existingSessionId = existingSession?.challenge_id || (existingSession as any)?.challengeId;
-      if (existingSession && existingSessionId == id) {
+      if (existingSession && (existingSessionId == id || (existingSessionId == null && existingSession.challenge_type == id))) {
         setActiveSession(existingSession);
         return;
       }
