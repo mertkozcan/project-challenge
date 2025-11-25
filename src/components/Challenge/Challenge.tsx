@@ -57,8 +57,18 @@ const ChallengeDetail: React.FC = () => {
     if (!userId) return;
     try {
       const session = await RunSessionService.getActiveSession(userId);
-      if (session && session.challenge_id === parseInt(id!)) {
-        setActiveSession(session);
+      console.log('Debug: Fetched active session:', session);
+      console.log('Debug: Current Challenge ID:', id);
+
+      if (session) {
+        // Handle potential type mismatch or casing issues
+        const sessionId = session.challenge_id || (session as any).challengeId;
+        if (sessionId == id) {
+          console.log('Debug: Session matches current challenge');
+          setActiveSession(session);
+        } else {
+          console.log(`Debug: Session ID ${sessionId} does not match current challenge ${id}`);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch active session', error);
@@ -82,7 +92,8 @@ const ChallengeDetail: React.FC = () => {
       // Check if user already has an active session for this challenge
       const existingSession = await RunSessionService.getActiveSession(userId);
       
-      if (existingSession && existingSession.challenge_id === parseInt(id)) {
+      const existingSessionId = existingSession?.challenge_id || (existingSession as any)?.challengeId;
+      if (existingSession && existingSessionId == id) {
         setActiveSession(existingSession);
         return;
       }
