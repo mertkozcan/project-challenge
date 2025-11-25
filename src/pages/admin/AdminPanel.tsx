@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Title,
@@ -42,7 +43,9 @@ const AdminPanel: React.FC = () => {
   
   // Bingo Tasks State
   const [bingoTasks, setBingoTasks] = useState<any[]>([]);
+  const [bingoBoards, setBingoBoards] = useState<any[]>([]);
   const [taskGameFilter, setTaskGameFilter] = useState<string>('Elden Ring');
+  const navigate = useNavigate();
   
   // Modals
   const [challengeModalOpened, setChallengeModalOpened] = useState(false);
@@ -100,6 +103,7 @@ const AdminPanel: React.FC = () => {
     else if (activeTab === 'builds') fetchBuilds();
     else if (activeTab === 'proofs') fetchProofs();
     else if (activeTab === 'bingo-tasks') fetchBingoTasks();
+    else if (activeTab === 'bingo-challenges') fetchBingoBoards();
   }, [activeTab, userId, buildFilter, taskGameFilter]);
 
   const fetchGames = async () => {
@@ -146,6 +150,15 @@ const AdminPanel: React.FC = () => {
         setBingoTasks(tasks);
     } catch (error) {
         console.error('Failed to fetch bingo tasks', error);
+    }
+  };
+
+  const fetchBingoBoards = async () => {
+    try {
+        const boards = await BingoService.getBoards();
+        setBingoBoards(boards);
+    } catch (error) {
+        console.error('Failed to fetch bingo boards', error);
     }
   };
 
@@ -270,6 +283,7 @@ const AdminPanel: React.FC = () => {
           <Tabs.Tab value="proofs" leftSection={<IconFileCheck size={18} />} rightSection={
             proofs.length > 0 && <Badge size="xs" circle color="red">{proofs.length}</Badge>
           }>Proofs</Tabs.Tab>
+          <Tabs.Tab value="bingo-challenges" leftSection={<IconTarget size={18} />}>Bingo Challenges</Tabs.Tab>
           <Tabs.Tab value="bingo-tasks" leftSection={<IconGridDots size={18} />}>Bingo Tasks</Tabs.Tab>
         </Tabs.List>
 
@@ -365,7 +379,7 @@ const AdminPanel: React.FC = () => {
                   ]}
                 />
               </Group>
-              <Button leftSection={<IconPlus size={16} />} onClick={() => setBuildModalOpened(true)}>
+              <Button leftSection={<IconPlus size={16} />} onClick={() => navigate('/builds/create?source=admin')}>
                 Create Official Build
               </Button>
             </Group>
@@ -470,6 +484,41 @@ const AdminPanel: React.FC = () => {
                 <Text c="dimmed" ta="center" py="xl" style={{ gridColumn: '1 / -1' }}>
                   No pending proofs to review. Good job!
                 </Text>
+              )}
+            </SimpleGrid>
+          </Paper>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="bingo-challenges">
+          <Paper p="xl" radius="md" withBorder>
+            <Group justify="space-between" mb="xl">
+              <Title order={4}>Bingo Challenges Management</Title>
+              <Button leftSection={<IconPlus size={16} />} onClick={() => navigate('/bingo/create?source=admin')}>
+                Create Bingo Challenge
+              </Button>
+            </Group>
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+              {bingoBoards.map((board) => (
+                <Card key={board.id} shadow="sm" padding="lg" radius="md" withBorder>
+                  <Group justify="space-between" mb="xs">
+                    <Text fw={700} size="lg">{board.title}</Text>
+                    <Badge color={board.created_by === 'admin' ? 'yellow' : 'blue'}>
+                        {board.created_by === 'admin' ? 'Official' : 'Community'}
+                    </Badge>
+                  </Group>
+                  <Text size="sm" c="dimmed" mb="md">
+                    {board.game_name} • {board.size}x{board.size} • {board.type}
+                  </Text>
+                  <Text size="sm" mb="md" lineClamp={2}>
+                    {board.description}
+                  </Text>
+                  <Button variant="light" fullWidth onClick={() => navigate(`/bingo/${board.id}`)}>
+                    View Board
+                  </Button>
+                </Card>
+              ))}
+              {bingoBoards.length === 0 && (
+                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>No bingo challenges found.</Text>
               )}
             </SimpleGrid>
           </Paper>

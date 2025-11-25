@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { Container, Title, TextInput, Textarea, Button, Group, Notification } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { BuildsService } from '@/services/builds/builds.service';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IconX } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
 import BuildEditor, { BuildSlots } from '@/components/Builds/BuildEditor';
 
 const CreateBuild: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const source = searchParams.get('source');
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +59,14 @@ const CreateBuild: React.FC = () => {
         ...form.values,
         user_id: userId,
         items_json: slots,
+        is_official: source === 'admin' // If created from admin panel, mark as official (backend should handle this or we pass it)
       });
-      navigate('/builds');
+      
+      if (source === 'admin') {
+          navigate('/admin');
+      } else {
+          navigate('/builds');
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to create build');
     } finally {
@@ -112,7 +120,7 @@ const CreateBuild: React.FC = () => {
         gameName={form.values.game_name}
         initialSlots={buildSlots}
         onSave={handleBuildSave}
-        onCancel={() => navigate('/builds')}
+        onCancel={() => source === 'admin' ? navigate('/admin') : navigate('/builds')}
       />
     </Container>
   );

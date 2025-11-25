@@ -7,6 +7,7 @@ export interface BingoBoard {
   description: string;
   size: number;
   created_at: string;
+  created_by?: string;
   banner_url?: string;
 }
 
