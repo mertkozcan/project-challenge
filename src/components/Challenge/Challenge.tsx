@@ -15,14 +15,16 @@ import {
   Badge,
 } from '@mantine/core';
 import { ChallengesService } from '@/services/challenges/challenges.service';
-import { RunSessionService } from '@/services/runSession.service';
+import { RunSessionService, RunSession } from '@/services/runSession.service';
 import { Challenge } from '@/@types/challenge';
 import { IconArrowLeft, IconTrophy, IconCoin, IconCheck } from '@tabler/icons-react';
 import ChallengeHero from './ChallengeHero';
 import EnhancedLeaderboard from './EnhancedLeaderboard';
+import ProofSubmission from './ProofSubmission';
 import { getGameTheme } from '@/utils/gameThemes';
 import { notifications } from '@mantine/notifications';
 import { useAppSelector } from '@/store';
+import useAuth from '@/utils/hooks/useAuth';
 
 interface ChallengeData extends Challenge {
   banner_url?: string;
@@ -31,31 +33,46 @@ interface ChallengeData extends Challenge {
   user_proof_status?: string;
 }
 
-import useAuth from '@/utils/hooks/useAuth';
-
 const ChallengeDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { userId } = useAppSelector((state) => state.auth.userInfo);
   const { authenticated } = useAuth();
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
+  const [activeSession, setActiveSession] = useState<RunSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [startingChallenge, setStartingChallenge] = useState(false);
 
-  useEffect(() => {
+  const fetchChallengeData = async () => {
     if (!id) return;
-    const fetchChallenge = async () => {
-      try {
-        const data = await ChallengesService.getChallengeById(id);
-        setChallenge(data);
-      } catch (error) {
-        console.error('Failed to fetch challenge', error);
-      } finally {
-        setLoading(false);
+    try {
+      const data = await ChallengesService.getChallengeById(id);
+      setChallenge(data);
+    } catch (error) {
+      console.error('Failed to fetch challenge', error);
+    }
+  };
+
+  const fetchActiveSession = async () => {
+    if (!userId) return;
+    try {
+      const session = await RunSessionService.getActiveSession(userId);
+      if (session && session.challenge_id === parseInt(id!)) {
+        setActiveSession(session);
       }
+    } catch (error) {
+      console.error('Failed to fetch active session', error);
+    }
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      await Promise.all([fetchChallengeData(), fetchActiveSession()]);
+      setLoading(false);
     };
-    fetchChallenge();
-  }, [id]);
+    init();
+  }, [id, userId]);
 
   const handleStartChallenge = async () => {
     if (!id || !userId || !challenge) return;
@@ -63,11 +80,10 @@ const ChallengeDetail: React.FC = () => {
     setStartingChallenge(true);
     try {
       // Check if user already has an active session for this challenge
-      const activeSession = await RunSessionService.getActiveSession(userId);
+      const existingSession = await RunSessionService.getActiveSession(userId);
       
-      if (activeSession && activeSession.challenge_id === parseInt(id)) {
-        // User already has a session for this challenge, navigate to proof upload
-        navigate('/proofs/upload', { state: { session: activeSession } });
+      if (existingSession && existingSession.challenge_id === parseInt(id)) {
+        setActiveSession(existingSession);
         return;
       }
 
@@ -84,8 +100,7 @@ const ChallengeDetail: React.FC = () => {
         color: 'green',
       });
 
-      // Navigate to proof upload with session data
-      navigate('/proofs/upload', { state: { session } });
+      setActiveSession(session);
     } catch (error: any) {
       console.error('Failed to start challenge:', error);
       notifications.show({
@@ -96,6 +111,11 @@ const ChallengeDetail: React.FC = () => {
     } finally {
       setStartingChallenge(false);
     }
+  };
+
+  const handleProofSuccess = () => {
+    setActiveSession(null);
+    fetchChallengeData(); // Refresh challenge data to update participation status
   };
 
   if (loading) return <LoadingOverlay visible={true} />;
@@ -166,7 +186,7 @@ const ChallengeDetail: React.FC = () => {
                 </Group>
               </Paper>
 
-              {/* Start Challenge Section */}
+              {/* Start Challenge / Proof Submission Section */}
               <Paper
                 shadow="md"
                 p="xl"
@@ -176,60 +196,64 @@ const ChallengeDetail: React.FC = () => {
                   border: `1px solid ${theme.primary}20`,
                 }}
               >
-                <Stack gap="md">
-                  <Title order={4} c={theme.primary}>Ready to Start?</Title>
-                  
-                  {challenge.user_participated && (
-                    <Badge
-                      color={challenge.user_proof_status === 'APPROVED' ? 'green' : 'yellow'}
-                      size="lg"
-                      leftSection={challenge.user_proof_status === 'APPROVED' ? <IconCheck size={16} /> : undefined}
-                    >
-                      {challenge.user_proof_status || 'PENDING'}
-                    </Badge>
-                  )}
+                {activeSession ? (
+                  <ProofSubmission session={activeSession} onSuccess={handleProofSuccess} />
+                ) : (
+                  <Stack gap="md">
+                    <Title order={4} c={theme.primary}>Ready to Start?</Title>
+                    
+                    {challenge.user_participated && (
+                      <Badge
+                        color={challenge.user_proof_status === 'APPROVED' ? 'green' : 'yellow'}
+                        size="lg"
+                        leftSection={challenge.user_proof_status === 'APPROVED' ? <IconCheck size={16} /> : undefined}
+                      >
+                        {challenge.user_proof_status || 'PENDING'}
+                      </Badge>
+                    )}
 
-                  <Text size="sm" c="dimmed">
-                    Starting this challenge will:
-                  </Text>
-                  <Stack gap="xs">
-                    <Text size="sm">✓ Generate a unique character name for you</Text>
-                    <Text size="sm">✓ Track your progress</Text>
-                    <Text size="sm">✓ Enable OCR verification for your proof</Text>
-                    <Text size="sm">✓ Require video evidence of completion</Text>
-                  </Stack>
+                    <Text size="sm" c="dimmed">
+                      Starting this challenge will:
+                    </Text>
+                    <Stack gap="xs">
+                      <Text size="sm">✓ Generate a unique character name for you</Text>
+                      <Text size="sm">✓ Track your progress</Text>
+                      <Text size="sm">✓ Enable OCR verification for your proof</Text>
+                      <Text size="sm">✓ Require video evidence of completion</Text>
+                    </Stack>
 
-                  {authenticated ? (
-                    <Button
-                      onClick={handleStartChallenge}
-                      loading={startingChallenge}
-                      fullWidth
-                      size="lg"
-                      leftSection={<IconTrophy size={20} />}
-                      style={{
-                        background: theme.gradient,
-                        boxShadow: `0 4px 20px ${theme.glow}`,
-                      }}
-                    >
-                      Start Challenge
-                    </Button>
-                  ) : (
-                    <Stack align="center" py="md">
-                      <Text c="dimmed" ta="center">
-                        You need to be logged in to start this challenge.
-                      </Text>
+                    {authenticated ? (
                       <Button
-                        onClick={() => navigate('/sign-in', { state: { message: 'You need to be logged in to start challenges.' } })}
+                        onClick={handleStartChallenge}
+                        loading={startingChallenge}
                         fullWidth
                         size="lg"
-                        variant="gradient"
-                        gradient={{ from: 'blue', to: 'cyan' }}
+                        leftSection={<IconTrophy size={20} />}
+                        style={{
+                          background: theme.gradient,
+                          boxShadow: `0 4px 20px ${theme.glow}`,
+                        }}
                       >
-                        Sign in to Participate
+                        Start Challenge
                       </Button>
-                    </Stack>
-                  )}
-                </Stack>
+                    ) : (
+                      <Stack align="center" py="md">
+                        <Text c="dimmed" ta="center">
+                          You need to be logged in to start this challenge.
+                        </Text>
+                        <Button
+                          onClick={() => navigate('/sign-in', { state: { message: 'You need to be logged in to start challenges.' } })}
+                          fullWidth
+                          size="lg"
+                          variant="gradient"
+                          gradient={{ from: 'blue', to: 'cyan' }}
+                        >
+                          Sign in to Participate
+                        </Button>
+                      </Stack>
+                    )}
+                  </Stack>
+                )}
               </Paper>
             </Stack>
           </Grid.Col>
