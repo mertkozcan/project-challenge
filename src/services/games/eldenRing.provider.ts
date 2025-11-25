@@ -137,7 +137,7 @@ export class EldenRingProvider implements GameDataProvider {
           {
             id: 'godrick',
             name: "Godrick's Great Rune",
-            image: "https://eldenring.fanapis.com/images/keyitems/17f69c5c93cl0i20356p63086308.png", // Attempted guess or placeholder
+            image: "/images/great-runes/godrick.png",
             description: "A Great Rune of the shardbearer Godrick. Raises all attributes.",
             category: 'greatRunes',
             stats: { effect: "Raises all attributes" }
@@ -145,7 +145,7 @@ export class EldenRingProvider implements GameDataProvider {
           {
             id: 'radahn',
             name: "Radahn's Great Rune",
-            image: null,
+            image: "/images/great-runes/radahn.png",
             description: "A Great Rune of the shardbearer Radahn. Raises maximum HP, FP and Stamina.",
             category: 'greatRunes',
             stats: { effect: "Raises maximum HP, FP and Stamina" }
@@ -153,7 +153,7 @@ export class EldenRingProvider implements GameDataProvider {
           {
             id: 'morgott',
             name: "Morgott's Great Rune",
-            image: null,
+            image: "/images/great-runes/morgott.png",
             description: "A Great Rune of the shardbearer Morgott. Greatly raises maximum HP.",
             category: 'greatRunes',
             stats: { effect: "Greatly raises maximum HP" }
@@ -161,7 +161,7 @@ export class EldenRingProvider implements GameDataProvider {
           {
             id: 'rykard',
             name: "Rykard's Great Rune",
-            image: null,
+            image: "/images/great-runes/rykard.png",
             description: "A Great Rune of the shardbearer Rykard. Restores HP upon defeating enemies.",
             category: 'greatRunes',
             stats: { effect: "Restores HP upon defeating enemies" }
@@ -169,7 +169,7 @@ export class EldenRingProvider implements GameDataProvider {
           {
             id: 'mohg',
             name: "Mohg's Great Rune",
-            image: null,
+            image: "/images/great-runes/mohg.png",
             description: "A Great Rune of the shardbearer Mohg. Grants a blessing of blood to summoned phantoms.",
             category: 'greatRunes',
             stats: { effect: "Grants a blessing of blood to summoned phantoms" }
@@ -177,18 +177,10 @@ export class EldenRingProvider implements GameDataProvider {
           {
             id: 'malenia',
             name: "Malenia's Great Rune",
-            image: null,
+            image: "/images/great-runes/malenia.png",
             description: "A Great Rune of the shardbearer Malenia. Attacks performed immediately after taking damage recover HP.",
             category: 'greatRunes',
             stats: { effect: "Attacks recover HP after taking damage" }
-          },
-          {
-            id: 'unborn',
-            name: "Great Rune of the Unborn",
-            image: null,
-            description: "Great Rune of unborn demigods. Used to perfect rebirth.",
-            category: 'greatRunes',
-            stats: { effect: "Used to perfect rebirth" }
           }
         ];
         
