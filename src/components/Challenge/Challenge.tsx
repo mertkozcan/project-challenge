@@ -13,9 +13,11 @@ import {
   Divider,
   Group,
   Badge,
+  Alert,
 } from '@mantine/core';
 import { ChallengesService } from '@/services/challenges/challenges.service';
 import { RunSessionService, RunSession } from '@/services/runSession.service';
+import ProofService from '@/services/proof/proof.service';
 import { Challenge } from '@/@types/challenge';
 import { IconArrowLeft, IconTrophy, IconCoin, IconCheck } from '@tabler/icons-react';
 import ChallengeHero from './ChallengeHero';
@@ -40,6 +42,7 @@ const ChallengeDetail: React.FC = () => {
   const { authenticated } = useAuth();
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [activeSession, setActiveSession] = useState<RunSession | null>(null);
+  const [pendingProof, setPendingProof] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [startingChallenge, setStartingChallenge] = useState(false);
 
@@ -53,36 +56,41 @@ const ChallengeDetail: React.FC = () => {
     }
   };
 
-  const fetchActiveSession = async () => {
-    if (!userId) return;
-    try {
-      const session = await RunSessionService.getActiveSession(userId);
-      console.log('Debug: Fetched active session:', session);
-      console.log('Debug: Current Challenge ID:', id);
-
-      if (session) {
-        // Handle potential type mismatch, casing issues, or backend mapping errors
-        // Debug logs showed challenge_id was null/undefined but challenge_type contained the ID "2"
-        const challengeIdFromSession = session.challenge_id || (session as any).challengeId;
-        
-        // Check if session matches directly or via the anomalous challenge_type field
-        // Use loose equality for null check to handle undefined
-        if (challengeIdFromSession == id || (challengeIdFromSession == null && session.challenge_type == id)) {
-          console.log('Debug: Session matches current challenge');
-          setActiveSession(session);
-        } else {
-          console.log(`Debug: Session Challenge ID ${challengeIdFromSession} (type: ${session.challenge_type}) does not match current challenge ${id}`);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch active session', error);
-    }
-  };
-
   useEffect(() => {
+    const checkActiveSession = async () => {
+      if (!userId) return;
+      try {
+        const session = await RunSessionService.getActiveSession(userId);
+        console.log('Debug: Fetched active session:', session);
+        console.log('Debug: Current Challenge ID:', id);
+  
+        if (session) {
+          const challengeIdFromSession = session.challenge_id || (session as any).challengeId;
+          
+          if (challengeIdFromSession == id || (challengeIdFromSession == null && session.challenge_type == id)) {
+            console.log('Debug: Session matches current challenge');
+            setActiveSession(session);
+          } else {
+            console.log(`Debug: Session Challenge ID ${challengeIdFromSession} (type: ${session.challenge_type}) does not match current challenge ${id}`);
+          }
+        }
+  
+        // Check for pending proof
+        if (id) {
+          const proof = await ProofService.getUserChallengeProof(userId, id);
+          if (proof && proof.status === 'PENDING') {
+            setPendingProof(proof);
+          }
+        }
+  
+      } catch (error) {
+        console.error('Failed to fetch active session or proof', error);
+      }
+    };
+
     const init = async () => {
       setLoading(true);
-      await Promise.all([fetchChallengeData(), fetchActiveSession()]);
+      await Promise.all([fetchChallengeData(), checkActiveSession()]);
       setLoading(false);
     };
     init();
@@ -128,8 +136,15 @@ const ChallengeDetail: React.FC = () => {
     }
   };
 
-  const handleProofSuccess = () => {
+  const handleProofSuccess = async () => {
     setActiveSession(null);
+    // Fetch the latest proof status to update the UI immediately
+    if (userId && id) {
+      const proof = await ProofService.getUserChallengeProof(userId, id);
+      if (proof && proof.status === 'PENDING') {
+        setPendingProof(proof);
+      }
+    }
     fetchChallengeData(); // Refresh challenge data to update participation status
   };
 
@@ -211,8 +226,12 @@ const ChallengeDetail: React.FC = () => {
                   border: `1px solid ${theme.primary}20`,
                 }}
               >
-                {activeSession ? (
-                  <ProofSubmission session={activeSession} onSuccess={handleProofSuccess} />
+                {pendingProof ? (
+                  <Alert icon={<IconCheck size={16} />} title="Proof Pending" color="blue" variant="light">
+                    You have submitted a proof for this challenge. Please wait for it to be reviewed before starting again.
+                  </Alert>
+                ) : activeSession ? (
+                  <ProofSubmission session={activeSession} challengeId={id!} onSuccess={handleProofSuccess} />
                 ) : (
                   <Stack gap="md">
                     <Title order={4} c={theme.primary}>Ready to Start?</Title>

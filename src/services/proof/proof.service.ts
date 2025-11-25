@@ -39,6 +39,13 @@ class ProofService {
     });
     return response.data;
   }
+  static async getUserChallengeProof(userId: string, challengeId: string | number): Promise<Proof | null> {
+    const response = await ApiService.fetchData<void, Proof>({
+      url: `/proofs/user/${userId}/challenge/${challengeId}`,
+      method: 'GET',
+    });
+    return response.data;
+  }
 }
 
 export default ProofService;

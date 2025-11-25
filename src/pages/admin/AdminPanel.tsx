@@ -453,12 +453,24 @@ const AdminPanel: React.FC = () => {
                   </Group>
                   
                   <Paper p="xs" bg="dark.8" mb="md" radius="sm">
-                    <Group justify="space-between">
-                      <Text size="xs" c="dimmed">Media Type: {proof.media_type}</Text>
-                      <a href={proof.media_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: '#4dabf7' }}>
-                        View Proof Media
-                      </a>
-                    </Group>
+                    <Stack gap="xs">
+                      <Group justify="space-between">
+                        <Text size="xs" c="dimmed">Media Type: {proof.media_type}</Text>
+                        {proof.media_url && (
+                          <a href={proof.media_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: '#4dabf7' }}>
+                            View Image
+                          </a>
+                        )}
+                      </Group>
+                      {proof.media_url && (
+                        <Group justify="space-between">
+                          <Text size="xs" c="dimmed">Video Evidence:</Text>
+                          <a href={proof.media_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: '#4dabf7' }}>
+                            Watch Video
+                          </a>
+                        </Group>
+                      )}
+                    </Stack>
                   </Paper>
 
                   <Group grow>

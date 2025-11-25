@@ -1,12 +1,14 @@
 const pool = require('../config/db');
+const crypto = require('crypto');
 
-const createProof = async (userId, challengeId, mediaUrl, mediaType, runCode, ocrResult, ocrExtractedText, videoUrl) => {
+const createProof = async ({ user_id, challenge_id, media_url, media_type, run_code, ocr_result, ocr_extracted_text, video_url }) => {
+    const id = crypto.randomUUID();
     const result = await pool.query(
         `INSERT INTO proofs 
-         (user_id, challenge_id, media_url, media_type, run_code, ocr_result, ocr_extracted_text, video_url, verification_status) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'PENDING') 
+         (id, user_id, challenge_id, media_url, media_type, run_code, ocr_result, ocr_extracted_text, video_url, verification_status, status) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDING', 'PENDING') 
          RETURNING *`,
-        [userId, challengeId, mediaUrl, mediaType, runCode, ocrResult, ocrExtractedText, videoUrl]
+        [id, user_id, challenge_id, media_url, media_type, run_code, ocr_result, ocr_extracted_text, video_url]
     );
     return result.rows[0];
 };

@@ -4,6 +4,7 @@ const { getChallengeById } = require('../models/challengeModel');
 const { createNotification } = require('../models/notificationModel');
 const multer = require('multer');
 const path = require('path');
+const pool = require('../config/db');
 
 // Multer Configuration
 const storage = multer.diskStorage({
@@ -19,7 +20,7 @@ const upload = multer({ storage: storage });
 
 const submitProof = async (req, res) => {
     try {
-        const { challenge_id, user_id, run_code, video_url } = req.body;
+        const { challenge_id, user_id, run_code, video_url, media_type } = req.body;
         const file = req.file;
 
         // Validation
@@ -40,9 +41,10 @@ const submitProof = async (req, res) => {
         const newProof = await createProof({
             challenge_id,
             user_id,
-            image_url: file ? `/uploads/${file.filename}` : null,
-            video_url: video_url,
-            run_code: run_code,
+            media_url: file ? `/uploads/${file.filename}` : null,
+            video_url,
+            run_code,
+            media_type: media_type || 'image',
             ocr_result: ocrResult,
             ocr_extracted_text: ocrText
         });
@@ -94,8 +96,8 @@ const approveProof = async (req, res) => {
         await createNotification(
             proof.user_id,
             'PROOF_APPROVED',
-            'Proof Approved! 🎉',
-            `Your proof for "${challenge.challenge_name}" has been approved! You earned ${pointsToAdd} points.`,
+            'Proof Accepted! 🎉',
+            `Your submission to challenge "${challenge.challenge_name}" was accepted! You earned ${pointsToAdd} points.`,
             proof.id
         );
 
@@ -123,7 +125,7 @@ const rejectProof = async (req, res) => {
             proof.user_id,
             'PROOF_REJECTED',
             'Proof Rejected ❌',
-            `Your proof for "${challenge.challenge_name}" was rejected. Please check the requirements and try again.`,
+            `Your submission to challenge "${challenge.challenge_name}" was rejected. Please check the requirements and try again.`,
             proof.id
         );
 
@@ -142,4 +144,17 @@ const getPendingProofs = async (req, res) => {
     }
 };
 
-module.exports = { submitProof, getProofs, approveProof, rejectProof, getPendingProofs, upload };
+const getUserChallengeProof = async (req, res) => {
+    const { userId, challengeId } = req.params;
+    try {
+        const result = await pool.query(
+            'SELECT * FROM proofs WHERE user_id = $1 AND challenge_id = $2 ORDER BY created_at DESC LIMIT 1',
+            [userId, challengeId]
+        );
+        res.json(result.rows[0] || null);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { submitProof, getProofs, approveProof, rejectProof, getPendingProofs, upload, getUserChallengeProof };

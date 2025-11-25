@@ -8,14 +8,15 @@ import { notifications } from '@mantine/notifications';
 import ApiService from '@/services/ApiService';
 import { OCRService } from '@/services/ocr.service';
 import { useAppSelector } from '@/store';
-import { RunSession } from '@/services/runSession.service';
+import { RunSession, RunSessionService } from '@/services/runSession.service';
 
 interface ProofSubmissionProps {
   session: RunSession;
+  challengeId: string | number;
   onSuccess?: () => void;
 }
 
-const ProofSubmission: React.FC<ProofSubmissionProps> = ({ session, onSuccess }) => {
+const ProofSubmission: React.FC<ProofSubmissionProps> = ({ session, challengeId, onSuccess }) => {
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
 
   const [file, setFile] = useState<File | null>(null);
@@ -24,6 +25,31 @@ const ProofSubmission: React.FC<ProofSubmissionProps> = ({ session, onSuccess })
   const [ocrStatus, setOcrStatus] = useState<'IDLE' | 'PROCESSING' | 'VERIFIED' | 'FAILED'>('IDLE');
   const [ocrText, setOcrText] = useState<string>('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!confirm('Are you sure you want to cancel this challenge? You will lose your current character name.')) return;
+    
+    try {
+      setCancelling(true);
+      await RunSessionService.cancelSession(session.id);
+      notifications.show({
+        title: 'Challenge Cancelled',
+        message: 'You have cancelled the challenge.',
+        color: 'blue',
+      });
+      if (onSuccess) onSuccess(); // Reuse onSuccess to refresh parent state
+    } catch (error) {
+      console.error('Failed to cancel session:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to cancel challenge.',
+        color: 'red',
+      });
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   const handleFileChange = async (file: File | null) => {
     if (!file) {
@@ -86,7 +112,8 @@ const ProofSubmission: React.FC<ProofSubmissionProps> = ({ session, onSuccess })
       const formData = new FormData();
       formData.append('media', file);
       formData.append('user_id', userId);
-      formData.append('challenge_id', session.challenge_id?.toString() || '');
+      // Use the explicitly passed challengeId instead of relying on the potentially buggy session object
+      formData.append('challenge_id', challengeId.toString());
       formData.append('run_code', session.run_code);
       formData.append('media_type', 'image');
       formData.append('ocr_result', ocrStatus);
@@ -185,16 +212,26 @@ const ProofSubmission: React.FC<ProofSubmissionProps> = ({ session, onSuccess })
           </Stack>
         )}
 
-        <Button 
-          fullWidth 
-          size="md" 
-          onClick={handleSubmit} 
-          loading={uploading}
-          disabled={!file || !videoUrl || ocrStatus === 'PROCESSING'}
-          leftSection={<IconUpload size={16} />}
-        >
-          Submit Proof
-        </Button>
+        <Group grow>
+          <Button 
+            size="md" 
+            onClick={handleSubmit} 
+            loading={uploading}
+            disabled={!file || !videoUrl || ocrStatus === 'PROCESSING'}
+            leftSection={<IconUpload size={16} />}
+          >
+            Submit Proof
+          </Button>
+          <Button 
+            size="md" 
+            variant="light" 
+            color="red" 
+            onClick={handleCancel}
+            loading={cancelling}
+          >
+            Cancel Challenge
+          </Button>
+        </Group>
       </Stack>
     </Card>
   );

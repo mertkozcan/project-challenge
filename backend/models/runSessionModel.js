@@ -8,12 +8,16 @@ const GAME_WORD_POOLS = {
         adjectives: [
             'Golden', 'Silver', 'Crimson', 'Azure', 'Radiant', 'Fell', 'Ancient', 'Eternal',
             'Blessed', 'Cursed', 'Moonlit', 'Starlit', 'Flame', 'Frost', 'Storm', 'Shadow',
-            'Holy', 'Dark', 'Glorious', 'Mighty', 'Swift', 'Iron', 'Rune', 'Spectral'
+            'Holy', 'Dark', 'Glorious', 'Mighty', 'Swift', 'Iron', 'Rune', 'Spectral',
+            'Rotten', 'Sacred', 'Profaned', 'Glintstone', 'Bestial', 'Frenzied', 'Godslayer',
+            'Gravity', 'Night', 'Order', 'Primeval', 'Ghostflame', 'Blood', 'Dragon', 'Omen'
         ],
         nouns: [
             'Tarnished', 'Knight', 'Warrior', 'Champion', 'Blade', 'Sentinel', 'Guardian',
             'Hunter', 'Seeker', 'Wanderer', 'Slayer', 'Lord', 'Maiden', 'Sage', 'Prophet',
-            'Warden', 'Reaver', 'Conqueror', 'Defender', 'Avenger', 'Crusader', 'Paladin'
+            'Warden', 'Reaver', 'Conqueror', 'Defender', 'Avenger', 'Crusader', 'Paladin',
+            'Samurai', 'Astrologer', 'Bandit', 'Prisoner', 'Confessor', 'Wretch', 'Vagabond',
+            'Hero', 'Duelist', 'Monk', 'Sorcerer', 'Cleric', 'Merchant', 'Nomad', 'Apostle'
         ]
     },
     'Dark Souls': {
