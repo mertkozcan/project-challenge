@@ -132,6 +132,72 @@ export class EldenRingProvider implements GameDataProvider {
         );
       }
 
+      if (category === 'greatRunes') {
+        const greatRunes: GameItem[] = [
+          {
+            id: 'godrick',
+            name: "Godrick's Great Rune",
+            image: "https://eldenring.fanapis.com/images/keyitems/17f69c5c93cl0i20356p63086308.png", // Attempted guess or placeholder
+            description: "A Great Rune of the shardbearer Godrick. Raises all attributes.",
+            category: 'greatRunes',
+            stats: { effect: "Raises all attributes" }
+          },
+          {
+            id: 'radahn',
+            name: "Radahn's Great Rune",
+            image: null,
+            description: "A Great Rune of the shardbearer Radahn. Raises maximum HP, FP and Stamina.",
+            category: 'greatRunes',
+            stats: { effect: "Raises maximum HP, FP and Stamina" }
+          },
+          {
+            id: 'morgott',
+            name: "Morgott's Great Rune",
+            image: null,
+            description: "A Great Rune of the shardbearer Morgott. Greatly raises maximum HP.",
+            category: 'greatRunes',
+            stats: { effect: "Greatly raises maximum HP" }
+          },
+          {
+            id: 'rykard',
+            name: "Rykard's Great Rune",
+            image: null,
+            description: "A Great Rune of the shardbearer Rykard. Restores HP upon defeating enemies.",
+            category: 'greatRunes',
+            stats: { effect: "Restores HP upon defeating enemies" }
+          },
+          {
+            id: 'mohg',
+            name: "Mohg's Great Rune",
+            image: null,
+            description: "A Great Rune of the shardbearer Mohg. Grants a blessing of blood to summoned phantoms.",
+            category: 'greatRunes',
+            stats: { effect: "Grants a blessing of blood to summoned phantoms" }
+          },
+          {
+            id: 'malenia',
+            name: "Malenia's Great Rune",
+            image: null,
+            description: "A Great Rune of the shardbearer Malenia. Attacks performed immediately after taking damage recover HP.",
+            category: 'greatRunes',
+            stats: { effect: "Attacks recover HP after taking damage" }
+          },
+          {
+            id: 'unborn',
+            name: "Great Rune of the Unborn",
+            image: null,
+            description: "Great Rune of unborn demigods. Used to perfect rebirth.",
+            category: 'greatRunes',
+            stats: { effect: "Used to perfect rebirth" }
+          }
+        ];
+        
+        if (query) {
+            return greatRunes.filter(r => r.name.toLowerCase().includes(query.toLowerCase()));
+        }
+        return greatRunes;
+      }
+
       return items.map((item: any) => this.mapToGameItem(item, category || 'weapons')); // Fallback category if mixed
     } catch (error) {
       console.error('Failed to search Elden Ring items:', error);
