@@ -119,4 +119,18 @@ export const AuthService = {
       callback(session?.user || null);
     });
   },
+
+  async resetPassword(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw error;
+  },
+
+  async setPersistence(remember: boolean) {
+    const { error } = await (supabase.auth as any).setPersistence(
+        remember ? 'LOCAL' : 'SESSION'
+    );
+    if (error) throw error;
+  },
 };

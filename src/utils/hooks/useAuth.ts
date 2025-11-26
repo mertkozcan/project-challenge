@@ -25,7 +25,7 @@ function useAuth() {
   const query = useQuery()
 
   const signIn = async (
-    values: SignInCredential
+    values: SignInCredential & { rememberMe?: boolean }
   ): Promise<
     | {
     status: Status
@@ -34,6 +34,9 @@ function useAuth() {
     | undefined
   > => {
     try {
+      if (values.rememberMe !== undefined) {
+          await AuthService.setPersistence(values.rememberMe);
+      }
       const resp = await AuthService.signIn(values.username, values.password)
       const user=resp.profile;
       dispatch(setUserId(user.id))
@@ -114,11 +117,27 @@ function useAuth() {
     handleSignOut()
   }
 
+  const resetPassword = async (email: string) => {
+    try {
+      await AuthService.resetPassword(email)
+      return {
+        status: 'success',
+        message: ''
+      }
+    } catch (errors: any) {
+      return {
+        status: 'failed',
+        message: errors?.message || errors.toString()
+      }
+    }
+  }
+
   return {
     authenticated:signedIn, //&& token ,
     signIn,
     signUp,
     signOut,
+    resetPassword,
   }
 }
 

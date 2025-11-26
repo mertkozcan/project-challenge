@@ -1,45 +1,37 @@
-# Implementation Plan - Adding Games & Bingo Tasks
+# Implementation Plan - Auth Features
 
 ## Goal Description
-Add the following games to the platform and populate them with initial "Bingo Tasks" to enable the Bingo feature:
-- Dark Souls 1, 2, 3
-- Bloodborne
-- Sekiro: Shadows Die Twice
-- Lies of P
-- Fallout 4
-- Elder Scrolls V: Skyrim
-- Baldur's Gate 3
-- Cyberpunk 2077
-- Resident Evil 2 Remake
-- Resident Evil 3 Remake
-- Resident Evil 4 Remake
-- Resident Evil 7
-- Resident Evil 8 (Village)
-- Hollow Knight
-- Minecraft
-- Terraria
-- The Binding of Isaac: Repentance
-- Hades
-- Celeste
-- Cuphead
-- The Witcher 3: Wild Hunt
-- Monster Hunter: World
-- Dead Cells
-- Slay the Spire
-- Stardew Valley
+Implement "Remember Me" functionality and a "Forgot Password" flow using Supabase Authentication.
 
 ## Proposed Changes
 
-### Database Seeding
-#### [NEW] [seed_rpg_games.js](file:///e:/Projects/project-challenge/project-challenge/backend/scripts/seed_rpg_games.js)
-- A script to:
-    1.  Insert the games into the `games` table (if they don't exist).
-    2.  Insert a set of ~25 generic/specific bingo tasks for each game into `bingo_tasks`.
-    - *Note:* Since we don't have a scraper yet, I will use a predefined list of common challenges (e.g., "Defeat a boss without healing", "Find a secret area") tailored to each game's genre to get the user started immediately.
+### Frontend Services
+#### [MODIFY] [AuthService.ts](file:///e:/Projects/project-challenge/project-challenge/src/services/auth/auth.service.ts)
+- Add `resetPassword(email: string)` method calling `supabase.auth.resetPasswordForEmail`.
+
+### Frontend Hooks
+#### [MODIFY] [useAuth.ts](file:///e:/Projects/project-challenge/project-challenge/src/utils/hooks/useAuth.ts)
+- Expose `resetPassword` function.
+
+### Frontend Pages
+#### [NEW] [ForgotPassword.tsx](file:///e:/Projects/project-challenge/project-challenge/src/pages/auth/ForgotPassword.tsx)
+- Create a new page with an email input form to request a password reset link.
+
+#### [MODIFY] [SignIn.tsx](file:///e:/Projects/project-challenge/project-challenge/src/pages/auth/SignIn.tsx)
+- Add "Remember Me" checkbox (visual/functional if possible).
+- Add "Forgot Password?" link pointing to `/forgot-password`.
+- *Note:* For "Remember Me", we will use `supabase.auth.setPersistence` to toggle between `LOCAL` (Remember) and `SESSION` (Don't Remember) storage.
+
+#### [MODIFY] [App.tsx](file:///e:/Projects/project-challenge/project-challenge/src/App.tsx)
+- Add route for `/forgot-password`.
 
 ## Verification Plan
 
 ### Manual Verification
-- Run the seed script: `node backend/scripts/seed_rpg_games.js`
-- Check the database or UI to ensure games are listed.
-- Create a Bingo Board for one of the new games to verify tasks appear.
+- **Forgot Password:**
+    - Go to `/forgot-password`.
+    - Enter email and submit.
+    - Check email (if possible) or verify success message.
+- **Remember Me:**
+    - Login with "Remember Me" UNCHECKED. Close tab/browser. Reopen. Should be logged out (if session persistence works as expected).
+    - Login with "Remember Me" CHECKED. Close tab/browser. Reopen. Should be logged in.

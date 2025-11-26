@@ -10,6 +10,8 @@ import {
   Anchor,
   Stack,
   Alert,
+  Checkbox,
+  Group,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import useAuth from '@/utils/hooks/useAuth';
@@ -26,6 +28,7 @@ const SignIn: React.FC = () => {
     initialValues: {
       email: '',
       password: '',
+      rememberMe: false,
     },
     validate: {
       email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
@@ -38,7 +41,11 @@ const SignIn: React.FC = () => {
     setError(null);
 
     try {
-      const result = await signIn({ username: values.email, password: values.password });
+      const result = await signIn({ 
+        username: values.email, 
+        password: values.password,
+        rememberMe: values.rememberMe 
+      });
       
       if (result?.status === 'failed') {
         setError(result.message || 'Login failed');
@@ -86,7 +93,17 @@ const SignIn: React.FC = () => {
               {...form.getInputProps('password')}
             />
 
-            <Button type="submit" fullWidth loading={loading}>
+            <Group justify="space-between" mt="md">
+              <Checkbox
+                label="Remember me"
+                {...form.getInputProps('rememberMe', { type: 'checkbox' })}
+              />
+              <Anchor component={Link} to="/forgot-password" size="sm">
+                Forgot password?
+              </Anchor>
+            </Group>
+
+            <Button type="submit" fullWidth loading={loading} mt="xl">
               Sign In
             </Button>
 
