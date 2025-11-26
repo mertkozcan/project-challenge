@@ -128,8 +128,20 @@ export const protectedRoutes = [
     authority: [],
   },
   {
+    key: 'edit-challenge',
+    path: '/challenges/edit/:id',
+    component: lazy(() => import('@/pages/challenges/CreateChallenge')),
+    authority: [],
+  },
+  {
     key: 'create-build',
     path: '/builds/create',
+    component: lazy(() => import('@/pages/builds/CreateBuild')),
+    authority: [],
+  },
+  {
+    key: 'edit-build',
+    path: '/builds/edit/:id',
     component: lazy(() => import('@/pages/builds/CreateBuild')),
     authority: [],
   },
@@ -154,6 +166,12 @@ export const protectedRoutes = [
   {
     key: 'create-bingo',
     path: '/bingo/create',
+    component: lazy(() => import('@/pages/bingo/CreateBingo')),
+    authority: [],
+  },
+  {
+    key: 'edit-bingo',
+    path: '/bingo/edit/:id',
     component: lazy(() => import('@/pages/bingo/CreateBingo')),
     authority: [],
   },

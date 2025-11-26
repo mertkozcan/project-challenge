@@ -52,5 +52,6 @@ router.put('/progress/:progressId/approve', approveProof);
 
 // Specific board detail (Must be last GET route)
 router.get('/:id', getBoardDetail);
+router.put('/:id', require('../controllers/bingoController').updateBoard);
 
 module.exports = router;

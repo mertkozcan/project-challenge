@@ -64,4 +64,24 @@ const getPopularChallenges = async (req, res) => {
   }
 };
 
-module.exports = { getChallenges, addChallenge, latestChallenges, getChallengeDetail, getPopularChallenges };
+const updateChallenge = async (req, res) => {
+  const { id } = req.params;
+  const { game_name, challenge_name, description, reward, type, end_date, reward_xp, difficulty, base_points } = req.body;
+
+  try {
+    const { updateChallenge: updateChallengeModel } = require('../models/challengeModel');
+    const updatedChallenge = await updateChallengeModel(id, {
+      game_name, challenge_name, description, reward, type, end_date, reward_xp, difficulty, base_points
+    });
+
+    if (!updatedChallenge) {
+      return res.status(404).json({ error: 'Challenge not found' });
+    }
+
+    res.json(updatedChallenge);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { getChallenges, addChallenge, updateChallenge, latestChallenges, getChallengeDetail, getPopularChallenges };

@@ -44,6 +44,7 @@ const ChallengeDetail: React.FC = () => {
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [activeSession, setActiveSession] = useState<RunSession | null>(null);
   const [pendingProof, setPendingProof] = useState<any | null>(null);
+  const [completedProof, setCompletedProof] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [startingChallenge, setStartingChallenge] = useState(false);
 
@@ -76,11 +77,15 @@ const ChallengeDetail: React.FC = () => {
           }
         }
   
-        // Check for pending proof
+        // Check for existing proof
         if (id) {
           const proof = await ProofService.getUserChallengeProof(userId, id);
-          if (proof && proof.status === 'PENDING') {
-            setPendingProof(proof);
+          if (proof) {
+            if (proof.status === 'PENDING') {
+              setPendingProof(proof);
+            } else if (proof.status === 'APPROVED') {
+              setCompletedProof(proof);
+            }
           }
         }
   
@@ -142,8 +147,12 @@ const ChallengeDetail: React.FC = () => {
     // Fetch the latest proof status to update the UI immediately
     if (userId && id) {
       const proof = await ProofService.getUserChallengeProof(userId, id);
-      if (proof && proof.status === 'PENDING') {
-        setPendingProof(proof);
+      if (proof) {
+        if (proof.status === 'PENDING') {
+          setPendingProof(proof);
+        } else if (proof.status === 'APPROVED') {
+          setCompletedProof(proof);
+        }
       }
     }
     fetchChallengeData(); // Refresh challenge data to update participation status
@@ -230,6 +239,25 @@ const ChallengeDetail: React.FC = () => {
                 {pendingProof ? (
                   <Alert icon={<IconCheck size={16} />} title="Proof Pending" color="blue" variant="light">
                     You have submitted a proof for this challenge. Please wait for it to be reviewed before starting again.
+                  </Alert>
+                ) : completedProof ? (
+                  <Alert icon={<IconTrophy size={16} />} title="Challenge Completed!" color="green" variant="filled">
+                    <Text fw={700}>Congratulations! You have completed this challenge.</Text>
+                    <Text size="sm" mt="xs">
+                      Your proof has been approved and you have earned your reward.
+                      You cannot submit another proof for this challenge.
+                    </Text>
+                    <Button 
+                      variant="white" 
+                      color="dark" 
+                      size="xs" 
+                      mt="md"
+                      component="a"
+                      href={completedProof.video_url || completedProof.media_url}
+                      target="_blank"
+                    >
+                      View Your Proof
+                    </Button>
                   </Alert>
                 ) : activeSession ? (
                   <ProofSubmission session={activeSession} challengeId={id!} onSuccess={handleProofSuccess} />

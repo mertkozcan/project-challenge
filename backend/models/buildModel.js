@@ -62,4 +62,22 @@ const deleteBuildById = async (id) => {
     return result.rows[0];
 };
 
-module.exports = { createBuild, getBuildsByGame, getBuildById, getAllBuilds, deleteBuildById };
+const updateBuild = async (id, data) => {
+    const { game_name, build_name, description, items_json, video_url } = data;
+
+    const result = await pool.query(
+        `UPDATE builds 
+         SET game_name = COALESCE($1, game_name),
+             build_name = COALESCE($2, build_name),
+             description = COALESCE($3, description),
+             items_json = COALESCE($4, items_json),
+             video_url = COALESCE($5, video_url),
+             updated_at = NOW()
+         WHERE id = $6
+         RETURNING *`,
+        [game_name, build_name, description, items_json, video_url, id]
+    );
+    return result.rows[0];
+};
+
+module.exports = { createBuild, getBuildsByGame, getBuildById, getAllBuilds, deleteBuildById, updateBuild };

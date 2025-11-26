@@ -38,4 +38,12 @@ export const ChallengesService = {
     });
     return res.data;
   },
+  async updateChallenge(id: string, data: Partial<Challenge>): Promise<Challenge> {
+    const res = await ApiService.fetchData<Partial<Challenge>, Challenge>({
+      url: `/challenges/${id}`,
+      method: 'PUT',
+      data,
+    });
+    return res.data;
+  },
 };

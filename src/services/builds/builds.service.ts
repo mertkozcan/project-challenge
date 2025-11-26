@@ -37,4 +37,12 @@ export const BuildsService = {
       method: 'DELETE',
     });
   },
+  async updateBuild(id: string, data: Partial<Build>): Promise<Build> {
+    const res = await ApiService.fetchData<Partial<Build>, Build>({
+      url: `/builds/${id}`,
+      method: 'PUT',
+      data,
+    });
+    return res.data;
+  },
 };

@@ -111,6 +111,15 @@ export const BingoService = {
     return res.data;
   },
 
+  async updateBoard(id: number, data: any): Promise<BingoBoard> {
+    const res = await ApiService.fetchData<any, BingoBoard>({
+      url: `/bingo/${id}`,
+      method: 'PUT',
+      data,
+    });
+    return res.data;
+  },
+
   // Task Management
   async createTask(data: any): Promise<any> {
     const res = await ApiService.fetchData<any, any>({

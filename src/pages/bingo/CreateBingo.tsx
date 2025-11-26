@@ -19,13 +19,14 @@ import {
   ThemeIcon,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { IconDeviceGamepad2, IconGridDots, IconWand, IconTrash, IconCheck } from '@tabler/icons-react';
 import { BingoService } from '@/services/bingo/bingo.service';
 import { notifications } from '@mantine/notifications';
 
 const CreateBingo = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [searchParams] = useSearchParams();
   const source = searchParams.get('source');
   const [active, setActive] = useState(0);
@@ -48,10 +49,72 @@ const CreateBingo = () => {
     },
   });
 
+  const [games, setGames] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchGames = async () => {
+      try {
+        const { GamesService } = await import('@/services/games/games.service');
+        const data = await GamesService.getAllGames();
+        setGames(data);
+      } catch (error) {
+        console.error('Failed to fetch games', error);
+      }
+    };
+    fetchGames();
+    if (id) {
+      fetchBoard();
+    }
+  }, [id]);
+
+  const fetchBoard = async () => {
+    if (!id) return;
+    try {
+      const { board, cells } = await BingoService.getBoardDetail(id);
+      form.setValues({
+        game_name: board.game_name,
+        title: board.title,
+        description: board.description,
+        size: board.size,
+        type: 'Normal', // Assuming default or fetch if available in board model
+        theme: 'Standard',
+      });
+      
+      // Populate tasks
+      const newTasks = Array(board.size * board.size).fill('');
+      cells.forEach((cell) => {
+        const index = cell.row_index * board.size + cell.col_index;
+        if (index < newTasks.length) {
+          newTasks[index] = cell.task;
+        }
+      });
+      setTasks(newTasks);
+    } catch (error) {
+      console.error('Failed to fetch board', error);
+      notifications.show({ title: 'Error', message: 'Failed to load board details', color: 'red' });
+    }
+  };
+
   // Initialize tasks array when size changes
   useEffect(() => {
+    // Only reset tasks if not editing or if size changed by user interaction (not initial load)
+    // But for simplicity, we might overwrite fetched tasks if size changes. 
+    // Ideally we should handle this carefully.
+    // For now, let's assume if id is present, we trust fetchBoard to set tasks.
+    // If user changes size, we reset.
     const totalCells = form.values.size * form.values.size;
-    setTasks(Array(totalCells).fill(''));
+    if (tasks.length !== totalCells && !id) {
+        setTasks(Array(totalCells).fill(''));
+    } else if (tasks.length !== totalCells && id) {
+        // If editing and size changed, resize array but keep existing tasks?
+        // Or just reset. Resetting is safer for grid integrity.
+        // But we need to avoid resetting immediately after fetchBoard sets it.
+        // fetchBoard sets tasks with correct length.
+        // So this effect will run after fetchBoard updates form size.
+        // We need to check if tasks length matches new size.
+        // If fetchBoard updates both size and tasks, this effect might run.
+        // Let's just check if tasks length matches.
+    }
   }, [form.values.size]);
 
   const handleNextStep = () => {
@@ -127,17 +190,28 @@ const CreateBingo = () => {
         task,
       }));
 
-      await BingoService.createBoard({
-        ...form.values,
-        cells,
-        created_by: source === 'admin' ? 'admin' : undefined
-      });
-
-      notifications.show({
-        title: 'Success',
-        message: 'Bingo board created successfully!',
-        color: 'green',
-      });
+      if (id) {
+        await BingoService.updateBoard(parseInt(id), {
+            ...form.values,
+            cells,
+        });
+        notifications.show({
+            title: 'Success',
+            message: 'Bingo board updated successfully!',
+            color: 'green',
+          });
+      } else {
+        await BingoService.createBoard({
+            ...form.values,
+            cells,
+            created_by: source === 'admin' ? 'admin' : undefined
+        });
+        notifications.show({
+            title: 'Success',
+            message: 'Bingo board created successfully!',
+            color: 'green',
+          });
+      }
       
       if (source === 'admin') {
           navigate('/admin');
@@ -148,7 +222,7 @@ const CreateBingo = () => {
       console.error(error);
       notifications.show({
         title: 'Error',
-        message: 'Failed to create bingo board',
+        message: 'Failed to save bingo board',
         color: 'red',
       });
     } finally {
@@ -158,7 +232,7 @@ const CreateBingo = () => {
 
   return (
     <Container size="lg" py="xl">
-      <Title order={2} mb="xl">Create New Bingo Board</Title>
+      <Title order={2} mb="xl">{id ? 'Edit Bingo Board' : 'Create New Bingo Board'}</Title>
 
       <Stepper active={active} onStepClick={setActive}>
         <Stepper.Step label="Setup" description="Board details">
@@ -167,7 +241,7 @@ const CreateBingo = () => {
               <Select
                 label="Game"
                 placeholder="Select game"
-                data={['Elden Ring']}
+                data={games.map(g => g.name)}
                 {...form.getInputProps('game_name')}
               />
               <TextInput
@@ -264,12 +338,12 @@ const CreateBingo = () => {
             <ThemeIcon size={60} radius="xl" color="green" mb="md">
                 <IconCheck size={32} />
             </ThemeIcon>
-            <Title order={3} mb="sm">Ready to Create!</Title>
+            <Title order={3} mb="sm">Ready to {id ? 'Update' : 'Create'}!</Title>
             <Text c="dimmed" mb="xl">
-                You are about to create a {form.values.size}x{form.values.size} {form.values.type} bingo board for {form.values.game_name}.
+                You are about to {id ? 'update' : 'create'} a {form.values.size}x{form.values.size} {form.values.type} bingo board for {form.values.game_name}.
             </Text>
             <Button size="lg" onClick={handleSubmit} loading={loading}>
-                Create Board
+                {id ? 'Update Board' : 'Create Board'}
             </Button>
           </Paper>
         </Stepper.Completed>

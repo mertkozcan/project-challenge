@@ -31,7 +31,7 @@ import ProofService, { type Proof } from '@/services/proof/proof.service';
 import { BingoService } from '@/services/bingo/bingo.service';
 import { Challenge } from '@/@types/challenge';
 import { Build } from '@/@types/build';
-import { IconPlus, IconTrash, IconDeviceGamepad2, IconFileCheck, IconCheck, IconX, IconTarget, IconSword, IconGridDots } from '@tabler/icons-react';
+import { IconPlus, IconTrash, IconDeviceGamepad2, IconFileCheck, IconCheck, IconX, IconTarget, IconSword, IconGridDots, IconEdit } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
 
 const AdminPanel: React.FC = () => {
@@ -52,6 +52,10 @@ const AdminPanel: React.FC = () => {
   const [buildModalOpened, setBuildModalOpened] = useState(false);
   const [modalOpened, setModalOpened] = useState(false);
   const [newTaskOpened, { open: openNewTask, close: closeNewTask }] = useDisclosure(false);
+
+  // Editing State
+  const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
+  const [editingBuild, setEditingBuild] = useState<Build | null>(null);
 
   const [buildFilter, setBuildFilter] = useState('all');
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
@@ -207,13 +211,39 @@ const AdminPanel: React.FC = () => {
   const handleCreateChallenge = async (values: typeof challengeForm.values) => {
     if (!userId) return;
     try {
-      await AdminService.createOfficialChallenge(values, userId);
+      if (editingChallenge) {
+        await ChallengesService.updateChallenge(editingChallenge.id.toString(), values as any);
+        notifications.show({ title: 'Success', message: 'Challenge updated successfully', color: 'green' });
+      } else {
+        await AdminService.createOfficialChallenge(values, userId);
+        notifications.show({ title: 'Success', message: 'Challenge created successfully', color: 'green' });
+      }
       setChallengeModalOpened(false);
+      setEditingChallenge(null);
       challengeForm.reset();
       fetchChallenges();
     } catch (error) {
-      console.error('Failed to create challenge', error);
+      console.error('Failed to save challenge', error);
+      notifications.show({ title: 'Error', message: 'Failed to save challenge', color: 'red' });
     }
+  };
+
+  const openChallengeModal = (challenge?: Challenge) => {
+    if (challenge) {
+      setEditingChallenge(challenge);
+      challengeForm.setValues({
+        game_name: challenge.game_name,
+        challenge_name: challenge.challenge_name,
+        description: challenge.description,
+        reward: challenge.reward,
+        type: challenge.type,
+        end_date: challenge.end_date ? new Date(challenge.end_date).toISOString().split('T')[0] : '',
+      });
+    } else {
+      setEditingChallenge(null);
+      challengeForm.reset();
+    }
+    setChallengeModalOpened(true);
   };
 
   const handleCreateBuild = async (values: typeof buildForm.values) => {
@@ -223,13 +253,38 @@ const AdminPanel: React.FC = () => {
         ...values,
         items_json: JSON.parse(values.items_json),
       };
-      await AdminService.createOfficialBuild(payload, userId);
+      
+      if (editingBuild) {
+        await BuildsService.updateBuild(editingBuild.id!.toString(), payload);
+        notifications.show({ title: 'Success', message: 'Build updated successfully', color: 'green' });
+      } else {
+        await AdminService.createOfficialBuild(payload, userId);
+        notifications.show({ title: 'Success', message: 'Build created successfully', color: 'green' });
+      }
       setBuildModalOpened(false);
+      setEditingBuild(null);
       buildForm.reset();
       fetchBuilds();
     } catch (error) {
-      console.error('Failed to create build', error);
+      console.error('Failed to save build', error);
+      notifications.show({ title: 'Error', message: 'Failed to save build', color: 'red' });
     }
+  };
+
+  const openBuildModal = (build?: Build) => {
+    if (build) {
+      setEditingBuild(build);
+      buildForm.setValues({
+        game_name: build.game_name,
+        build_name: build.build_name,
+        description: build.description,
+        items_json: JSON.stringify(build.items_json, null, 2),
+      });
+    } else {
+      setEditingBuild(null);
+      buildForm.reset();
+    }
+    setBuildModalOpened(true);
   };
 
   const handleDeleteBuild = async (id: number) => {
@@ -320,7 +375,7 @@ const AdminPanel: React.FC = () => {
           <Paper p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="xl">
               <Title order={4}>Official Challenges</Title>
-              <Button leftSection={<IconPlus size={16} />} onClick={() => setChallengeModalOpened(true)}>
+              <Button leftSection={<IconPlus size={16} />} onClick={() => openChallengeModal()}>
                 Add Challenge
               </Button>
             </Group>
@@ -346,9 +401,14 @@ const AdminPanel: React.FC = () => {
                     </Table.Td>
                     <Table.Td>{challenge.reward}</Table.Td>
                     <Table.Td>
-                      <ActionIcon color="red" variant="subtle">
-                        <IconTrash size={18} />
-                      </ActionIcon>
+                      <Group gap="xs">
+                        <ActionIcon color="blue" variant="subtle" onClick={() => openChallengeModal(challenge)}>
+                          <IconEdit size={18} />
+                        </ActionIcon>
+                        <ActionIcon color="red" variant="subtle">
+                          <IconTrash size={18} />
+                        </ActionIcon>
+                      </Group>
                     </Table.Td>
                   </Table.Tr>
                 ))}
@@ -379,7 +439,7 @@ const AdminPanel: React.FC = () => {
                   ]}
                 />
               </Group>
-              <Button leftSection={<IconPlus size={16} />} onClick={() => navigate('/builds/create?source=admin')}>
+              <Button leftSection={<IconPlus size={16} />} onClick={() => openBuildModal()}>
                 Create Official Build
               </Button>
             </Group>
@@ -411,14 +471,24 @@ const AdminPanel: React.FC = () => {
                     </Table.Td>
                     <Table.Td>{new Date(build.created_at).toLocaleDateString()}</Table.Td>
                     <Table.Td>
-                      <ActionIcon 
-                        color="red" 
-                        variant="subtle" 
-                        onClick={() => handleDeleteBuild(build.id!)}
-                        title="Delete Build"
-                      >
-                        <IconTrash size={18} />
-                      </ActionIcon>
+                      <Group gap="xs">
+                        <ActionIcon 
+                          color="blue" 
+                          variant="subtle" 
+                          onClick={() => openBuildModal(build)}
+                          title="Edit Build"
+                        >
+                          <IconEdit size={18} />
+                        </ActionIcon>
+                        <ActionIcon 
+                          color="red" 
+                          variant="subtle" 
+                          onClick={() => handleDeleteBuild(build.id!)}
+                          title="Delete Build"
+                        >
+                          <IconTrash size={18} />
+                        </ActionIcon>
+                      </Group>
                     </Table.Td>
                   </Table.Tr>
                 ))}
@@ -524,9 +594,14 @@ const AdminPanel: React.FC = () => {
                   <Text size="sm" mb="md" lineClamp={2}>
                     {board.description}
                   </Text>
-                  <Button variant="light" fullWidth onClick={() => navigate(`/bingo/${board.id}`)}>
-                    View Board
-                  </Button>
+                  <Group grow>
+                    <Button variant="light" onClick={() => navigate(`/bingo/${board.id}`)}>
+                      View Board
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate(`/bingo/edit/${board.id}?source=admin`)}>
+                      Edit
+                    </Button>
+                  </Group>
                 </Card>
               ))}
               {bingoBoards.length === 0 && (
@@ -540,10 +615,11 @@ const AdminPanel: React.FC = () => {
             <Stack gap="md">
                 <Group justify="space-between">
                     <Select 
-                        data={['Elden Ring']}
+                        data={games.map(g => g.name)}
                         value={taskGameFilter}
                         onChange={(val) => setTaskGameFilter(val || 'Elden Ring')}
                         allowDeselect={false}
+                        searchable
                     />
                     <Button leftSection={<IconPlus size={16} />} onClick={openNewTask}>Add Task</Button>
                 </Group>
@@ -609,13 +685,15 @@ const AdminPanel: React.FC = () => {
         </form>
       </Modal>
 
-      <Modal opened={challengeModalOpened} onClose={() => setChallengeModalOpened(false)} title="Add Official Challenge" centered>
+      <Modal opened={challengeModalOpened} onClose={() => setChallengeModalOpened(false)} title={editingChallenge ? "Edit Challenge" : "Add Official Challenge"} centered>
         <form onSubmit={challengeForm.onSubmit(handleCreateChallenge)}>
           <Stack gap="md">
-            <TextInput
+            <Select
               label="Game Name"
-              placeholder="e.g., Elden Ring"
+              placeholder="Select Game"
+              data={games.map(g => g.name)}
               required
+              searchable
               {...challengeForm.getInputProps('game_name')}
             />
             <TextInput
@@ -648,19 +726,21 @@ const AdminPanel: React.FC = () => {
               {...challengeForm.getInputProps('end_date')}
             />
             <Button type="submit" fullWidth mt="md">
-              Create Challenge
+              {editingChallenge ? "Update Challenge" : "Create Challenge"}
             </Button>
           </Stack>
         </form>
       </Modal>
 
-      <Modal opened={buildModalOpened} onClose={() => setBuildModalOpened(false)} title="Add Official Build" centered>
+      <Modal opened={buildModalOpened} onClose={() => setBuildModalOpened(false)} title={editingBuild ? "Edit Build" : "Add Official Build"} centered>
         <form onSubmit={buildForm.onSubmit(handleCreateBuild)}>
           <Stack gap="md">
-            <TextInput
+            <Select
               label="Game Name"
-              placeholder="e.g., Elden Ring"
+              placeholder="Select Game"
+              data={games.map(g => g.name)}
               required
+              searchable
               {...buildForm.getInputProps('game_name')}
             />
             <TextInput
@@ -683,7 +763,7 @@ const AdminPanel: React.FC = () => {
               minRows={4}
             />
             <Button type="submit" fullWidth mt="md">
-              Create Build
+              {editingBuild ? "Update Build" : "Create Build"}
             </Button>
           </Stack>
         </form>
@@ -694,8 +774,9 @@ const AdminPanel: React.FC = () => {
             <Stack>
                 <Select 
                     label="Game" 
-                    data={['Elden Ring']} 
+                    data={games.map(g => g.name)} 
                     required 
+                    searchable
                     {...taskForm.getInputProps('game_name')} 
                 />
                 <Textarea 

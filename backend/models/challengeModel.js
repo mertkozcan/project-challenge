@@ -145,4 +145,26 @@ const completeChallengeWithXP = async (challengeId, userId, proofId) => {
   };
 };
 
-module.exports = { getAllChallenges, createChallenge, getLatestChallenges, getChallengeById, getPopularChallenges, completeChallengeWithXP };
+const updateChallenge = async (id, data) => {
+  const { game_name, challenge_name, description, reward, type, end_date, reward_xp, difficulty, base_points } = data;
+
+  const result = await pool.query(
+    `UPDATE challenges 
+     SET game_name = COALESCE($1, game_name),
+         challenge_name = COALESCE($2, challenge_name),
+         description = COALESCE($3, description),
+         reward = COALESCE($4, reward),
+         type = COALESCE($5, type),
+         end_date = COALESCE($6, end_date),
+         reward_xp = COALESCE($7, reward_xp),
+         difficulty = COALESCE($8, difficulty),
+         base_points = COALESCE($9, base_points),
+         updated_at = NOW()
+     WHERE id = $10
+     RETURNING *`,
+    [game_name, challenge_name, description, reward, type, end_date, reward_xp, difficulty, base_points, id]
+  );
+  return result.rows[0];
+};
+
+module.exports = { getAllChallenges, createChallenge, updateChallenge, getLatestChallenges, getChallengeById, getPopularChallenges, completeChallengeWithXP };

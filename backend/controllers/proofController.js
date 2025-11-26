@@ -117,7 +117,16 @@ const approveProof = async (req, res) => {
             proof.id
         );
 
-        res.json({ message: 'Proof approved', proof: updatedProof, pointsAdded: pointsToAdd });
+        // 5. Get Updated User Profile
+        const { getUserProfile } = require('../models/userModel');
+        const updatedUser = await getUserProfile(proof.user_id);
+
+        res.json({
+            message: 'Proof approved',
+            proof: updatedProof,
+            pointsAdded: pointsToAdd,
+            user: updatedUser
+        });
 
     } catch (error) {
         console.error(error);

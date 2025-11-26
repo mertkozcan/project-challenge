@@ -161,5 +161,43 @@ module.exports = {
     createBingoTask,
     getBingoTasks,
     deleteBingoTask,
+};
+
+const updateBoard = async (id, data) => {
+    const { game_name, title, description, size, type, theme } = data;
+
+    const result = await pool.query(
+        `UPDATE bingo_boards 
+         SET game_name = COALESCE($1, game_name),
+             title = COALESCE($2, title),
+             description = COALESCE($3, description),
+             size = COALESCE($4, size),
+             type = COALESCE($5, type),
+             theme = COALESCE($6, theme),
+             updated_at = NOW()
+         WHERE id = $7
+         RETURNING *`,
+        [game_name, title, description, size, type, theme, id]
+    );
+    return result.rows[0];
+};
+
+module.exports = {
+    getAllBoards,
+    getBoardById,
+    getBoardCells,
+    getUserProgress,
+    submitCellProof,
+    approveCellProof,
+    createBoard,
+    updateBoard,
+    addCell,
+    getUserRun,
+    updateRunTime,
+    finishRun,
+    resetRun,
+    createBingoTask,
+    getBingoTasks,
+    deleteBingoTask,
     getRandomBingoTasks,
 };

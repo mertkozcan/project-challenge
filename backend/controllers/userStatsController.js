@@ -1,4 +1,4 @@
-const { getUserStats, getUserActivity, getUserBuilds } = require('../models/userStatsModel');
+const { getUserStats, getUserActivity, getUserBuilds, getUserChallenges, getUserBingoBoards } = require('../models/userStatsModel');
 const { getUserIdByUsername } = require('../models/userModel');
 
 const resolveUserId = async (identifier) => {
@@ -46,8 +46,34 @@ const getBuilds = async (req, res) => {
     }
 };
 
+const getChallenges = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const resolvedId = await resolveUserId(userId);
+        const challenges = await getUserChallenges(resolvedId);
+        res.json(challenges);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+const getBingoBoards = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const resolvedId = await resolveUserId(userId);
+        const boards = await getUserBingoBoards(resolvedId);
+        res.json(boards);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getStats,
     getActivity,
     getBuilds,
+    getChallenges,
+    getBingoBoards,
 };

@@ -103,8 +103,44 @@ const getUserBuilds = async (userId) => {
     }
 };
 
+const getUserChallenges = async (userId) => {
+    try {
+        const result = await pool.query(
+            `SELECT c.*, g.icon_url as game_icon
+             FROM challenges c
+             LEFT JOIN games g ON c.game_name = g.name
+             WHERE c.created_by = $1
+             ORDER BY c.created_at DESC`,
+            [userId]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error('Error getting user challenges:', error);
+        throw error;
+    }
+};
+
+const getUserBingoBoards = async (userId) => {
+    try {
+        const result = await pool.query(
+            `SELECT b.*, g.icon_url as game_icon
+             FROM bingo_boards b
+             LEFT JOIN games g ON b.game_name = g.name
+             WHERE b.created_by = $1
+             ORDER BY b.created_at DESC`,
+            [userId]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error('Error getting user bingo boards:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     getUserStats,
     getUserActivity,
     getUserBuilds,
+    getUserChallenges,
+    getUserBingoBoards,
 };

@@ -156,6 +156,17 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
     fetchClasses();
   }, []);
 
+  // Sync target level to stats
+  useEffect(() => {
+      setSlots(prev => ({
+          ...prev,
+          stats: {
+              ...prev.stats,
+              level: targetLevel
+          }
+      }));
+  }, [targetLevel]);
+
   // Helper to calculate total attribute points
   const calculateTotalAttributes = (s: CharacterStats) => {
       return s.vigor + s.mind + s.endurance + s.strength + s.dexterity + s.intelligence + s.faith + s.arcane;

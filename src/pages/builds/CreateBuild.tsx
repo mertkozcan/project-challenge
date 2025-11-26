@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { Container, Title, TextInput, Textarea, Button, Group, Notification } from '@mantine/core';
+import React, { useState, useEffect } from 'react';
+import { Container, Title, TextInput, Textarea, Button, Group, Notification, Select } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { BuildsService } from '@/services/builds/builds.service';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { IconX } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
 import BuildEditor, { BuildSlots } from '@/components/Builds/BuildEditor';
 
 const CreateBuild: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [searchParams] = useSearchParams();
   const source = searchParams.get('source');
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
@@ -31,15 +32,53 @@ const CreateBuild: React.FC = () => {
     consumables: [],
   });
 
+  const [games, setGames] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchGames = async () => {
+      try {
+        const { GamesService } = await import('@/services/games/games.service');
+        const data = await GamesService.getAllGames();
+        setGames(data);
+      } catch (error) {
+        console.error('Failed to fetch games', error);
+      }
+    };
+    fetchGames();
+    if (id) {
+      fetchBuild();
+    }
+  }, [id]);
+
+  const fetchBuild = async () => {
+    if (!id) return;
+    try {
+      const build = await BuildsService.getBuildById(id);
+      form.setValues({
+        game_name: build.game_name,
+        build_name: build.build_name,
+        description: build.description,
+        video_url: build.video_url || '',
+      });
+      if (build.items_json) {
+        setBuildSlots(build.items_json as BuildSlots);
+      }
+    } catch (error) {
+      console.error('Failed to fetch build', error);
+      setError('Failed to load build details');
+    }
+  };
+
   const form = useForm({
     initialValues: {
-      game_name: 'Elden Ring',
+      game_name: '',
       build_name: '',
       description: '',
       video_url: '',
     },
 
     validate: {
+      game_name: (value) => (value ? null : 'Game is required'),
       build_name: (value) => (value ? null : 'Build name is required'),
     },
   });
@@ -55,12 +94,19 @@ const CreateBuild: React.FC = () => {
     try {
       if (!userId) throw new Error('You must be logged in to create a build');
 
-      await BuildsService.createBuild({
-        ...form.values,
-        user_id: userId,
-        items_json: slots,
-        is_official: source === 'admin' // If created from admin panel, mark as official (backend should handle this or we pass it)
-      });
+      if (id) {
+        await BuildsService.updateBuild(id, {
+          ...form.values,
+          items_json: slots,
+        });
+      } else {
+        await BuildsService.createBuild({
+          ...form.values,
+          user_id: userId,
+          items_json: slots,
+          is_official: source === 'admin'
+        });
+      }
       
       if (source === 'admin') {
           navigate('/admin');
@@ -68,7 +114,7 @@ const CreateBuild: React.FC = () => {
           navigate('/builds');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to create build');
+      setError(err.message || 'Failed to save build');
     } finally {
       setLoading(false);
     }
@@ -76,7 +122,7 @@ const CreateBuild: React.FC = () => {
 
   return (
     <Container size="xl" py="xl">
-      <Title order={2} mb="xl">Create New Build</Title>
+      <Title order={2} mb="xl">{id ? 'Edit Build' : 'Create New Build'}</Title>
 
       {error && (
         <Notification icon={<IconX size="1.1rem" />} color="red" title="Error" mb="md" onClose={() => setError(null)}>
@@ -84,12 +130,13 @@ const CreateBuild: React.FC = () => {
         </Notification>
       )}
 
-      <TextInput
+      <Select
         label="Game"
-        value="Elden Ring"
-        disabled
+        placeholder="Select a game"
+        data={games.map(g => g.name)}
+        required
+        {...form.getInputProps('game_name')}
         mb="md"
-        description="Currently only Elden Ring builds are supported. More games coming soon!"
       />
 
       <TextInput

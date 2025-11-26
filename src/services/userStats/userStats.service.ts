@@ -54,4 +54,20 @@ export const UserStatsService = {
     });
     return res.data;
   },
+
+  async getUserChallenges(userId: string): Promise<any[]> {
+    const res = await ApiService.fetchData<void, any[]>({
+      url: `/users/${userId}/challenges`,
+      method: 'GET',
+    });
+    return res.data;
+  },
+
+  async getUserBingoBoards(userId: string): Promise<any[]> {
+    const res = await ApiService.fetchData<void, any[]>({
+      url: `/users/${userId}/bingo-boards`,
+      method: 'GET',
+    });
+    return res.data;
+  },
 };

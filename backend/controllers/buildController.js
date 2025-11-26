@@ -57,4 +57,24 @@ const deleteBuild = async (req, res) => {
     }
 };
 
-module.exports = { addBuild, getBuilds, getBuildDetail, deleteBuild };
+const updateBuild = async (req, res) => {
+    const { id } = req.params;
+    const { game_name, build_name, description, items_json, video_url } = req.body;
+
+    try {
+        const { updateBuild: updateBuildModel } = require('../models/buildModel');
+        const updatedBuild = await updateBuildModel(id, {
+            game_name, build_name, description, items_json, video_url
+        });
+
+        if (!updatedBuild) {
+            return res.status(404).json({ error: 'Build not found' });
+        }
+
+        res.json(updatedBuild);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { addBuild, getBuilds, getBuildDetail, deleteBuild, updateBuild };

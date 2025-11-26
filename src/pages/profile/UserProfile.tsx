@@ -14,6 +14,7 @@ import {
   SimpleGrid,
   Box,
   Button,
+  ActionIcon,
 } from '@mantine/core';
 import { UserService, type ProfileData } from '@/services/user/user.service';
 import { UserStatsService, type UserBuild } from '@/services/userStats/userStats.service';
@@ -23,6 +24,7 @@ import {
   IconMedal,
   IconStar,
   IconArrowRight,
+  IconEdit,
 } from '@tabler/icons-react';
 import StatsCard from '@/components/Profile/StatsCard';
 import ActivityTimeline from '@/components/Profile/ActivityTimeline';
@@ -30,6 +32,7 @@ import { useNavigate } from 'react-router-dom';
 import { Tabs } from '@mantine/core';
 import AchievementsList from '@/components/Achievements/AchievementsList';
 import TrustBadge from '@/components/Trust/TrustBadge';
+import { useAppSelector } from '@/store';
 
 const UserProfile: React.FC = () => {
   const { username } = useParams();
@@ -38,6 +41,9 @@ const UserProfile: React.FC = () => {
   const [builds, setBuilds] = useState<UserBuild[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [challenges, setChallenges] = useState<any[]>([]);
+  const [bingoBoards, setBingoBoards] = useState<any[]>([]);
+  const currentUserId = useAppSelector((state) => state.auth.userInfo.userId);
 
   useEffect(() => {
     if (!username) return;
@@ -46,14 +52,18 @@ const UserProfile: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const [profileData, buildsData, activityData] = await Promise.all([
+      const [profileData, buildsData, activityData, challengesData, bingoData] = await Promise.all([
         UserService.getProfile(username!),
         UserStatsService.getUserBuilds(username!),
         UserStatsService.getUserActivity(username!),
+        UserStatsService.getUserChallenges(username!),
+        UserStatsService.getUserBingoBoards(username!),
       ]);
       setData(profileData);
       setBuilds(buildsData);
       setActivities(activityData);
+      setChallenges(challengesData);
+      setBingoBoards(bingoData);
     } catch (error) {
       console.error('Failed to fetch profile data', error);
     } finally {
@@ -116,6 +126,9 @@ const UserProfile: React.FC = () => {
         <Tabs defaultValue="overview" mb="xl">
           <Tabs.List mb="xl">
             <Tabs.Tab value="overview">Overview</Tabs.Tab>
+            <Tabs.Tab value="builds">Builds ({builds.length})</Tabs.Tab>
+            <Tabs.Tab value="challenges">Challenges ({challenges.length})</Tabs.Tab>
+            <Tabs.Tab value="bingo">Bingo Boards ({bingoBoards.length})</Tabs.Tab>
             <Tabs.Tab value="achievements">Achievements & Badges</Tabs.Tab>
           </Tabs.List>
 
@@ -211,6 +224,154 @@ const UserProfile: React.FC = () => {
                 </Paper>
               </Grid.Col>
             </Grid>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="builds">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+              {builds.map((build) => (
+                <Paper
+                  key={build.id}
+                  p="lg"
+                  radius="md"
+                  withBorder
+                  style={{ cursor: 'pointer', transition: 'transform 0.2s', position: 'relative' }}
+                  onClick={() => navigate(`/builds/${build.id}`)}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+                >
+                  {String(profile.id) === String(currentUserId) && (
+                    <ActionIcon 
+                      variant="filled" 
+                      color="blue" 
+                      style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/builds/edit/${build.id}`);
+                      }}
+                    >
+                      <IconEdit size={16} />
+                    </ActionIcon>
+                  )}
+                  <Group mb="md" justify="space-between">
+                    <Group>
+                        {build.game_icon && (
+                            <Avatar src={build.game_icon} size="sm" radius="xl" />
+                        )}
+                        <Badge size="sm" variant="light">{build.game_name}</Badge>
+                    </Group>
+                    <Text size="xs" c="dimmed">{new Date(build.created_at).toLocaleDateString()}</Text>
+                  </Group>
+                  <Text fw={700} size="lg" mb="xs" lineClamp={1}>{build.build_name}</Text>
+                  <Text size="sm" c="dimmed" lineClamp={3} mb="md">
+                    {build.description}
+                  </Text>
+                </Paper>
+              ))}
+              {builds.length === 0 && (
+                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>No builds found.</Text>
+              )}
+            </SimpleGrid>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="challenges">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+              {challenges.map((challenge) => (
+                <Paper
+                  key={challenge.id}
+                  p="lg"
+                  radius="md"
+                  withBorder
+                  style={{ cursor: 'pointer', transition: 'transform 0.2s', position: 'relative' }}
+                  onClick={() => navigate(`/challenges/${challenge.id}`)}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+                >
+                  {String(profile.id) === String(currentUserId) && (
+                    <ActionIcon 
+                      variant="filled" 
+                      color="blue" 
+                      style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/challenges/edit/${challenge.id}`);
+                      }}
+                    >
+                      <IconEdit size={16} />
+                    </ActionIcon>
+                  )}
+                  <Group mb="md" justify="space-between">
+                    <Group>
+                        {challenge.game_icon && (
+                            <Avatar src={challenge.game_icon} size="sm" radius="xl" />
+                        )}
+                        <Badge size="sm" variant="light">{challenge.game_name}</Badge>
+                    </Group>
+                    <Text size="xs" c="dimmed">{new Date(challenge.created_at).toLocaleDateString()}</Text>
+                  </Group>
+                  <Text fw={700} size="lg" mb="xs" lineClamp={1}>{challenge.challenge_name}</Text>
+                  <Text size="sm" c="dimmed" lineClamp={3} mb="md">
+                    {challenge.description}
+                  </Text>
+                  <Badge color={challenge.type === 'permanent' ? 'blue' : 'green'} variant="dot" mt="sm">
+                    {challenge.type}
+                  </Badge>
+                </Paper>
+              ))}
+              {challenges.length === 0 && (
+                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>No challenges found.</Text>
+              )}
+            </SimpleGrid>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="bingo">
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
+              {bingoBoards.map((board) => (
+                <Paper
+                  key={board.id}
+                  p="lg"
+                  radius="md"
+                  withBorder
+                  style={{ cursor: 'pointer', transition: 'transform 0.2s', position: 'relative' }}
+                  onClick={() => navigate(`/bingo/${board.id}`)}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-4px)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+                >
+                  {String(profile.id) === String(currentUserId) && (
+                    <ActionIcon 
+                      variant="filled" 
+                      color="blue" 
+                      style={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/bingo/edit/${board.id}`);
+                      }}
+                    >
+                      <IconEdit size={16} />
+                    </ActionIcon>
+                  )}
+                  <Group mb="md" justify="space-between">
+                    <Group>
+                        {board.game_icon && (
+                            <Avatar src={board.game_icon} size="sm" radius="xl" />
+                        )}
+                        <Badge size="sm" variant="light">{board.game_name}</Badge>
+                    </Group>
+                    <Text size="xs" c="dimmed">{new Date(board.created_at).toLocaleDateString()}</Text>
+                  </Group>
+                  <Text fw={700} size="lg" mb="xs" lineClamp={1}>{board.title}</Text>
+                  <Text size="sm" c="dimmed" lineClamp={3} mb="md">
+                    {board.description}
+                  </Text>
+                  <Group mt="sm">
+                    <Badge variant="outline">{board.size}x{board.size}</Badge>
+                    <Badge variant="outline">{board.type}</Badge>
+                  </Group>
+                </Paper>
+              ))}
+              {bingoBoards.length === 0 && (
+                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>No bingo boards found.</Text>
+              )}
+            </SimpleGrid>
           </Tabs.Panel>
 
           <Tabs.Panel value="achievements">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Container,
   Title,
@@ -12,6 +12,7 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import ApiService from '@/services/ApiService';
+import { ChallengesService } from '@/services/challenges/challenges.service';
 
 interface Game {
   id: number;
@@ -22,6 +23,7 @@ import { useAppSelector } from '@/store';
 
 const CreateChallenge: React.FC = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(false);
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
@@ -42,7 +44,10 @@ const CreateChallenge: React.FC = () => {
 
   useEffect(() => {
     fetchGames();
-  }, []);
+    if (id) {
+      fetchChallenge();
+    }
+  }, [id]);
 
   const fetchGames = async () => {
     try {
@@ -57,21 +62,40 @@ const CreateChallenge: React.FC = () => {
     }
   };
 
+  const fetchChallenge = async () => {
+    if (!id) return;
+    try {
+      const challenge = await ChallengesService.getChallengeById(id);
+      form.setValues({
+        game_name: challenge.game_name,
+        challenge_name: challenge.challenge_name,
+        description: challenge.description,
+        type: challenge.type || 'permanent',
+      });
+    } catch (error) {
+      console.error('Failed to fetch challenge', error);
+    }
+  };
+
   const handleSubmit = async (values: typeof form.values) => {
     setLoading(true);
     try {
-      await ApiService.fetchData({
-        url: '/challenges',
-        method: 'POST',
-        data: {
-          ...values,
-          reward: 'None', // Community challenges have no reward
-          created_by: userId,
-        },
-      });
+      if (id) {
+        await ChallengesService.updateChallenge(id, values as any);
+      } else {
+        await ApiService.fetchData({
+          url: '/challenges',
+          method: 'POST',
+          data: {
+            ...values,
+            reward: 'None', // Community challenges have no reward
+            created_by: userId,
+          },
+        });
+      }
       navigate('/challenges');
     } catch (error) {
-      console.error('Failed to create challenge', error);
+      console.error('Failed to save challenge', error);
     } finally {
       setLoading(false);
     }
@@ -79,7 +103,7 @@ const CreateChallenge: React.FC = () => {
 
   return (
     <Container size="sm" py="xl">
-      <Title order={2} mb="xl">Create Community Challenge</Title>
+      <Title order={2} mb="xl">{id ? 'Edit Challenge' : 'Create Community Challenge'}</Title>
 
       <Paper shadow="sm" p="xl" withBorder>
         <form onSubmit={form.onSubmit(handleSubmit)}>
@@ -116,7 +140,7 @@ const CreateChallenge: React.FC = () => {
               Cancel
             </Button>
             <Button type="submit" loading={loading}>
-              Create Challenge
+              {id ? 'Update Challenge' : 'Create Challenge'}
             </Button>
           </Group>
         </form>

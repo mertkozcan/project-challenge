@@ -59,6 +59,16 @@ const ProofSubmission: React.FC<ProofSubmissionProps> = ({ session, challengeId,
       return;
     }
 
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm'];
+    if (!validTypes.includes(file.type)) {
+      notifications.show({
+        title: 'Invalid File Type',
+        message: 'Only images (jpeg, jpg, png, webp) and videos (mp4, webm) are allowed!',
+        color: 'red',
+      });
+      return;
+    }
+
     setFile(file);
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
@@ -165,7 +175,7 @@ const ProofSubmission: React.FC<ProofSubmissionProps> = ({ session, challengeId,
           label="1. Upload Screenshot (Required)"
           description="Upload a screenshot showing your character name and stats."
           placeholder="Click to select file"
-          accept="image/png,image/jpeg"
+          accept="image/png,image/jpeg,image/webp,video/mp4,video/webm"
           leftSection={<IconPhoto size={16} />}
           onChange={handleFileChange}
           clearable

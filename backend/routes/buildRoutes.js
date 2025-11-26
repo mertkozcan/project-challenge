@@ -10,6 +10,7 @@ router.post('/', addBuild);
 router.get('/', getBuilds);
 router.get('/:id', getBuildDetail);
 router.delete('/:id', authenticateToken, deleteBuild);
+router.put('/:id', authenticateToken, require('../controllers/buildController').updateBuild);
 
 // Rating endpoints
 router.post('/:buildId/rate', authenticateToken, rateBuild);

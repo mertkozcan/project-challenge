@@ -287,3 +287,43 @@ module.exports = {
     deleteTask,
     getRandomTasks,
 };
+
+const updateBoard = async (req, res) => {
+    const { id } = req.params;
+    const { game_name, title, description, size, type, theme } = req.body;
+
+    try {
+        const { updateBoard: updateBoardModel } = require('../models/bingoModel');
+        const updatedBoard = await updateBoardModel(id, {
+            game_name, title, description, size, type, theme
+        });
+
+        if (!updatedBoard) {
+            return res.status(404).json({ error: 'Board not found' });
+        }
+
+        res.json(updatedBoard);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = {
+    getBoards,
+    getBoardDetail,
+    submitProof,
+    approveProof,
+    createNewBoard,
+    updateBoard,
+    upload,
+    completeCellDirect,
+    resetBoardProgress,
+    finishBingoRun,
+    updateBingoRunTime,
+    getSoloHistory,
+    getBingoStats,
+    addTask,
+    getTasks,
+    deleteTask,
+    getRandomTasks,
+};

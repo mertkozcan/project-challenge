@@ -12,7 +12,10 @@ const {
 
 const router = express.Router();
 
-// All admin routes require admin middleware
+const { authenticateToken } = require('../middleware/authMiddleware');
+
+// All admin routes require authentication AND admin middleware
+router.use(authenticateToken);
 router.use(isAdmin);
 
 // Games
