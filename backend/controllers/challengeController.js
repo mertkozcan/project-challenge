@@ -30,7 +30,37 @@ const addChallenge = async (req, res) => {
   }
 };
 
-// ...
+const latestChallenges = async (req, res) => {
+  try {
+    const challenges = await getLatestChallenges();
+    res.json(challenges);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getChallengeDetail = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user ? req.user.userId : null;
+  try {
+    const challenge = await getChallengeById(id, userId);
+    if (!challenge) {
+      return res.status(404).json({ error: 'Challenge not found' });
+    }
+    res.json(challenge);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getPopularChallenges = async (req, res) => {
+  try {
+    const challenges = await getPopularChallengesModel();
+    res.json(challenges);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 const updateChallenge = async (req, res) => {
   const { id } = req.params;
