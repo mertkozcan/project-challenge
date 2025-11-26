@@ -28,15 +28,15 @@ const getAllChallenges = async (type, contentType) => {
   return result.rows;
 };
 
-const createChallenge = async (gameName, challengeName, description, reward, type = 'permanent', endDate = null, rewardXp = null) => {
+const createChallenge = async (gameName, challengeName, description, reward, type = 'permanent', endDate = null, rewardXp = null, difficulty = 'Medium', basePoints = 250) => {
   // Auto-calculate XP if not provided
   if (!rewardXp) {
     rewardXp = type === 'daily' ? 200 : type === 'weekly' ? 500 : 100;
   }
 
   const result = await pool.query(
-    'INSERT INTO challenges (game_name, challenge_name, description, reward, type, end_date, reward_xp) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-    [gameName, challengeName, description, reward, type, endDate, rewardXp]
+    'INSERT INTO challenges (game_name, challenge_name, description, reward, type, end_date, reward_xp, difficulty, base_points) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+    [gameName, challengeName, description, reward, type, endDate, rewardXp, difficulty, basePoints]
   );
   return result.rows[0];
 };

@@ -173,4 +173,18 @@ const getUserChallengeProof = async (req, res) => {
     }
 };
 
-module.exports = { submitProof, getProofs, approveProof, rejectProof, getPendingProofs, upload, getUserChallengeProof };
+const voteProofHandler = async (req, res) => {
+    const { id } = req.params; // proofId
+    const { userId } = req.body; // user voting
+
+    try {
+        const { voteProof } = require('../models/proofModel');
+        const result = await voteProof(id, userId);
+        res.json(result);
+    } catch (error) {
+        console.error('Vote Proof Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { submitProof, getProofs, approveProof, rejectProof, getPendingProofs, upload, getUserChallengeProof, voteProofHandler };

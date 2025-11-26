@@ -23,6 +23,7 @@ import { IconArrowLeft, IconTrophy, IconCoin, IconCheck } from '@tabler/icons-re
 import ChallengeHero from './ChallengeHero';
 import EnhancedLeaderboard from './EnhancedLeaderboard';
 import ProofSubmission from './ProofSubmission';
+import CommunityProofs from './CommunityProofs';
 import { getGameTheme } from '@/utils/gameThemes';
 import { notifications } from '@mantine/notifications';
 import { useAppSelector } from '@/store';
@@ -312,6 +313,12 @@ const ChallengeDetail: React.FC = () => {
             </Paper>
           </Grid.Col>
         </Grid>
+
+        <Divider my="xl" />
+        
+        {/* Community Proofs Section */}
+        {id && <CommunityProofs challengeId={id} />}
+
       </Container>
     </Box>
   );
