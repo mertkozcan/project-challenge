@@ -23,12 +23,14 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { IconDeviceGamepad2, IconGridDots, IconWand, IconTrash, IconCheck } from '@tabler/icons-react';
 import { BingoService } from '@/services/bingo/bingo.service';
 import { notifications } from '@mantine/notifications';
+import { useAppSelector } from '@/store';
 
 const CreateBingo = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const source = searchParams.get('source');
+  const userId = useAppSelector((state) => state.auth.userInfo.userId);
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(false);
   const [tasks, setTasks] = useState<string[]>([]);
@@ -204,7 +206,7 @@ const CreateBingo = () => {
         await BingoService.createBoard({
             ...form.values,
             cells,
-            created_by: source === 'admin' ? 'admin' : undefined
+            created_by: source === 'admin' ? 'admin' : userId
         });
         notifications.show({
             title: 'Success',

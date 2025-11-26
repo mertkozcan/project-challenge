@@ -246,46 +246,7 @@ const AdminPanel: React.FC = () => {
     setChallengeModalOpened(true);
   };
 
-  const handleCreateBuild = async (values: typeof buildForm.values) => {
-    if (!userId) return;
-    try {
-      const payload = {
-        ...values,
-        items_json: JSON.parse(values.items_json),
-      };
-      
-      if (editingBuild) {
-        await BuildsService.updateBuild(editingBuild.id!.toString(), payload);
-        notifications.show({ title: 'Success', message: 'Build updated successfully', color: 'green' });
-      } else {
-        await AdminService.createOfficialBuild(payload, userId);
-        notifications.show({ title: 'Success', message: 'Build created successfully', color: 'green' });
-      }
-      setBuildModalOpened(false);
-      setEditingBuild(null);
-      buildForm.reset();
-      fetchBuilds();
-    } catch (error) {
-      console.error('Failed to save build', error);
-      notifications.show({ title: 'Error', message: 'Failed to save build', color: 'red' });
-    }
-  };
 
-  const openBuildModal = (build?: Build) => {
-    if (build) {
-      setEditingBuild(build);
-      buildForm.setValues({
-        game_name: build.game_name,
-        build_name: build.build_name,
-        description: build.description,
-        items_json: JSON.stringify(build.items_json, null, 2),
-      });
-    } else {
-      setEditingBuild(null);
-      buildForm.reset();
-    }
-    setBuildModalOpened(true);
-  };
 
   const handleDeleteBuild = async (id: number) => {
     if (!confirm('Are you sure you want to delete this build? This action cannot be undone.')) return;
@@ -439,7 +400,7 @@ const AdminPanel: React.FC = () => {
                   ]}
                 />
               </Group>
-              <Button leftSection={<IconPlus size={16} />} onClick={() => openBuildModal()}>
+              <Button leftSection={<IconPlus size={16} />} onClick={() => navigate('/builds/create?source=admin')}>
                 Create Official Build
               </Button>
             </Group>
@@ -475,7 +436,7 @@ const AdminPanel: React.FC = () => {
                         <ActionIcon 
                           color="blue" 
                           variant="subtle" 
-                          onClick={() => openBuildModal(build)}
+                          onClick={() => navigate(`/builds/edit/${build.id}?source=admin`)}
                           title="Edit Build"
                         >
                           <IconEdit size={18} />
@@ -732,42 +693,7 @@ const AdminPanel: React.FC = () => {
         </form>
       </Modal>
 
-      <Modal opened={buildModalOpened} onClose={() => setBuildModalOpened(false)} title={editingBuild ? "Edit Build" : "Add Official Build"} centered>
-        <form onSubmit={buildForm.onSubmit(handleCreateBuild)}>
-          <Stack gap="md">
-            <Select
-              label="Game Name"
-              placeholder="Select Game"
-              data={games.map(g => g.name)}
-              required
-              searchable
-              {...buildForm.getInputProps('game_name')}
-            />
-            <TextInput
-              label="Build Name"
-              placeholder="e.g., Bleed Build"
-              required
-              {...buildForm.getInputProps('build_name')}
-            />
-            <Textarea
-              label="Description"
-              placeholder="Build description..."
-              required
-              {...buildForm.getInputProps('description')}
-            />
-            <Textarea
-              label="Items JSON"
-              placeholder='{"weapon": "Rivers of Blood"}'
-              required
-              {...buildForm.getInputProps('items_json')}
-              minRows={4}
-            />
-            <Button type="submit" fullWidth mt="md">
-              {editingBuild ? "Update Build" : "Create Build"}
-            </Button>
-          </Stack>
-        </form>
-      </Modal>
+
 
       <Modal opened={newTaskOpened} onClose={closeNewTask} title="Add Bingo Task" centered>
         <form onSubmit={taskForm.onSubmit(handleAddTask)}>

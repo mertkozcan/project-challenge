@@ -89,6 +89,19 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
     incantations: [],
     consumables: [],
   });
+
+  useEffect(() => {
+    if (initialSlots) {
+      setSlots(initialSlots);
+      if (initialSlots.startingClass) {
+          // We need to wait for classes to load to set the full object if needed, 
+          // or just set it if we trust the data. 
+          // Since selectedClass is used for stats calculation, we should try to match it with loaded classes if possible,
+          // or just use the stored one.
+          setSelectedClass(initialSlots.startingClass as unknown as EldenRingClass);
+      }
+    }
+  }, [initialSlots]);
   
   const [modalOpen, setModalOpen] = useState(false);
   const [currentSlot, setCurrentSlot] = useState<{
@@ -203,13 +216,28 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
               faith: Number(newClass.stats.faith),
               arcane: Number(newClass.stats.arcane),
           };
-          setSlots(prev => ({ ...prev, stats: newStats }));
+          const startingClassItem: GameItem = {
+            id: newClass.id,
+            name: newClass.name,
+            image: newClass.image,
+            description: newClass.description,
+            category: 'classes',
+            stats: newClass.stats
+          };
+
+          setSlots(prev => ({ 
+              ...prev, 
+              stats: newStats,
+              startingClass: startingClassItem
+          }));
           
           // Ensure target level is at least class level
           const classLevel = Number(newClass.stats.level);
           if (targetLevel < classLevel) {
               setTargetLevel(classLevel);
           }
+      } else {
+          setSlots(prev => ({ ...prev, startingClass: null }));
       }
   };
 

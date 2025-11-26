@@ -34,21 +34,19 @@ const CreateBuild: React.FC = () => {
 
   const [games, setGames] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchGames = async () => {
-      try {
-        const { GamesService } = await import('@/services/games/games.service');
-        const data = await GamesService.getAllGames();
-        setGames(data);
-      } catch (error) {
-        console.error('Failed to fetch games', error);
-      }
-    };
-    fetchGames();
-    if (id) {
-      fetchBuild();
-    }
-  }, [id]);
+  const form = useForm({
+    initialValues: {
+      game_name: '',
+      build_name: '',
+      description: '',
+      video_url: '',
+    },
+
+    validate: {
+      game_name: (value) => (value ? null : 'Game is required'),
+      build_name: (value) => (value ? null : 'Build name is required'),
+    },
+  });
 
   const fetchBuild = async () => {
     if (!id) return;
@@ -69,19 +67,21 @@ const CreateBuild: React.FC = () => {
     }
   };
 
-  const form = useForm({
-    initialValues: {
-      game_name: '',
-      build_name: '',
-      description: '',
-      video_url: '',
-    },
-
-    validate: {
-      game_name: (value) => (value ? null : 'Game is required'),
-      build_name: (value) => (value ? null : 'Build name is required'),
-    },
-  });
+  useEffect(() => {
+    const fetchGames = async () => {
+      try {
+        const { GamesService } = await import('@/services/games/games.service');
+        const data = await GamesService.getAllGames();
+        setGames(data);
+      } catch (error) {
+        console.error('Failed to fetch games', error);
+      }
+    };
+    fetchGames();
+    if (id) {
+      fetchBuild();
+    }
+  }, [id]);
 
   const handleBuildSave = async (slots: BuildSlots) => {
     if (!form.values.build_name) {

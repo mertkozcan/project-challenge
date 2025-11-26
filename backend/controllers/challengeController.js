@@ -13,7 +13,7 @@ const getChallenges = async (req, res) => {
 const addChallenge = async (req, res) => {
   const { game_name, challenge_name, description, reward, type, end_date, created_by } = req.body;
   try {
-    const newChallenge = await createChallenge(game_name, challenge_name, description, reward, type, end_date);
+    const newChallenge = await createChallenge(game_name, challenge_name, description, reward, type, end_date === '' ? null : end_date);
 
     // If created_by is provided, update the challenge
     if (created_by) {
@@ -71,7 +71,7 @@ const updateChallenge = async (req, res) => {
   try {
     const { updateChallenge: updateChallengeModel } = require('../models/challengeModel');
     const updatedChallenge = await updateChallengeModel(id, {
-      game_name, challenge_name, description, reward, type, end_date, reward_xp, difficulty, base_points
+      game_name, challenge_name, description, reward, type, end_date: end_date === '' ? null : end_date, reward_xp, difficulty, base_points
     });
 
     if (!updatedChallenge) {
