@@ -44,7 +44,7 @@ function useAuth() {
         username
       } = user
       dispatch(signInSuccess({
-        token: '',
+        token: resp.access_token,
         refreshToken: '',
         expireTime: 0,
         signedIn: true,
