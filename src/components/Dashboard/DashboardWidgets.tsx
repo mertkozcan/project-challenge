@@ -80,7 +80,7 @@ export const ChallengeSpotlightWidget = ({ challenge, loading }: any) => {
               Accept Challenge
             </Button>
             <Badge size="lg" variant="outline" color="yellow" leftSection={<IconTrophy size={14} />}>
-              {challenge.reward} Points
+              {challenge.reward_xp} XP
             </Badge>
           </Group>
         </div>

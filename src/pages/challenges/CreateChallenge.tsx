@@ -88,7 +88,7 @@ const CreateChallenge: React.FC = () => {
           method: 'POST',
           data: {
             ...values,
-            reward: 'None', // Community challenges have no reward
+            reward_xp: 0, // Community challenges have 0 XP by default
             created_by: userId,
           },
         });

@@ -217,10 +217,10 @@ const ChallengeDetail: React.FC = () => {
                   <IconCoin size={24} color={theme.primary} />
                   <div>
                     <Text size="sm" c="dimmed">
-                      Reward
+                      Reward (XP)
                     </Text>
                     <Text size="xl" fw={700} c={theme.primary}>
-                      {challenge.reward}
+                      {challenge.reward_xp} XP
                     </Text>
                   </div>
                 </Group>

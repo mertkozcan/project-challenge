@@ -3,7 +3,7 @@ export interface Challenge {
   game_name: string;
   challenge_name: string;
   description: string;
-  reward: string;
+  reward_xp: number;
   type: 'daily' | 'weekly' | 'permanent';
   end_date?: string;
   created_at: string;

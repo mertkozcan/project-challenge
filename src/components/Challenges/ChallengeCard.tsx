@@ -10,7 +10,7 @@ interface ChallengeCardProps {
   description: string;
   gameName: string;
   type: string;
-  reward: string;
+  reward: number;
   bannerUrl?: string;
   participantCount?: number;
 }
@@ -83,7 +83,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
             <Group gap="xs">
               <IconTrophy size={16} color="gold" />
               <Text size="sm" c="yellow" fw={600}>
-                {reward}
+                {reward} XP
               </Text>
             </Group>
 

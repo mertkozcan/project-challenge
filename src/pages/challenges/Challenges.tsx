@@ -103,7 +103,7 @@ const Challenges: React.FC = () => {
         filtered.sort((a, b) => (b.participation_count || 0) - (a.participation_count || 0));
         break;
       case 'reward':
-        filtered.sort((a, b) => parseInt(b.reward) - parseInt(a.reward));
+        filtered.sort((a, b) => (b.reward_xp || 0) - (a.reward_xp || 0));
         break;
     }
 
@@ -161,7 +161,7 @@ const Challenges: React.FC = () => {
                   description={challenge.description}
                   gameName={challenge.game_name}
                   type={challenge.type}
-                  reward={challenge.reward}
+                  reward={challenge.reward_xp}
                   bannerUrl={challenge.banner_url}
                   participantCount={challenge.participation_count}
                 />
@@ -197,7 +197,7 @@ const Challenges: React.FC = () => {
                     description={challenge.description}
                     gameName={challenge.game_name}
                     type={challenge.type}
-                    reward={challenge.reward}
+                    reward={challenge.reward_xp}
                     bannerUrl={challenge.banner_url}
                     participantCount={challenge.participation_count}
                   />

@@ -20,6 +20,7 @@ import {
   Stack,
   Select,
   Image,
+  NumberInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
@@ -73,7 +74,7 @@ const AdminPanel: React.FC = () => {
       game_name: '',
       challenge_name: '',
       description: '',
-      reward: '',
+      reward_xp: 0,
       type: 'permanent',
       end_date: '',
     },
@@ -235,7 +236,7 @@ const AdminPanel: React.FC = () => {
         game_name: challenge.game_name,
         challenge_name: challenge.challenge_name,
         description: challenge.description,
-        reward: challenge.reward,
+        reward_xp: challenge.reward_xp || 0,
         type: challenge.type,
         end_date: challenge.end_date ? new Date(challenge.end_date).toISOString().split('T')[0] : '',
       });
@@ -360,7 +361,7 @@ const AdminPanel: React.FC = () => {
                         {challenge.type}
                       </Badge>
                     </Table.Td>
-                    <Table.Td>{challenge.reward}</Table.Td>
+                    <Table.Td>{challenge.reward_xp} XP</Table.Td>
                     <Table.Td>
                       <Group gap="xs">
                         <ActionIcon color="blue" variant="subtle" onClick={() => openChallengeModal(challenge)}>
@@ -669,11 +670,12 @@ const AdminPanel: React.FC = () => {
               required
               {...challengeForm.getInputProps('description')}
             />
-            <TextInput
-              label="Reward"
-              placeholder="e.g., 500 Points"
+            <NumberInput
+              label="Reward XP"
+              placeholder="e.g., 500"
               required
-              {...challengeForm.getInputProps('reward')}
+              min={0}
+              {...challengeForm.getInputProps('reward_xp')}
             />
             <Select
               label="Type"
