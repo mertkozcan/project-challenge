@@ -1,51 +1,45 @@
-# Implementation Plan - Security Hardening
+# Implementation Plan - Adding Games & Bingo Tasks
 
 ## Goal Description
-Fix critical security vulnerabilities identified in the audit report. The primary focus is on securing authentication (JWT), restricting file uploads, and protecting sensitive data.
-
-## User Review Required
-> [!IMPORTANT]
-> This plan introduces **Breaking Changes** to the API.
-> - All protected endpoints will require a valid `Authorization: Bearer <token>` header.
-> - Clients sending `userId` in the body/query for authentication will fail.
-> - File uploads will be restricted to specific types (images/videos) and sizes.
+Add the following games to the platform and populate them with initial "Bingo Tasks" to enable the Bingo feature:
+- Dark Souls 1, 2, 3
+- Bloodborne
+- Sekiro: Shadows Die Twice
+- Lies of P
+- Fallout 4
+- Elder Scrolls V: Skyrim
+- Baldur's Gate 3
+- Cyberpunk 2077
+- Resident Evil 2 Remake
+- Resident Evil 3 Remake
+- Resident Evil 4 Remake
+- Resident Evil 7
+- Resident Evil 8 (Village)
+- Hollow Knight
+- Minecraft
+- Terraria
+- The Binding of Isaac: Repentance
+- Hades
+- Celeste
+- Cuphead
+- The Witcher 3: Wild Hunt
+- Monster Hunter: World
+- Dead Cells
+- Slay the Spire
+- Stardew Valley
 
 ## Proposed Changes
 
-### Backend Dependencies
-#### [NEW] [package.json](file:///e:/Projects/project-challenge/project-challenge/package.json)
-- Add `jsonwebtoken` dependency.
-
-### Authentication & Authorization
-#### [MODIFY] [authMiddleware.js](file:///e:/Projects/project-challenge/project-challenge/backend/middleware/authMiddleware.js)
-- Remove logic that accepts `userId` from body/query.
-- Implement `jsonwebtoken.verify` to validate the Bearer token.
-- Set `req.user` from the decoded token payload.
-
-#### [MODIFY] [adminMiddleware.js](file:///e:/Projects/project-challenge/project-challenge/backend/middleware/adminMiddleware.js)
-- Update to use `req.user.id` (set by auth middleware) instead of `req.body.user_id`.
-
-#### [MODIFY] [loginController.js](file:///e:/Projects/project-challenge/project-challenge/backend/controllers/loginController.js)
-- Update `loginUser` to generate and return a JWT token upon successful login.
-- Update `registerUser` to generate and return a JWT token upon successful registration.
-
-### File Upload Security
-#### [MODIFY] [proofController.js](file:///e:/Projects/project-challenge/project-challenge/backend/controllers/proofController.js)
-- Configure `multer` with `fileFilter` to allow only images (jpeg, png, webp) and videos (mp4, webm).
-- Configure `limits` to restrict file size (e.g., 50MB).
-
-### Data Protection
-#### [MODIFY] [db.js](file:///e:/Projects/project-challenge/project-challenge/backend/config/db.js)
-- Remove or mask the console log that prints the database connection string.
+### Database Seeding
+#### [NEW] [seed_rpg_games.js](file:///e:/Projects/project-challenge/project-challenge/backend/scripts/seed_rpg_games.js)
+- A script to:
+    1.  Insert the games into the `games` table (if they don't exist).
+    2.  Insert a set of ~25 generic/specific bingo tasks for each game into `bingo_tasks`.
+    - *Note:* Since we don't have a scraper yet, I will use a predefined list of common challenges (e.g., "Defeat a boss without healing", "Find a secret area") tailored to each game's genre to get the user started immediately.
 
 ## Verification Plan
 
-### Automated Tests
-- Create a test script to:
-    - Attempt to access a protected route without a token (should fail 401).
-    - Login to get a token, then access a protected route (should pass 200).
-    - Attempt to upload a disallowed file type (e.g., .txt) (should fail).
-    - Attempt to upload a large file (>50MB) (should fail).
-
 ### Manual Verification
-- Review server logs to ensure DB connection string is not visible.
+- Run the seed script: `node backend/scripts/seed_rpg_games.js`
+- Check the database or UI to ensure games are listed.
+- Create a Bingo Board for one of the new games to verify tasks appear.
