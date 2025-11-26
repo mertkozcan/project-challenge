@@ -127,10 +127,4 @@ export const AuthService = {
     if (error) throw error;
   },
 
-  async setPersistence(remember: boolean) {
-    const { error } = await (supabase.auth as any).setPersistence(
-        remember ? 'LOCAL' : 'SESSION'
-    );
-    if (error) throw error;
-  },
 };

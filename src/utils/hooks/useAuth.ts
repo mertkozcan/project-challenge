@@ -34,9 +34,6 @@ function useAuth() {
     | undefined
   > => {
     try {
-      if (values.rememberMe !== undefined) {
-          await AuthService.setPersistence(values.rememberMe);
-      }
       const resp = await AuthService.signIn(values.username, values.password)
       const user=resp.profile;
       dispatch(setUserId(user.id))
