@@ -16,7 +16,23 @@ const storage = multer.diskStorage({
     },
 });
 
-const upload = multer({ storage: storage });
+const fileFilter = (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|webp|mp4|webm/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (extname && mimetype) {
+        return cb(null, true);
+    } else {
+        cb(new Error('Only images (jpeg, jpg, png, webp) and videos (mp4, webm) are allowed!'));
+    }
+};
+
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
 
 const submitProof = async (req, res) => {
     try {

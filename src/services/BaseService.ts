@@ -18,11 +18,12 @@ BaseService.interceptors.request.use(
     const rawPersistData = localStorage.getItem(PERSIST_STORE_NAME);
     const persistData = deepParseJson(rawPersistData);
 
-    // Get userId from Redux store (we use userId as the auth token)
-    let accessToken = (persistData as any)?.auth?.userInfo?.userId;
+    // Get token from Redux store
+    let accessToken = (persistData as any)?.auth?.session?.token;
+    
     if (!accessToken) {
       const { auth } = store.getState();
-      accessToken = auth.userInfo.userId;
+      accessToken = auth.session.token;
     }
 
     if (accessToken) {

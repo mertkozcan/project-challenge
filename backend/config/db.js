@@ -10,10 +10,7 @@ if (!connectionString) {
   // process.exit(1)
 }
 
-console.log(
-  '[DB] Connecting to:',
-  connectionString?.replace(/(\/\/.*:)([^@]+)@/, '$1*****@')
-)
+console.log('[DB] Connecting to database...');
 
 const pool = new Pool({
   connectionString,

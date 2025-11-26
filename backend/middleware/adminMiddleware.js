@@ -2,7 +2,11 @@ const pool = require('../config/db');
 
 // Middleware to check if user is admin
 const isAdmin = async (req, res, next) => {
-    const userId = req.body.user_id || req.query.user_id;
+    const userId = req.user?.id; // Get from auth middleware
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
 
     try {
         const result = await pool.query('SELECT is_admin FROM users WHERE id = $1', [userId]);
