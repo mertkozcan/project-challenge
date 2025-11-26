@@ -41,7 +41,76 @@ const createChallenge = async (gameName, challengeName, description, type = 'per
   return result.rows[0];
 };
 
-// ... (getLatestChallenges, getChallengeById, getPopularChallenges, completeChallengeWithXP remain unchanged)
+const getLatestChallenges = async () => {
+  const result = await pool.query('SELECT * FROM challenges ORDER BY created_at DESC LIMIT 5');
+  return result.rows;
+};
+
+const getChallengeById = async (id, userId = null) => {
+  const result = await pool.query(
+    `SELECT c.*, g.banner_url, g.icon_url as game_icon,
+     (SELECT COUNT(*) FROM user_bingo_runs WHERE challenge_id = c.id) as participation_count
+     FROM challenges c
+     LEFT JOIN games g ON c.game_name = g.name
+     WHERE c.id = $1`,
+    [id]
+  );
+  const challenge = result.rows[0];
+
+  if (challenge && userId) {
+    const participation = await pool.query(
+      'SELECT * FROM user_bingo_runs WHERE user_id = $1 AND challenge_id = $2',
+      [userId, id]
+    );
+    challenge.user_participated = participation.rows.length > 0;
+
+    // Check proof status
+    const proof = await pool.query(
+      'SELECT status FROM proofs WHERE user_id = $1 AND challenge_id = $2 ORDER BY created_at DESC LIMIT 1',
+      [userId, id]
+    );
+    challenge.user_proof_status = proof.rows[0]?.status;
+  }
+
+  return challenge;
+};
+
+const getPopularChallenges = async (limit = 5) => {
+  const result = await pool.query(
+    `SELECT c.*, g.icon_url as game_icon, COUNT(ubr.id) as participation_count
+     FROM challenges c
+     LEFT JOIN games g ON c.game_name = g.name
+     LEFT JOIN user_bingo_runs ubr ON c.id = ubr.challenge_id
+     GROUP BY c.id, g.icon_url
+     ORDER BY participation_count DESC
+     LIMIT $1`,
+    [limit]
+  );
+  return result.rows;
+};
+
+const completeChallengeWithXP = async (challengeId, userId, proofId) => {
+  try {
+    // 1. Get Challenge XP
+    const challengeResult = await pool.query('SELECT reward_xp FROM challenges WHERE id = $1', [challengeId]);
+    const xpReward = challengeResult.rows[0]?.reward_xp || 0;
+
+    // 2. Update User XP
+    await pool.query('UPDATE users SET total_xp = total_xp + $1 WHERE id = $2', [xpReward, userId]);
+
+    // 3. Mark run as completed (if applicable)
+    // Assuming user_bingo_runs tracks the active session
+    await pool.query(
+      'UPDATE user_bingo_runs SET status = $1, completed_at = NOW() WHERE user_id = $2 AND challenge_id = $3 AND status = $4',
+      ['COMPLETED', userId, challengeId, 'ACTIVE']
+    );
+
+    return { success: true, xpAwarded: xpReward };
+  } catch (error) {
+    console.error('Error completing challenge with XP:', error);
+    throw error;
+  }
+};
 
 const updateChallenge = async (id, data) => {
   const { game_name, challenge_name, description, type, end_date, reward_xp, difficulty, base_points } = data;
