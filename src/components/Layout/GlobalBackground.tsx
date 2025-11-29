@@ -4,7 +4,21 @@ import { useComputedColorScheme } from '@mantine/core';
 export const GlobalBackground: React.FC = () => {
   const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
 
-  if (computedColorScheme !== 'dark') return null;
+  if (computedColorScheme !== 'dark') {
+    return (
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1, pointerEvents: 'none', background: '#f8f9fa' }}>
+         <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '100vh',
+          background: 'radial-gradient(circle at 50% 0%, rgba(200, 220, 255, 0.4) 0%, rgba(248, 249, 250, 0) 70%)',
+          zIndex: 0,
+        }} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1, pointerEvents: 'none', background: '#0B0C15' }}>

@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
             <Text size="lg" fw={500} c="blue.3" mb={4}>
               {authenticated ? `Welcome back, ${user?.username || 'Hunter'}` : 'Welcome to Project Challenge'}
             </Text>
-            <Title order={1} style={{ fontSize: '3.5rem', letterSpacing: '-2px', lineHeight: 1, color: 'white' }}>
+            <Title order={1} style={{ fontSize: '3.5rem', letterSpacing: '-2px', lineHeight: 1 }}>
               {authenticated ? 'Ready for your next run?' : 'Master the Challenge.'}
             </Title>
           </motion.div>

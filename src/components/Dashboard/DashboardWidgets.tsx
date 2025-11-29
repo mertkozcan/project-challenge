@@ -1,50 +1,57 @@
 import React from 'react';
-import { Paper, Text, Title, Group, ThemeIcon, Button, RingProgress, Stack, Badge, Avatar, ActionIcon, Progress, SimpleGrid } from '@mantine/core';
+import { Paper, Text, Title, Group, ThemeIcon, Button, RingProgress, Stack, Badge, Avatar, ActionIcon, Progress, SimpleGrid, useComputedColorScheme } from '@mantine/core';
 import { IconTrophy, IconFlame, IconClock, IconArrowRight, IconTarget, IconUsers, IconStar, IconRocket, IconPlus, IconDeviceGamepad2, IconSword } from '@tabler/icons-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 // --- Widget Wrapper ---
-const WidgetWrapper = ({ children, onClick, className, style, delay = 0 }: any) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay }}
-    whileHover={{ scale: 1.02, translateY: -5 }}
-    whileTap={{ scale: 0.98 }}
-    onClick={onClick}
-    style={{ height: '100%', cursor: onClick ? 'pointer' : 'default', ...style }}
-    className={className}
-  >
-    <Paper
-      h="100%"
-      p="md"
-      radius="lg"
-      style={{
-        background: 'rgba(20, 20, 30, 0.6)', // Darker background for better contrast
-        backdropFilter: 'blur(16px)', // Stronger blur
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)', // Deeper shadow
-        overflow: 'hidden',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
+const WidgetWrapper = ({ children, onClick, className, style, delay = 0 }: any) => {
+  const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
+  const isDark = computedColorScheme === 'dark';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay }}
+      whileHover={{ scale: 1.02, translateY: -5 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      style={{ height: '100%', cursor: onClick ? 'pointer' : 'default', ...style }}
+      className={className}
     >
-      {/* Subtle gradient overlay */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '100px',
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)',
-        pointerEvents: 'none',
-      }} />
-      {children}
-    </Paper>
-  </motion.div>
-);
+      <Paper
+        h="100%"
+        p="md"
+        radius="lg"
+        style={{
+          background: isDark ? 'rgba(20, 20, 30, 0.6)' : 'rgba(255, 255, 255, 0.6)',
+          backdropFilter: 'blur(16px)',
+          border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.05)',
+          boxShadow: isDark ? '0 8px 32px rgba(0, 0, 0, 0.4)' : '0 8px 32px rgba(0, 0, 0, 0.05)',
+          overflow: 'hidden',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Subtle gradient overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '100px',
+          background: isDark 
+            ? 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)'
+            : 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)',
+          pointerEvents: 'none',
+        }} />
+        {children}
+      </Paper>
+    </motion.div>
+  );
+};
 
 // --- 1. Challenge Spotlight Widget (2x2) ---
 export const ChallengeSpotlightWidget = ({ challenge, loading }: any) => {
@@ -181,6 +188,9 @@ export const QuickBingoWidget = ({ activeRooms }: { activeRooms?: number }) => {
 
 // --- 5. Live Pulse Widget (1x2) ---
 export const LivePulseWidget = ({ activities }: any) => {
+  const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
+  const isDark = computedColorScheme === 'dark';
+
   return (
     <WidgetWrapper style={{ gridRow: 'span 2' }} delay={0.25}>
       <Group justify="space-between" mb="md">
@@ -188,7 +198,7 @@ export const LivePulseWidget = ({ activities }: any) => {
             <ThemeIcon color="green" variant="light" size="sm" radius="xl">
                 <IconRocket size={12} />
             </ThemeIcon>
-            <Text fw={800} c="white" size="xs" tt="uppercase" style={{ letterSpacing: '1px' }}>Live Pulse</Text>
+            <Text fw={800} size="xs" tt="uppercase" style={{ letterSpacing: '1px' }}>Live Pulse</Text>
         </Group>
         <Badge size="xs" variant="dot" color="green" className="animate-pulse">Live</Badge>
       </Group>
@@ -201,16 +211,19 @@ export const LivePulseWidget = ({ activities }: any) => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Paper p="xs" radius="md" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <Paper p="xs" radius="md" style={{ 
+                background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', 
+                border: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)' 
+            }}>
                 <Group wrap="nowrap" align="center">
                     <ThemeIcon size="md" radius="xl" variant="gradient" gradient={activity.type === 'challenge' ? { from: 'orange', to: 'red' } : { from: 'blue', to: 'cyan' }}>
                         {activity.type === 'challenge' ? <IconTarget size={14} /> : <IconSword size={14} />}
                     </ThemeIcon>
                     <div style={{ flex: 1, overflow: 'hidden' }}>
-                    <Text size="xs" fw={700} c="white" truncate>{activity.title}</Text>
+                    <Text size="xs" fw={700} truncate>{activity.title}</Text>
                     <Group gap={4}>
                         <Text size="xs" c="dimmed">by</Text>
-                        <Text size="xs" c="blue.3" fw={600} truncate>{activity.user}</Text>
+                        <Text size="xs" c="blue" fw={600} truncate>{activity.user}</Text>
                     </Group>
                     </div>
                     <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap', fontSize: '10px' }}>{activity.time}</Text>
@@ -282,6 +295,8 @@ export const StatsOverviewWidget = ({ stats }: any) => {
 export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
     const navigate = useNavigate();
     const displayBuilds = builds.slice(0, 2);
+    const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
+    const isDark = computedColorScheme === 'dark';
 
     return (
         <WidgetWrapper style={{ gridColumn: 'span 2' }} delay={0.35}>
@@ -301,7 +316,10 @@ export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
                             key={build.id} 
                             p="xs" 
                             radius="md" 
-                            style={{ background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                            style={{ 
+                                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', 
+                                cursor: 'pointer' 
+                            }}
                             onClick={() => navigate(`/builds/${build.id}`)}
                         >
                             <Group gap="xs" mb={4}>
@@ -320,8 +338,8 @@ export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
                                 p="xs" 
                                 radius="md" 
                                 style={{ 
-                                    background: 'rgba(255,255,255,0.02)', 
-                                    border: '1px dashed rgba(255,255,255,0.1)',
+                                    background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)', 
+                                    border: isDark ? '1px dashed rgba(255,255,255,0.1)' : '1px dashed rgba(0,0,0,0.1)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
