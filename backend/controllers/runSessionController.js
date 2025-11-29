@@ -28,6 +28,8 @@ const runSessionController = {
             const session = await RunSessionModel.createRunSession(
                 userId,
                 gameName,
+                'permanent', // Default type for now, or extract from request if needed
+                null,        // No deadline for permanent challenges
                 challengeId,
                 bingoBoardId
             );

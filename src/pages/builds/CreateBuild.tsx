@@ -36,7 +36,7 @@ const CreateBuild: React.FC = () => {
 
   const form = useForm({
     initialValues: {
-      game_name: '',
+      game_name: 'Elden Ring',
       build_name: '',
       description: '',
       video_url: '',
@@ -133,7 +133,10 @@ const CreateBuild: React.FC = () => {
       <Select
         label="Game"
         placeholder="Select a game"
-        data={games.map(g => g.name)}
+        data={['Elden Ring']}
+        value="Elden Ring"
+        disabled
+        description="Currently only Elden Ring is supported for build creation."
         required
         {...form.getInputProps('game_name')}
         mb="md"

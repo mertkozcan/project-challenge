@@ -59,6 +59,8 @@ const AdminPanel: React.FC = () => {
   const [editingBuild, setEditingBuild] = useState<Build | null>(null);
 
   const [buildFilter, setBuildFilter] = useState('all');
+  const [challengeFilter, setChallengeFilter] = useState('official');
+  const [bingoFilter, setBingoFilter] = useState('all');
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
 
   const form = useForm({
@@ -109,7 +111,7 @@ const AdminPanel: React.FC = () => {
     else if (activeTab === 'proofs') fetchProofs();
     else if (activeTab === 'bingo-tasks') fetchBingoTasks();
     else if (activeTab === 'bingo-challenges') fetchBingoBoards();
-  }, [activeTab, userId, buildFilter, taskGameFilter]);
+  }, [activeTab, userId, buildFilter, challengeFilter, bingoFilter, taskGameFilter]);
 
   const fetchGames = async () => {
     if (!userId) return;
@@ -132,7 +134,8 @@ const AdminPanel: React.FC = () => {
 
   const fetchChallenges = async () => {
     try {
-      const data = await ChallengesService.getChallenges(undefined, 'official');
+      const contentType = challengeFilter === 'all' ? undefined : challengeFilter;
+      const data = await ChallengesService.getChallenges(undefined, contentType);
       setChallenges(data);
     } catch (error) {
       console.error('Failed to fetch challenges', error);
@@ -336,7 +339,18 @@ const AdminPanel: React.FC = () => {
         <Tabs.Panel value="challenges">
           <Paper p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="xl">
-              <Title order={4}>Official Challenges</Title>
+              <Group>
+                <Title order={4}>Challenges Management</Title>
+                <SegmentedControl
+                  value={challengeFilter}
+                  onChange={setChallengeFilter}
+                  data={[
+                    { label: 'All', value: 'all' },
+                    { label: 'Official', value: 'official' },
+                    { label: 'Community', value: 'community' },
+                  ]}
+                />
+              </Group>
               <Button leftSection={<IconPlus size={16} />} onClick={() => openChallengeModal()}>
                 Add Challenge
               </Button>
@@ -347,6 +361,7 @@ const AdminPanel: React.FC = () => {
                   <Table.Th>Name</Table.Th>
                   <Table.Th>Game</Table.Th>
                   <Table.Th>Type</Table.Th>
+                  <Table.Th>Status</Table.Th>
                   <Table.Th>Reward</Table.Th>
                   <Table.Th>Actions</Table.Th>
                 </Table.Tr>
@@ -359,6 +374,14 @@ const AdminPanel: React.FC = () => {
                     <Table.Td>
                       <Badge color={challenge.type === 'permanent' ? 'blue' : 'green'} variant="light">
                         {challenge.type}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      <Badge 
+                        color={challenge.is_official ? 'yellow' : 'blue'} 
+                        variant={challenge.is_official ? 'filled' : 'light'}
+                      >
+                        {challenge.is_official ? 'Official' : 'Community'}
                       </Badge>
                     </Table.Td>
                     <Table.Td>{challenge.reward_xp} XP</Table.Td>
@@ -376,8 +399,8 @@ const AdminPanel: React.FC = () => {
                 ))}
                 {challenges.length === 0 && (
                    <Table.Tr>
-                    <Table.Td colSpan={5} align="center">
-                      <Text c="dimmed">No official challenges found.</Text>
+                    <Table.Td colSpan={6} align="center">
+                      <Text c="dimmed">No challenges found matching filter.</Text>
                     </Table.Td>
                   </Table.Tr>
                 )}
@@ -536,13 +559,31 @@ const AdminPanel: React.FC = () => {
         <Tabs.Panel value="bingo-challenges">
           <Paper p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="xl">
-              <Title order={4}>Bingo Challenges Management</Title>
+              <Group>
+                <Title order={4}>Bingo Challenges Management</Title>
+                <SegmentedControl
+                  value={bingoFilter}
+                  onChange={setBingoFilter}
+                  data={[
+                    { label: 'All', value: 'all' },
+                    { label: 'Official', value: 'official' },
+                    { label: 'Community', value: 'community' },
+                  ]}
+                />
+              </Group>
               <Button leftSection={<IconPlus size={16} />} onClick={() => navigate('/bingo/create?source=admin')}>
                 Create Bingo Challenge
               </Button>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-              {bingoBoards.map((board) => (
+              {bingoBoards
+                .filter(board => {
+                  if (bingoFilter === 'all') return true;
+                  if (bingoFilter === 'official') return board.created_by === 'admin';
+                  if (bingoFilter === 'community') return board.created_by !== 'admin';
+                  return true;
+                })
+                .map((board) => (
                 <Card key={board.id} shadow="sm" padding="lg" radius="md" withBorder>
                   <Group justify="space-between" mb="xs">
                     <Text fw={700} size="lg">{board.title}</Text>
