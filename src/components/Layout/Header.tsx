@@ -1,12 +1,15 @@
 import React from 'react';
-import { Group, Paper } from '@mantine/core';
+import { Group, Paper, ActionIcon, useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import NotificationBell from '@/components/Notifications/NotificationBell';
 import UserLevelDisplay from '@/components/User/UserLevelDisplay';
+import { IconSun, IconMoon } from '@tabler/icons-react';
 
 const Header: React.FC = () => {
   const user = useSelector((state: RootState) => state.auth.user);
+  const { setColorScheme } = useMantineColorScheme();
+  const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
 
   return (
     <Paper 
@@ -19,6 +22,15 @@ const Header: React.FC = () => {
       }}
     >
       <Group justify="flex-end" gap="md">
+        <ActionIcon
+          onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
+          variant="default"
+          size="lg"
+          aria-label="Toggle color scheme"
+        >
+          {computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+        </ActionIcon>
+
         {user && (
           <UserLevelDisplay 
             level={user.level || 1} 

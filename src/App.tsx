@@ -26,7 +26,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <MantineProvider forceColorScheme="dark" theme={theme}>
+      <MantineProvider defaultColorScheme="dark" theme={theme}>
         <Notifications position="top-right" zIndex={1000} />
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>

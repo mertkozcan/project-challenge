@@ -15,6 +15,8 @@ import { useLocation } from 'react-router-dom';
 
 import FriendsWidget from "@/components/Social/FriendsWidget";
 
+import { GlobalBackground } from "./GlobalBackground";
+
 export function Layout() {
   const {authenticated} = useAuth()
   const layoutType = useAppSelector((state) => state.theme.currentLayout)
@@ -47,6 +49,7 @@ export function Layout() {
         </div>
       }
     >
+      <GlobalBackground />
       <AppLayout/>
       {authenticated && <FriendsWidget />}
     </Suspense>
