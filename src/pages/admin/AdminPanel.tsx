@@ -232,6 +232,17 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleDeleteChallenge = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this challenge?')) {
+      try {
+        await ChallengesService.deleteChallenge(id);
+        fetchChallenges();
+      } catch (error) {
+        console.error('Failed to delete challenge', error);
+      }
+    }
+  };
+
   const openChallengeModal = (challenge?: Challenge) => {
     if (challenge) {
       setEditingChallenge(challenge);
@@ -390,7 +401,7 @@ const AdminPanel: React.FC = () => {
                         <ActionIcon color="blue" variant="subtle" onClick={() => openChallengeModal(challenge)}>
                           <IconEdit size={18} />
                         </ActionIcon>
-                        <ActionIcon color="red" variant="subtle">
+                        <ActionIcon color="red" variant="subtle" onClick={() => handleDeleteChallenge(String(challenge.id))}>
                           <IconTrash size={18} />
                         </ActionIcon>
                       </Group>

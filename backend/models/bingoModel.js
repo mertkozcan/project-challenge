@@ -55,10 +55,10 @@ const approveCellProof = async (progressId) => {
     return result.rows[0];
 };
 
-const createBoard = async (gameName, title, description, size = 5, type = 'Normal', theme = 'Standard', createdBy = null) => {
+const createBoard = async (gameName, title, description, size = 5, type = 'Normal', theme = 'Standard', createdBy = null, isOfficial = false) => {
     const result = await pool.query(
-        'INSERT INTO bingo_boards (game_name, title, description, size, type, theme, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [gameName, title, description, size, type, theme, createdBy]
+        'INSERT INTO bingo_boards (game_name, title, description, size, type, theme, created_by, is_official) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+        [gameName, title, description, size, type, theme, createdBy, isOfficial]
     );
     return result.rows[0];
 };

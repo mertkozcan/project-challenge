@@ -1,40 +1,38 @@
-require('dotenv').config();
-const { Pool } = require('pg');
+const pool = require('../config/db');
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-});
-
-async function checkSchema() {
+const checkSchema = async () => {
     try {
-        const client = await pool.connect();
-        console.log('Connected to database');
+        console.log('Checking schema...');
 
-        const tables = ['run_sessions', 'proofs', 'challenges'];
-
-        for (const table of tables) {
-            console.log(`\nChecking table: ${table}`);
-            const res = await client.query(`
-        SELECT column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_name = $1
-      `, [table]);
-
-            if (res.rows.length === 0) {
-                console.log(`Table ${table} does not exist!`);
-            } else {
-                res.rows.forEach(row => {
-                    console.log(` - ${row.column_name} (${row.data_type})`);
-                });
-            }
+        // Check users table for role
+        try {
+            await pool.query('SELECT role FROM users LIMIT 1');
+            console.log('✅ users.role exists');
+        } catch (e) {
+            console.log('❌ users.role MISSING:', e.message);
         }
 
-        client.release();
-    } catch (err) {
-        console.error('Error checking schema:', err);
+        // Check bingo_boards for is_official
+        try {
+            await pool.query('SELECT is_official FROM bingo_boards LIMIT 1');
+            console.log('✅ bingo_boards.is_official exists');
+        } catch (e) {
+            console.log('❌ bingo_boards.is_official MISSING:', e.message);
+        }
+
+        // Check challenges for is_official
+        try {
+            await pool.query('SELECT is_official FROM challenges LIMIT 1');
+            console.log('✅ challenges.is_official exists');
+        } catch (e) {
+            console.log('❌ challenges.is_official MISSING:', e.message);
+        }
+
+    } catch (error) {
+        console.error('Error checking schema:', error);
     } finally {
         await pool.end();
     }
-}
+};
 
 checkSchema();

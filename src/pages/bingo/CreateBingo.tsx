@@ -206,7 +206,8 @@ const CreateBingo = () => {
         await BingoService.createBoard({
             ...form.values,
             cells,
-            created_by: source === 'admin' ? 'admin' : userId
+            created_by: userId,
+            is_official: source === 'admin'
         });
         notifications.show({
             title: 'Success',

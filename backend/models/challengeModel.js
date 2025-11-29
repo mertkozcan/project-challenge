@@ -133,4 +133,9 @@ const updateChallenge = async (id, data) => {
   return result.rows[0];
 };
 
-module.exports = { getAllChallenges, createChallenge, updateChallenge, getLatestChallenges, getChallengeById, getPopularChallenges, completeChallengeWithXP };
+const deleteChallenge = async (id) => {
+  const result = await pool.query('DELETE FROM challenges WHERE id = $1 RETURNING *', [id]);
+  return result.rows[0];
+};
+
+module.exports = { getAllChallenges, createChallenge, updateChallenge, deleteChallenge, getLatestChallenges, getChallengeById, getPopularChallenges, completeChallengeWithXP };

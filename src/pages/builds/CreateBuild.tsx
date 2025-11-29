@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Container, Title, TextInput, Textarea, Button, Group, Notification, Select } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { BuildsService } from '@/services/builds/builds.service';
+import { AdminService } from '@/services/admin/admin.service';
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { IconX } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
 import BuildEditor, { BuildSlots } from '@/components/Builds/BuildEditor';
+import { notifications } from '@mantine/notifications';
 
 const CreateBuild: React.FC = () => {
   const navigate = useNavigate();
@@ -99,13 +101,22 @@ const CreateBuild: React.FC = () => {
           ...form.values,
           items_json: slots,
         });
+        notifications.show({ title: 'Success', message: 'Build updated successfully', color: 'green' });
       } else {
-        await BuildsService.createBuild({
-          ...form.values,
-          user_id: userId,
-          items_json: slots,
-          is_official: source === 'admin'
-        });
+        if (source === 'admin') {
+            await AdminService.createOfficialBuild({
+                ...form.values,
+                items_json: slots,
+            }, userId);
+            notifications.show({ title: 'Success', message: 'Official Build created successfully', color: 'green' });
+        } else {
+            await BuildsService.createBuild({
+                ...form.values,
+                user_id: userId,
+                items_json: slots,
+            });
+            notifications.show({ title: 'Success', message: 'Build created successfully', color: 'green' });
+        }
       }
       
       if (source === 'admin') {
@@ -115,6 +126,7 @@ const CreateBuild: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || 'Failed to save build');
+      notifications.show({ title: 'Error', message: 'Failed to save build', color: 'red' });
     } finally {
       setLoading(false);
     }

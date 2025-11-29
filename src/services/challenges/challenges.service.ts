@@ -46,4 +46,11 @@ export const ChallengesService = {
     });
     return res.data;
   },
+
+  async deleteChallenge(id: string): Promise<void> {
+    await ApiService.fetchData<void, void>({
+      url: `/challenges/${id}`,
+      method: 'DELETE',
+    });
+  },
 };

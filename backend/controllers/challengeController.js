@@ -82,4 +82,20 @@ const updateChallenge = async (req, res) => {
   }
 };
 
-module.exports = { getChallenges, addChallenge, updateChallenge, latestChallenges, getChallengeDetail, getPopularChallenges };
+const deleteChallenge = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { deleteChallenge: deleteChallengeModel } = require('../models/challengeModel');
+    const deletedChallenge = await deleteChallengeModel(id);
+
+    if (!deletedChallenge) {
+      return res.status(404).json({ error: 'Challenge not found' });
+    }
+
+    res.json({ message: 'Challenge deleted successfully', id });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+module.exports = { getChallenges, addChallenge, updateChallenge, deleteChallenge, latestChallenges, getChallengeDetail, getPopularChallenges };

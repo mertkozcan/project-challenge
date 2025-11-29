@@ -9,5 +9,6 @@ router.get('/latest', latestChallenges);
 router.get('/popular', getPopularChallenges);
 router.get('/:id', getChallengeDetail);
 router.put('/:id', require('../controllers/challengeController').updateChallenge);
+router.delete('/:id', require('../controllers/challengeController').deleteChallenge);
 
 module.exports = router;

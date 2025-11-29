@@ -106,10 +106,10 @@ const approveProof = async (req, res) => {
 };
 
 const createNewBoard = async (req, res) => {
-    const { game_name, title, description, size, type, theme, cells, created_by } = req.body;
+    const { game_name, title, description, size, type, theme, cells, created_by, is_official } = req.body;
 
     try {
-        const board = await createBoard(game_name, title, description, size, type, theme, created_by);
+        const board = await createBoard(game_name, title, description, size, type, theme, created_by, is_official);
 
         // Add cells if provided
         if (cells && Array.isArray(cells)) {
