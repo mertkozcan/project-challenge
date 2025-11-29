@@ -232,6 +232,7 @@ export class EldenRingProvider implements GameDataProvider {
     if (apiItem.dmgNegation) stats.negation = apiItem.dmgNegation;
     if (apiItem.resistance) stats.resistance = apiItem.resistance;
     if (apiItem.weight) stats.weight = apiItem.weight;
+    if (apiItem.category) stats.category = apiItem.category; // e.g. Helm, Chest Armor, Gauntlets, Leg Armor
     
     // Spells/Incantations specific
     if (apiItem.cost) stats.cost = apiItem.cost;

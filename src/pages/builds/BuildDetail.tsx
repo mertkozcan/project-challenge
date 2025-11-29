@@ -25,6 +25,7 @@ import RateBuildSection from '@/components/Builds/RateBuildSection';
 import BuildComments from '@/components/Builds/BuildComments';
 import BuildRatingService from '@/services/buildRating.service';
 import ItemTooltip from '@/components/Builds/ItemTooltip';
+import EldenRingBuildView from '@/components/Builds/EldenRingBuildView';
 
 interface BuildData extends Build {
   banner_url?: string;
@@ -180,133 +181,137 @@ const BuildDetail: React.FC = () => {
               )}
 
               {/* Items/Equipment Card */}
-              {Object.keys(items).length > 0 && (
-                <Paper
-                  shadow="md"
-                  p="xl"
-                  radius="md"
-                  style={{
-                    background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
-                    border: `1px solid ${theme.primary}20`,
-                  }}
-                >
-                  <Title order={3} mb="xl" c={theme.primary}>
-                    Equipment & Items
-                  </Title>
-                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                    {Object.entries(items).map(([key, value]: [string, any]) => {
-                      // Handle array items (spells, incantations, consumables)
-                      if (Array.isArray(value)) {
-                        if (value.length === 0) return null;
-                        return (
-                          <Card
-                            key={key}
-                            padding="md"
-                            radius="md"
-                            style={{
-                              background: 'rgba(0, 0, 0, 0.3)',
-                              border: `1px solid ${theme.primary}30`,
-                              gridColumn: '1 / -1', // Span full width
-                            }}
-                          >
-                            <Text size="sm" c="dimmed" tt="uppercase" fw={700} mb="xs">
-                              {key.replace(/_/g, ' ')}
-                            </Text>
-                            <Group gap="xs">
-                              {value.map((item: any, index: number) => (
-                                <ItemTooltip
-                                  key={`${key}-${index}`}
-                                  itemName={item.name}
-                                  description={item.description}
-                                  stats={item.stats}
-                                  theme={theme}
-                                >
-                                  <Badge
-                                    size="lg"
-                                    variant="light"
-                                    color={theme.primary}
-                                    style={{ cursor: 'help' }}
+              {build.game_name === 'Elden Ring' ? (
+                <EldenRingBuildView build={build} theme={theme} />
+              ) : (
+                Object.keys(items).length > 0 && (
+                  <Paper
+                    shadow="md"
+                    p="xl"
+                    radius="md"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(30, 30, 46, 0.95), rgba(21, 21, 21, 0.95))',
+                      border: `1px solid ${theme.primary}20`,
+                    }}
+                  >
+                    <Title order={3} mb="xl" c={theme.primary}>
+                      Equipment & Items
+                    </Title>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                      {Object.entries(items).map(([key, value]: [string, any]) => {
+                        // Handle array items (spells, incantations, consumables)
+                        if (Array.isArray(value)) {
+                          if (value.length === 0) return null;
+                          return (
+                            <Card
+                              key={key}
+                              padding="md"
+                              radius="md"
+                              style={{
+                                background: 'rgba(0, 0, 0, 0.3)',
+                                border: `1px solid ${theme.primary}30`,
+                                gridColumn: '1 / -1', // Span full width
+                              }}
+                            >
+                              <Text size="sm" c="dimmed" tt="uppercase" fw={700} mb="xs">
+                                {key.replace(/_/g, ' ')}
+                              </Text>
+                              <Group gap="xs">
+                                {value.map((item: any, index: number) => (
+                                  <ItemTooltip
+                                    key={`${key}-${index}`}
+                                    itemName={item.name}
+                                    description={item.description}
+                                    stats={item.stats}
+                                    theme={theme}
                                   >
-                                    {item.name}
-                                  </Badge>
-                                </ItemTooltip>
-                              ))}
-                            </Group>
-                          </Card>
-                        );
-                      }
-
-                      // Skip Ash of War entries as they are handled within their parent weapon card
-                      if (key.endsWith('Ash')) return null;
-
-                      // Skip special keys that are handled separately
-                      if (['stats', 'startingClass', 'greatRune'].includes(key)) return null;
-
-                      // Handle single items
-                      const itemStats = typeof value === 'object' && value !== null ? value : undefined;
-                      const displayValue = typeof value === 'object' ? value.name || JSON.stringify(value) : value;
-
-                      if (!displayValue) return null;
-
-                      // Check for associated Ash of War
-                      const ashKey = `${key}Ash`;
-                      const ashItem = items[ashKey];
-
-                      return (
-                        <ItemTooltip
-                          key={key}
-                          itemName={displayValue}
-                          description={itemStats?.description}
-                          stats={itemStats}
-                          theme={theme}
-                        >
-                          <Card
-                            padding="md"
-                            radius="md"
-                            style={{
-                              background: 'rgba(0, 0, 0, 0.3)',
-                              border: `1px solid ${theme.primary}30`,
-                              cursor: 'help',
-                              transition: 'all 0.2s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.border = `1px solid ${theme.primary}60`;
-                              e.currentTarget.style.transform = 'translateY(-2px)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.border = `1px solid ${theme.primary}30`;
-                              e.currentTarget.style.transform = 'translateY(0)';
-                            }}
-                          >
-                            <Text size="sm" c="dimmed" tt="uppercase" fw={700} mb="xs">
-                              {key.replace(/_/g, ' ')}
-                            </Text>
-                            <Text size="md" c={theme.primary} fw={600}>
-                              {displayValue}
-                            </Text>
-
-                            {/* Display Ash of War if present */}
-                            {ashItem && (
-                              <Group gap="xs" mt="sm" style={{ borderTop: `1px solid ${theme.primary}20`, paddingTop: 8 }}>
-                                <Badge 
-                                  size="sm" 
-                                  variant="outline" 
-                                  color="gray" 
-                                  style={{ borderColor: theme.primary, color: theme.primary }}
-                                >
-                                  Ash of War
-                                </Badge>
-                                <Text size="sm" c="dimmed">
-                                  {ashItem.name}
-                                </Text>
+                                    <Badge
+                                      size="lg"
+                                      variant="light"
+                                      color={theme.primary}
+                                      style={{ cursor: 'help' }}
+                                    >
+                                      {item.name}
+                                    </Badge>
+                                  </ItemTooltip>
+                                ))}
                               </Group>
-                            )}
-                          </Card>
-                        </ItemTooltip>
-                      );
-                    })}
-                  </SimpleGrid>
-                </Paper>
+                            </Card>
+                          );
+                        }
+
+                        // Skip Ash of War entries as they are handled within their parent weapon card
+                        if (key.endsWith('Ash')) return null;
+
+                        // Skip special keys that are handled separately
+                        if (['stats', 'startingClass', 'greatRune'].includes(key)) return null;
+
+                        // Handle single items
+                        const itemStats = typeof value === 'object' && value !== null ? value : undefined;
+                        const displayValue = typeof value === 'object' ? value.name || JSON.stringify(value) : value;
+
+                        if (!displayValue) return null;
+
+                        // Check for associated Ash of War
+                        const ashKey = `${key}Ash`;
+                        const ashItem = items[ashKey];
+
+                        return (
+                          <ItemTooltip
+                            key={key}
+                            itemName={displayValue}
+                            description={itemStats?.description}
+                            stats={itemStats}
+                            theme={theme}
+                          >
+                            <Card
+                              padding="md"
+                              radius="md"
+                              style={{
+                                background: 'rgba(0, 0, 0, 0.3)',
+                                border: `1px solid ${theme.primary}30`,
+                                cursor: 'help',
+                                transition: 'all 0.2s ease',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.border = `1px solid ${theme.primary}60`;
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.border = `1px solid ${theme.primary}30`;
+                                e.currentTarget.style.transform = 'translateY(0)';
+                              }}
+                            >
+                              <Text size="sm" c="dimmed" tt="uppercase" fw={700} mb="xs">
+                                {key.replace(/_/g, ' ')}
+                              </Text>
+                              <Text size="md" c={theme.primary} fw={600}>
+                                {displayValue}
+                              </Text>
+
+                              {/* Display Ash of War if present */}
+                              {ashItem && (
+                                <Group gap="xs" mt="sm" style={{ borderTop: `1px solid ${theme.primary}20`, paddingTop: 8 }}>
+                                  <Badge 
+                                    size="sm" 
+                                    variant="outline" 
+                                    color="gray" 
+                                    style={{ borderColor: theme.primary, color: theme.primary }}
+                                  >
+                                    Ash of War
+                                  </Badge>
+                                  <Text size="sm" c="dimmed">
+                                    {ashItem.name}
+                                  </Text>
+                                </Group>
+                              )}
+                            </Card>
+                          </ItemTooltip>
+                        );
+                      })}
+                    </SimpleGrid>
+                  </Paper>
+                )
               )}
 
               {/* Comments Section */}
@@ -371,7 +376,7 @@ const BuildDetail: React.FC = () => {
               </Paper>
 
               {/* Character Stats Card */}
-              {items.stats && (
+              {items.stats && build.game_name !== 'Elden Ring' && (
                 <Paper
                   shadow="md"
                   p="xl"

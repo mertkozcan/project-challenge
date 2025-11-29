@@ -108,10 +108,11 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
     key: keyof BuildSlots;
     category: any;
     isMulti?: boolean;
+    filter?: string;
   } | null>(null);
 
-  const openModal = (slotKey: keyof BuildSlots, category: any, isMulti = false) => {
-    setCurrentSlot({ key: slotKey, category, isMulti });
+  const openModal = (slotKey: keyof BuildSlots, category: any, isMulti = false, filter?: string) => {
+    setCurrentSlot({ key: slotKey, category, isMulti, filter });
     setModalOpen(true);
   };
 
@@ -459,28 +460,28 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
                   <ItemSlot
                     label="Head"
                     item={slots.head}
-                    onSelect={() => openModal('head', 'armors')}
+                    onSelect={() => openModal('head', 'armors', false, 'Helm')}
                     onClear={() => clearSlot('head')}
                     theme={theme}
                   />
                   <ItemSlot
                     label="Chest"
                     item={slots.chest}
-                    onSelect={() => openModal('chest', 'armors')}
+                    onSelect={() => openModal('chest', 'armors', false, 'Chest Armor')}
                     onClear={() => clearSlot('chest')}
                     theme={theme}
                   />
                   <ItemSlot
                     label="Arms"
                     item={slots.arms}
-                    onSelect={() => openModal('arms', 'armors')}
+                    onSelect={() => openModal('arms', 'armors', false, 'Gauntlets')}
                     onClear={() => clearSlot('arms')}
                     theme={theme}
                   />
                   <ItemSlot
                     label="Legs"
                     item={slots.legs}
-                    onSelect={() => openModal('legs', 'armors')}
+                    onSelect={() => openModal('legs', 'armors', false, 'Leg Armor')}
                     onClear={() => clearSlot('legs')}
                     theme={theme}
                   />
@@ -648,6 +649,7 @@ const BuildEditor = ({ gameName, initialSlots, onSave, onCancel }: BuildEditorPr
           category={currentSlot.category}
           onSelect={handleItemSelect}
           theme={theme}
+          filter={currentSlot.filter}
         />
       )}
     </Paper>

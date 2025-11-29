@@ -11,9 +11,10 @@ interface ItemSearchModalProps {
   category: ItemCategory;
   onSelect: (item: GameItem) => void;
   theme?: any;
+  filter?: string; // Optional filter for sub-categories (e.g. Helm, Chest Armor)
 }
 
-const ItemSearchModal = ({ opened, onClose, category, onSelect, theme }: ItemSearchModalProps) => {
+const ItemSearchModal = ({ opened, onClose, category, onSelect, theme, filter }: ItemSearchModalProps) => {
   const [query, setQuery] = useState('');
   const [items, setItems] = useState<GameItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,7 +34,17 @@ const ItemSearchModal = ({ opened, onClose, category, onSelect, theme }: ItemSea
     setLoading(true);
     try {
       const results = await provider.searchItems(searchQuery || '', category);
-      setItems(results);
+      
+      // Apply client-side filtering if filter prop is provided
+      let filteredResults = results;
+      if (filter) {
+          filteredResults = results.filter(item => 
+              item.stats?.category === filter || 
+              item.category === filter // Fallback if category is top-level
+          );
+      }
+      
+      setItems(filteredResults);
     } catch (error) {
       console.error('Failed to search items:', error);
       setItems([]);
