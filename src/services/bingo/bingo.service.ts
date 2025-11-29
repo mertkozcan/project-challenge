@@ -44,7 +44,7 @@ export const BingoService = {
     return res.data;
   },
 
-  async getBoardDetail(boardId: string, userId: string = '1'): Promise<BingoBoardDetail> {
+  async getBoardDetail(boardId: string, userId?: string): Promise<BingoBoardDetail> {
     const res = await ApiService.fetchData<void, BingoBoardDetail>({
       url: `/bingo/${boardId}`,
       method: 'GET',

@@ -72,7 +72,7 @@ const CreateBingo = () => {
   const fetchBoard = async () => {
     if (!id) return;
     try {
-      const { board, cells } = await BingoService.getBoardDetail(id);
+      const { board, cells } = await BingoService.getBoardDetail(id, userId);
       form.setValues({
         game_name: board.game_name,
         title: board.title,
