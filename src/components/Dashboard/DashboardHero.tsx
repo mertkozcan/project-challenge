@@ -59,11 +59,11 @@ const HeroSlide = ({ image, title, subtitle, type, link, actionLabel, color, ico
         </Badge>
       </Group>
       
-      <Title order={1} style={{ color: 'white', fontSize: '2.5rem', lineHeight: 1.1 }}>
+      <Title order={1} style={{ color: 'white', fontSize: '2.5rem', lineHeight: 1.1, textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
         {title}
       </Title>
       
-      <Text size="lg" c="dimmed" style={{ color: 'rgba(255,255,255,0.9)', maxWidth: 600 }}>
+      <Text size="lg" c="dimmed" style={{ color: 'rgba(255,255,255,0.9)', maxWidth: 600, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
         {subtitle}
       </Text>
 

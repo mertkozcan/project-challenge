@@ -109,28 +109,30 @@ export const UserProgressWidget = ({ stats, user }: any) => {
 
   return (
     <WidgetWrapper onClick={() => navigate(`/profile/${user?.username}`)} delay={0.1}>
-      <Group justify="space-between" mb="xs">
+      <Group justify="space-between" mb={4}>
         <Text fw={700} c="dimmed" size="xs" tt="uppercase">My Rank</Text>
-        <ThemeIcon variant="light" color="blue" radius="md">
-          <IconTrophy size={16} />
+        <ThemeIcon variant="light" color="blue" radius="md" size="sm">
+          <IconTrophy size={14} />
         </ThemeIcon>
       </Group>
       
-      <Stack gap="xs" align="center" justify="center" flex={1}>
+      <Group align="center" justify="center" gap="md" style={{ flex: 1 }}>
         <RingProgress
-          size={100}
-          thickness={8}
+          size={70}
+          thickness={6}
           roundCaps
           sections={[{ value: progress, color: 'blue' }]}
           label={
-            <Text ta="center" fw={700} size="xl">
+            <Text ta="center" fw={700} size="lg">
               {level}
             </Text>
           }
         />
-        <Text size="xs" c="dimmed">Level {level}</Text>
-        <Text size="xs" fw={700}>{xp} / {nextLevelXp} XP</Text>
-      </Stack>
+        <div>
+            <Text size="sm" fw={700}>Level {level}</Text>
+            <Text size="xs" c="dimmed">{xp} / {nextLevelXp} XP</Text>
+        </div>
+      </Group>
     </WidgetWrapper>
   );
 };
@@ -140,18 +142,18 @@ export const QuickCreateWidget = ({ totalChallenges }: { totalChallenges?: numbe
   const navigate = useNavigate();
   return (
     <WidgetWrapper onClick={() => navigate('/challenges/create')} delay={0.15}>
-      <Stack justify="space-between" h="100%">
-        <ThemeIcon size={40} radius="md" variant="gradient" gradient={{ from: 'indigo', to: 'cyan' }}>
-          <IconPlus size={24} />
-        </ThemeIcon>
+      <Group justify="space-between" h="100%" align="center">
         <div>
           <Text fw={700} size="lg">Create</Text>
           <Text size="xs" c="dimmed">New Challenge</Text>
           {totalChallenges !== undefined && (
-             <Badge size="xs" variant="light" color="blue" mt={4}>{totalChallenges}+ Challenges</Badge>
+             <Badge size="xs" variant="light" color="blue" mt={4}>{totalChallenges}+ Active</Badge>
           )}
         </div>
-      </Stack>
+        <ThemeIcon size={40} radius="md" variant="gradient" gradient={{ from: 'indigo', to: 'cyan' }}>
+          <IconPlus size={24} />
+        </ThemeIcon>
+      </Group>
     </WidgetWrapper>
   );
 };
@@ -279,7 +281,6 @@ export const StatsOverviewWidget = ({ stats }: any) => {
 // --- 8. Trending Builds Widget (2x1) ---
 export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
     const navigate = useNavigate();
-    // Simple carousel effect or just display 2 side by side
     const displayBuilds = builds.slice(0, 2);
 
     return (
@@ -294,22 +295,44 @@ export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
                 <Button variant="subtle" size="xs" onClick={() => navigate('/builds')}>View All</Button>
             </Group>
             <SimpleGrid cols={2} spacing="xs">
-                {displayBuilds.map((build) => (
-                    <Paper 
-                        key={build.id} 
-                        p="xs" 
-                        radius="md" 
-                        style={{ background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}
-                        onClick={() => navigate(`/builds/${build.id}`)}
-                    >
-                        <Group gap="xs" mb={4}>
-                             <Avatar src={build.game_icon} size="xs" />
-                             <Text size="xs" fw={700} lineClamp={1}>{build.build_name}</Text>
-                        </Group>
-                        <Text size="xs" c="dimmed" lineClamp={1}>by {build.username}</Text>
-                    </Paper>
-                ))}
-                {displayBuilds.length === 0 && <Text size="xs" c="dimmed">No trending builds yet.</Text>}
+                {displayBuilds.length > 0 ? (
+                    displayBuilds.map((build) => (
+                        <Paper 
+                            key={build.id} 
+                            p="xs" 
+                            radius="md" 
+                            style={{ background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                            onClick={() => navigate(`/builds/${build.id}`)}
+                        >
+                            <Group gap="xs" mb={4}>
+                                 <Avatar src={build.game_icon} size="xs" />
+                                 <Text size="xs" fw={700} lineClamp={1}>{build.build_name}</Text>
+                            </Group>
+                            <Text size="xs" c="dimmed" lineClamp={1}>by {build.username}</Text>
+                        </Paper>
+                    ))
+                ) : (
+                    // Placeholder / Empty State
+                    <>
+                        {[1, 2].map((i) => (
+                            <Paper 
+                                key={i} 
+                                p="xs" 
+                                radius="md" 
+                                style={{ 
+                                    background: 'rgba(255,255,255,0.02)', 
+                                    border: '1px dashed rgba(255,255,255,0.1)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    height: '60px'
+                                }}
+                            >
+                                <Text size="xs" c="dimmed" ta="center">Be the first to share a build!</Text>
+                            </Paper>
+                        ))}
+                    </>
+                )}
             </SimpleGrid>
         </WidgetWrapper>
     );
