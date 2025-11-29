@@ -7,7 +7,7 @@ import UserLevelDisplay from '@/components/User/UserLevelDisplay';
 import { IconSun, IconMoon } from '@tabler/icons-react';
 
 const Header: React.FC = () => {
-  const user = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state.auth.userInfo);
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
 
@@ -24,14 +24,16 @@ const Header: React.FC = () => {
       <Group justify="flex-end" gap="md">
         <ActionIcon
           onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
-          variant="default"
+          variant="light"
+          color="gray"
           size="lg"
+          radius="md"
           aria-label="Toggle color scheme"
         >
-          {computedColorScheme === 'dark' ? <IconSun size={18} /> : <IconMoon size={18} />}
+          {computedColorScheme === 'dark' ? <IconSun size={20} /> : <IconMoon size={20} />}
         </ActionIcon>
 
-        {user && (
+        {user && user.userId && (
           <UserLevelDisplay 
             level={user.level || 1} 
             totalXp={user.total_xp || 0} 
