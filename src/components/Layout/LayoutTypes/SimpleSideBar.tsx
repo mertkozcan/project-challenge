@@ -12,7 +12,9 @@ import AuthorityCheck from '@/route/AuthorityCheck';
 import { useAppSelector } from '@/store';
 import NotificationDropdown from '@/components/Notifications/NotificationDropdown';
 import useAuth from '@/utils/hooks/useAuth';
-import { IconLogin } from '@tabler/icons-react';
+import { IconLogin, IconSun, IconMoon } from '@tabler/icons-react';
+import { ActionIcon, useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
+import UserLevelDisplay from '@/components/User/UserLevelDisplay';
 
 function SideBarContent() {
   const navigate = useNavigate();
@@ -57,6 +59,9 @@ export default function SimpleSideBar() {
   const [opened, { toggle }] = useDisclosure();
   const { authenticated } = useAuth();
   const navigate = useNavigate();
+  const { setColorScheme } = useMantineColorScheme();
+  const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
+  const user = useAppSelector((state) => state.auth.userInfo);
 
   return (
     <AppShell
@@ -80,8 +85,29 @@ export default function SimpleSideBar() {
             />
           </Group>
           <Group>
+            <ActionIcon
+              onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
+              variant="default"
+              size="lg"
+              radius="md"
+              aria-label="Toggle color scheme"
+              mr="xs"
+            >
+              {computedColorScheme === 'dark' ? <IconSun size={20} /> : <IconMoon size={20} />}
+            </ActionIcon>
+
             {authenticated ? (
-              <NotificationDropdown />
+              <Group gap="xs">
+                 {user && (
+                    <UserLevelDisplay 
+                      level={user.level || 1} 
+                      totalXp={user.total_xp || 0} 
+                      size="sm"
+                      showProgress={false}
+                    />
+                  )}
+                <NotificationDropdown />
+              </Group>
             ) : (
               <Group gap="xs">
                 <Button variant="default" size="xs" onClick={() => navigate('/sign-in')}>Sign In</Button>

@@ -24,8 +24,8 @@ const Header: React.FC = () => {
       <Group justify="flex-end" gap="md">
         <ActionIcon
           onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
-          variant="light"
-          color="gray"
+          variant="filled"
+          color={computedColorScheme === 'dark' ? 'yellow' : 'blue'}
           size="lg"
           radius="md"
           aria-label="Toggle color scheme"
