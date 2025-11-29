@@ -21,16 +21,26 @@ const WidgetWrapper = ({ children, onClick, className, style, delay = 0 }: any) 
       p="md"
       radius="lg"
       style={{
-        background: 'rgba(30, 30, 40, 0.6)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+        background: 'rgba(20, 20, 30, 0.6)', // Darker background for better contrast
+        backdropFilter: 'blur(16px)', // Stronger blur
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)', // Deeper shadow
         overflow: 'hidden',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
+      {/* Subtle gradient overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '100px',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)',
+        pointerEvents: 'none',
+      }} />
       {children}
     </Paper>
   </motion.div>
@@ -172,22 +182,39 @@ export const LivePulseWidget = ({ activities }: any) => {
   return (
     <WidgetWrapper style={{ gridRow: 'span 2' }} delay={0.25}>
       <Group justify="space-between" mb="md">
-        <Text fw={700} c="dimmed" size="xs" tt="uppercase">Community Pulse</Text>
-        <Badge size="xs" variant="dot" color="green">Live</Badge>
+        <Group gap="xs">
+            <ThemeIcon color="green" variant="light" size="sm" radius="xl">
+                <IconRocket size={12} />
+            </ThemeIcon>
+            <Text fw={800} c="white" size="xs" tt="uppercase" style={{ letterSpacing: '1px' }}>Live Pulse</Text>
+        </Group>
+        <Badge size="xs" variant="dot" color="green" className="animate-pulse">Live</Badge>
       </Group>
       
-      <Stack gap="md" style={{ overflow: 'hidden' }}>
+      <Stack gap="sm" style={{ overflow: 'hidden' }}>
         {activities.map((activity: any, index: number) => (
-          <Group key={index} wrap="nowrap" align="flex-start">
-            <ThemeIcon size="sm" radius="xl" variant="light" color={activity.type === 'challenge' ? 'orange' : 'blue'}>
-                {activity.type === 'challenge' ? <IconTarget size={12} /> : <IconSword size={12} />}
-            </ThemeIcon>
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <Text size="xs" fw={700} truncate>{activity.title}</Text>
-              <Text size="xs" c="dimmed" truncate>by {activity.user}</Text>
-            </div>
-            <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>{activity.time}</Text>
-          </Group>
+          <motion.div 
+            key={index}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+          >
+            <Paper p="xs" radius="md" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <Group wrap="nowrap" align="center">
+                    <ThemeIcon size="md" radius="xl" variant="gradient" gradient={activity.type === 'challenge' ? { from: 'orange', to: 'red' } : { from: 'blue', to: 'cyan' }}>
+                        {activity.type === 'challenge' ? <IconTarget size={14} /> : <IconSword size={14} />}
+                    </ThemeIcon>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                    <Text size="xs" fw={700} c="white" truncate>{activity.title}</Text>
+                    <Group gap={4}>
+                        <Text size="xs" c="dimmed">by</Text>
+                        <Text size="xs" c="blue.3" fw={600} truncate>{activity.user}</Text>
+                    </Group>
+                    </div>
+                    <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap', fontSize: '10px' }}>{activity.time}</Text>
+                </Group>
+            </Paper>
+          </motion.div>
         ))}
         {activities.length === 0 && <Text size="sm" c="dimmed">No recent activity.</Text>}
       </Stack>

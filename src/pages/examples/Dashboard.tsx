@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Title, Text, Button, Group, Box } from '@mantine/core';
+import { Container, Title, Text, Button, Group, Box, Stack } from '@mantine/core';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/store';
@@ -21,6 +21,7 @@ import {
   SoloBingoWidget,
   LeaderboardPodiumWidget
 } from '@/components/Dashboard/DashboardWidgets';
+import { DashboardHero } from '@/components/Dashboard/DashboardHero';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -137,27 +138,41 @@ const Dashboard: React.FC = () => {
   }, [userId, authenticated]);
 
   return (
-    <Box style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
+    <Box style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', background: '#0B0C15' }}>
       {/* Immersive Background */}
       <div style={{
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
-        height: '60vh',
-        background: 'radial-gradient(circle at 50% 0%, rgba(60, 20, 100, 0.4) 0%, rgba(10, 10, 12, 0) 70%)',
+        height: '80vh',
+        background: 'radial-gradient(circle at 50% 0%, rgba(80, 40, 150, 0.25) 0%, rgba(11, 12, 21, 0) 70%)',
+        zIndex: 0,
+        pointerEvents: 'none',
+      }} />
+      
+      {/* Animated Particles or Grid (Optional - CSS based) */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+        opacity: 0.3,
         zIndex: 0,
         pointerEvents: 'none',
       }} />
 
       <Container size="xl" py="xl" style={{ position: 'relative', zIndex: 1 }}>
         {/* Header Section */}
-        <Group justify="space-between" mb={40} align="flex-end">
+        <Group justify="space-between" mb={30} align="flex-end">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <Text size="lg" c="dimmed" mb={4}>
+            <Text size="lg" fw={500} c="blue.3" mb={4}>
               {authenticated ? `Welcome back, ${user?.username || 'Hunter'}` : 'Welcome to Project Challenge'}
             </Text>
-            <Title order={1} style={{ fontSize: '3rem', letterSpacing: '-1px' }}>
+            <Title order={1} style={{ fontSize: '3.5rem', letterSpacing: '-2px', lineHeight: 1, color: 'white' }}>
               {authenticated ? 'Ready for your next run?' : 'Master the Challenge.'}
             </Title>
           </motion.div>
@@ -171,66 +186,62 @@ const Dashboard: React.FC = () => {
           )}
         </Group>
 
+        {/* Hero Section */}
+        <DashboardHero 
+            challengeOfTheDay={challengeOfTheDay} 
+            featuredBuild={featuredBuild} 
+            activeRoomCount={activeRoomCount} 
+        />
+
         {/* Bento Grid Layout */}
         <Box
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
-            gridAutoRows: 'minmax(180px, auto)',
+            gridAutoRows: 'minmax(160px, auto)',
             gap: '24px',
           }}
         >
-          {/* 1. Challenge Spotlight (2x2) */}
-          <Box style={{ gridColumn: 'span 2', gridRow: 'span 2' }}>
-             <ChallengeSpotlightWidget challenge={challengeOfTheDay} loading={loading} />
+          {/* 1. User Progress / Quick Actions (1x2) */}
+          <Box style={{ gridColumn: 'span 1', gridRow: 'span 2' }}>
+             {authenticated ? (
+                <Stack h="100%">
+                    <Box style={{ flex: 1 }}><UserProgressWidget stats={userStats} user={user} /></Box>
+                    <Box style={{ flex: 1 }}><QuickCreateWidget totalChallenges={totalChallenges} /></Box>
+                </Stack>
+             ) : (
+                <Stack h="100%">
+                    <Box style={{ flex: 1 }}><QuickCreateWidget totalChallenges={totalChallenges} /></Box>
+                    <Box style={{ flex: 1 }}><QuickBingoWidget activeRooms={activeRoomCount} /></Box>
+                </Stack>
+             )}
           </Box>
 
-          {/* 2. User Progress (1x1) or Sign In Callout */}
-          <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
-            {authenticated ? (
-              <UserProgressWidget stats={userStats} user={user} />
-            ) : (
-               <QuickCreateWidget totalChallenges={totalChallenges} />
-            )}
-          </Box>
-
-          {/* 3. Quick Action: Bingo (1x1) */}
-          <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
-            <QuickBingoWidget activeRooms={activeRoomCount} />
-          </Box>
-
-          {/* 4. Live Pulse (1x2) */}
+          {/* 2. Live Pulse (1x2) */}
           <Box style={{ gridColumn: 'span 1', gridRow: 'span 2' }}>
             <LivePulseWidget activities={liveActivity} />
           </Box>
 
-          {/* 5. Stats Overview (2x1) */}
+          {/* 3. Trending Builds (2x1) */}
+          <Box style={{ gridColumn: 'span 2', gridRow: 'span 1' }}>
+               <TrendingBuildsWidget builds={trendingBuilds} />
+          </Box>
+
+          {/* 4. Stats Overview (2x1) */}
           {authenticated && (
              <Box style={{ gridColumn: 'span 2', gridRow: 'span 1' }}>
                 <StatsOverviewWidget stats={userStats} />
              </Box>
           )}
           
-           {/* 6. Featured Build (1x1) */}
-           {authenticated && (
-              <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
-                <FeaturedBuildWidget build={featuredBuild} />
-              </Box>
-           )}
-
-           {/* 7. Trending Builds (2x1) */}
-           <Box style={{ gridColumn: 'span 2', gridRow: 'span 1' }}>
-                <TrendingBuildsWidget builds={trendingBuilds} />
-           </Box>
-
-           {/* 8. Solo Bingo (1x1) */}
-           <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
-                <SoloBingoWidget />
-           </Box>
-
-           {/* 9. Leaderboard Podium (1x1) */}
+          {/* 5. Leaderboard (1x1) */}
            <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
                 <LeaderboardPodiumWidget topPlayers={topPlayers} />
+           </Box>
+
+           {/* 6. Solo Bingo (1x1) */}
+           <Box style={{ gridColumn: 'span 1', gridRow: 'span 1' }}>
+                <SoloBingoWidget />
            </Box>
 
         </Box>
