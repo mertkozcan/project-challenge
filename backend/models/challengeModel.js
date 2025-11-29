@@ -49,7 +49,7 @@ const getLatestChallenges = async () => {
 const getChallengeById = async (id, userId = null) => {
   const result = await pool.query(
     `SELECT c.*, g.banner_url, g.icon_url as game_icon,
-     (SELECT COUNT(*) FROM user_bingo_runs WHERE challenge_id = c.id) as participation_count
+     (SELECT COUNT(*) FROM run_sessions WHERE challenge_id = c.id) as participation_count
      FROM challenges c
      LEFT JOIN games g ON c.game_name = g.name
      WHERE c.id = $1`,
@@ -59,7 +59,7 @@ const getChallengeById = async (id, userId = null) => {
 
   if (challenge && userId) {
     const participation = await pool.query(
-      'SELECT * FROM user_bingo_runs WHERE user_id = $1 AND challenge_id = $2',
+      'SELECT * FROM run_sessions WHERE user_id = $1 AND challenge_id = $2',
       [userId, id]
     );
     challenge.user_participated = participation.rows.length > 0;
@@ -80,7 +80,7 @@ const getPopularChallenges = async (limit = 5) => {
     `SELECT c.*, g.icon_url as game_icon, COUNT(ubr.id) as participation_count
      FROM challenges c
      LEFT JOIN games g ON c.game_name = g.name
-     LEFT JOIN user_bingo_runs ubr ON c.id = ubr.challenge_id
+     LEFT JOIN run_sessions ubr ON c.id = ubr.challenge_id
      GROUP BY c.id, g.icon_url
      ORDER BY participation_count DESC
      LIMIT $1`,
@@ -99,9 +99,9 @@ const completeChallengeWithXP = async (challengeId, userId, proofId) => {
     await pool.query('UPDATE users SET total_xp = total_xp + $1 WHERE id = $2', [xpReward, userId]);
 
     // 3. Mark run as completed (if applicable)
-    // Assuming user_bingo_runs tracks the active session
+    // Update run_sessions for the active session
     await pool.query(
-      'UPDATE user_bingo_runs SET status = $1, completed_at = NOW() WHERE user_id = $2 AND challenge_id = $3 AND status = $4',
+      'UPDATE run_sessions SET status = $1, completed_at = NOW() WHERE user_id = $2 AND challenge_id = $3 AND status = $4',
       ['COMPLETED', userId, challengeId, 'ACTIVE']
     );
 
