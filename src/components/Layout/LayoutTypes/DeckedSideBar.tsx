@@ -39,8 +39,9 @@ function DeckedSideBarContent() {
           <div>
             <img
               className={classes.logo}
-              alt={'Mantine Logo'}
-              src={'/logo/logo-light-full.svg'}
+              alt={'Project Challenge Logo'}
+              src={'/logo/logo.svg'}
+              style={{ height: 40, width: 'auto' }}
             />
           </div>
           {navigationConfig.map((link, index) => (

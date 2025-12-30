@@ -79,9 +79,9 @@ export default function SimpleSideBar() {
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <img 
               className={classes.logo} 
-              alt="Mantine Logo" 
-              src="/logo/logo-light-full.svg" 
-              style={{ height: 30, width: 'auto' }}
+              alt="Project Challenge Logo" 
+              src="/logo/logo.svg" 
+              style={{ height: 40, width: 'auto' }}
             />
           </Group>
           <Group>
