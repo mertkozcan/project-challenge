@@ -39,7 +39,7 @@ function DeckedSideBarContent() {
           <div>
             <img
               className={classes.logo}
-              alt={'Project Challenge Logo'}
+              alt={'Bingo Challengers Logo'}
               src={'/logo/logo.svg'}
               style={{ height: 40, width: 'auto' }}
             />

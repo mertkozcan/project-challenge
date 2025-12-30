@@ -10,6 +10,8 @@ export default defineConfig({
     setupFiles: './vitest.setup.mjs',
   },
   preview: {
-    allowedHosts: ['project-challenge.up.railway.app'],
+    allowedHosts: ['project-challenge.up.railway.app', 'www.bingochallengers.com', 'bingochallengers.com'],
+    host: true,
+    port: Number(process.env.PORT) || 5173,
   },
 });

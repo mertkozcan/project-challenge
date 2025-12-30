@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
         <Group justify="space-between" mb={30} align="flex-end">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
             <Text size="lg" fw={500} c="blue.3" mb={4}>
-              {authenticated ? `Welcome back, ${user?.username || 'Hunter'}` : 'Welcome to Project Challenge'}
+              {authenticated ? `Welcome back, ${user?.username || 'Hunter'}` : 'Welcome to Bingo Challengers'}
             </Text>
             <Title order={1} style={{ fontSize: '3.5rem', letterSpacing: '-2px', lineHeight: 1 }}>
               {authenticated ? 'Ready for your next run?' : 'Master the Challenge.'}
