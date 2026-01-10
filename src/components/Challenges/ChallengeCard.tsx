@@ -15,6 +15,8 @@ interface ChallengeCardProps {
   participantCount?: number;
 }
 
+import { useTranslation } from 'react-i18next';
+
 const ChallengeCard: React.FC<ChallengeCardProps> = ({
   id,
   name,
@@ -26,6 +28,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
   participantCount,
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const getChallengeTypeColor = (type: string) => {
     switch (type) {
@@ -67,7 +70,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
               {name}
             </Text>
             <Badge color={getChallengeTypeColor(type)} variant="light">
-              {type.toUpperCase()}
+              {t(`challenges.${type}`)}
             </Badge>
           </Group>
 

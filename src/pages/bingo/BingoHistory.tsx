@@ -5,9 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { BingoHistoryService, GameHistory } from '@/services/bingo/bingoHistory.service';
 import { useAppSelector } from '@/store';
 
+import { useTranslation } from 'react-i18next';
+
 const BingoHistory: React.FC = () => {
   const navigate = useNavigate();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
+  const { t, i18n } = useTranslation();
   
   const [games, setGames] = useState<GameHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,9 +18,9 @@ const BingoHistory: React.FC = () => {
   // Redirect guests to login
   useEffect(() => {
     if (!userId) {
-      navigate('/sign-in', { state: { message: 'You need to be logged in to view game history.' } });
+      navigate('/sign-in', { state: { message: t('bingo.loginRequiredForHistory') } });
     }
-  }, [userId, navigate]);
+  }, [userId, navigate, t]);
 
   useEffect(() => {
     fetchHistory();
@@ -39,11 +42,11 @@ const BingoHistory: React.FC = () => {
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}m ${secs}s`;
+    return t('common.durationMinutesSeconds', { mins, secs });
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(i18n.language === 'tr' ? 'tr-TR' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -60,11 +63,11 @@ const BingoHistory: React.FC = () => {
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
         <div>
-          <Title order={1}>Game History</Title>
-          <Text c="dimmed">Your completed multiplayer bingo games</Text>
+          <Title order={1}>{t('bingo.gameHistory')}</Title>
+          <Text c="dimmed">{t('bingo.gameHistorySubtitle')}</Text>
         </div>
         <Button onClick={() => navigate('/bingo/rooms')}>
-          Back to Lobby
+          {t('bingo.backToLobby')}
         </Button>
       </Group>
 
@@ -72,9 +75,9 @@ const BingoHistory: React.FC = () => {
         <Card shadow="sm" padding="xl" radius="md" withBorder>
           <Stack align="center" gap="md">
             <IconTrophy size={48} color="gray" />
-            <Text size="lg" c="dimmed">No completed games yet</Text>
-            <Text size="sm" c="dimmed">Play some multiplayer bingo to see your history here!</Text>
-            <Button onClick={() => navigate('/bingo/rooms')}>Find a Game</Button>
+            <Text size="lg" c="dimmed">{t('bingo.noGamesYet')}</Text>
+            <Text size="sm" c="dimmed">{t('bingo.playToSeeHistory')}</Text>
+            <Button onClick={() => navigate('/bingo/rooms')}>{t('bingo.findAGame')}</Button>
           </Stack>
         </Card>
       ) : (
@@ -85,7 +88,7 @@ const BingoHistory: React.FC = () => {
                 <Stack gap="md">
                   <Group justify="space-between">
                     <Text fw={700} size="lg">{game.board_title}</Text>
-                    <Badge color="green">Completed</Badge>
+                    <Badge color="green">{t('dashboard.completed')}</Badge>
                   </Group>
 
                   <Group gap="xs">
@@ -97,7 +100,7 @@ const BingoHistory: React.FC = () => {
                   <Group gap="sm">
                     <Avatar src={game.winner_avatar} size="sm" />
                     <div>
-                      <Text size="xs" c="dimmed">Winner</Text>
+                      <Text size="xs" c="dimmed">{t('bingo.winner')}</Text>
                       <Text size="sm" fw={500}>{game.winner_username}</Text>
                     </div>
                   </Group>
@@ -106,7 +109,7 @@ const BingoHistory: React.FC = () => {
                   <Group justify="space-between">
                     <Group gap="xs">
                       <IconUsers size={16} />
-                      <Text size="sm">{game.participant_count} players</Text>
+                      <Text size="sm">{t('bingo.playersCount', { count: game.participant_count })}</Text>
                     </Group>
                     <Group gap="xs">
                       <IconClock size={16} />
@@ -124,7 +127,7 @@ const BingoHistory: React.FC = () => {
                     variant="light"
                     onClick={() => navigate(`/bingo/history/${game.id}`)}
                   >
-                    View Details
+                    {t('bingo.viewDetails')}
                   </Button>
                 </Stack>
               </Card>

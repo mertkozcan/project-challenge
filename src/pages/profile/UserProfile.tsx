@@ -34,6 +34,8 @@ import AchievementsList from '@/components/Achievements/AchievementsList';
 import TrustBadge from '@/components/Trust/TrustBadge';
 import { useAppSelector } from '@/store';
 
+import { useTranslation } from 'react-i18next';
+
 const UserProfile: React.FC = () => {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -44,6 +46,7 @@ const UserProfile: React.FC = () => {
   const [challenges, setChallenges] = useState<any[]>([]);
   const [bingoBoards, setBingoBoards] = useState<any[]>([]);
   const currentUserId = useAppSelector((state) => state.auth.userInfo.userId);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!username) return;
@@ -72,7 +75,7 @@ const UserProfile: React.FC = () => {
   };
 
   if (loading) return <LoadingOverlay visible={true} />;
-  if (!data) return <Text>User not found</Text>;
+  if (!data) return <Text>{t('profile.userNotFound')}</Text>;
 
   const { profile, stats, rank, recentActivity } = data;
 
@@ -116,7 +119,7 @@ const UserProfile: React.FC = () => {
                 )}
               </Group>
               <Text size="lg" c="dimmed">{profile.email}</Text>
-              <Text size="sm" c="dimmed">Member since {new Date(profile.created_at).toLocaleDateString()}</Text>
+              <Text size="sm" c="dimmed">{t('profile.memberSince', { date: new Date(profile.created_at).toLocaleDateString() })}</Text>
             </Stack>
           </Group>
         </Container>
@@ -125,11 +128,11 @@ const UserProfile: React.FC = () => {
       <Container size="xl">
         <Tabs defaultValue="overview" mb="xl">
           <Tabs.List mb="xl">
-            <Tabs.Tab value="overview">Overview</Tabs.Tab>
-            <Tabs.Tab value="builds">Builds ({builds.length})</Tabs.Tab>
-            <Tabs.Tab value="challenges">Challenges ({challenges.length})</Tabs.Tab>
-            <Tabs.Tab value="bingo">Bingo Boards ({bingoBoards.length})</Tabs.Tab>
-            <Tabs.Tab value="achievements">Achievements & Badges</Tabs.Tab>
+            <Tabs.Tab value="overview">{t('profile.overview')}</Tabs.Tab>
+            <Tabs.Tab value="builds">{t('profile.builds')} ({builds.length})</Tabs.Tab>
+            <Tabs.Tab value="challenges">{t('challenges.title')} ({challenges.length})</Tabs.Tab>
+            <Tabs.Tab value="bingo">{t('dashboard.bingo')} ({bingoBoards.length})</Tabs.Tab>
+            <Tabs.Tab value="achievements">{t('profile.achievementsAndBadges')}</Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="overview">
@@ -140,28 +143,28 @@ const UserProfile: React.FC = () => {
                   {/* Stats Grid */}
                   <SimpleGrid cols={{ base: 2, sm: 4 }}>
                     <StatsCard
-                      label="Total Points"
+                      label={t('profile.totalPoints')}
                       value={stats.total_points}
                       icon={IconStar}
                       color="yellow"
                       delay={0.1}
                     />
                     <StatsCard
-                      label="Challenges"
+                      label={t('challenges.title')}
                       value={stats.completed_challenges}
                       icon={IconTrophy}
                       color="blue"
                       delay={0.2}
                     />
                     <StatsCard
-                      label="Builds"
+                      label={t('profile.builds')}
                       value={stats.created_builds}
                       icon={IconSword}
                       color="red"
                       delay={0.3}
                     />
                     <StatsCard
-                      label="Global Rank"
+                      label={t('profile.globalRank')}
                       value={rank ? `#${rank}` : '-'}
                       icon={IconMedal}
                       color="green"
@@ -172,10 +175,10 @@ const UserProfile: React.FC = () => {
                   {/* Created Builds Showcase */}
                   <Box>
                     <Group justify="space-between" mb="md">
-                      <Title order={3}>Created Builds</Title>
+                      <Title order={3}>{t('profile.createdBuilds')}</Title>
                       {builds.length > 0 && (
                         <Button variant="subtle" rightSection={<IconArrowRight size={16} />} onClick={() => navigate('/builds')}>
-                          View All
+                          {t('dashboard.viewAll')}
                         </Button>
                       )}
                     </Group>
@@ -209,7 +212,7 @@ const UserProfile: React.FC = () => {
                       </SimpleGrid>
                     ) : (
                       <Paper p="xl" withBorder radius="md" ta="center" bg="dark.8">
-                        <Text c="dimmed">No builds created yet.</Text>
+                        <Text c="dimmed">{t('profile.noBuildsFound')}</Text>
                       </Paper>
                     )}
                   </Box>
@@ -219,7 +222,7 @@ const UserProfile: React.FC = () => {
               {/* Right Column: Activity Timeline */}
               <Grid.Col span={{ base: 12, md: 4 }}>
                 <Paper p="xl" radius="md" withBorder>
-                  <Title order={3} mb="xl">Recent Completions</Title>
+                  <Title order={3} mb="xl">{t('profile.recentCompletions')}</Title>
                   <ActivityTimeline activities={activities} />
                 </Paper>
               </Grid.Col>
@@ -268,7 +271,7 @@ const UserProfile: React.FC = () => {
                 </Paper>
               ))}
               {builds.length === 0 && (
-                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>No builds found.</Text>
+                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>{t('profile.noBuildsFound')}</Text>
               )}
             </SimpleGrid>
           </Tabs.Panel>
@@ -313,12 +316,12 @@ const UserProfile: React.FC = () => {
                     {challenge.description}
                   </Text>
                   <Badge color={challenge.type === 'permanent' ? 'blue' : 'green'} variant="dot" mt="sm">
-                    {challenge.type}
+                    {t(`challenges.${challenge.type}`)}
                   </Badge>
                 </Paper>
               ))}
               {challenges.length === 0 && (
-                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>No challenges found.</Text>
+                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>{t('profile.noChallengesFound')}</Text>
               )}
             </SimpleGrid>
           </Tabs.Panel>
@@ -369,7 +372,7 @@ const UserProfile: React.FC = () => {
                 </Paper>
               ))}
               {bingoBoards.length === 0 && (
-                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>No bingo boards found.</Text>
+                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>{t('profile.noBingoBoardsFound')}</Text>
               )}
             </SimpleGrid>
           </Tabs.Panel>

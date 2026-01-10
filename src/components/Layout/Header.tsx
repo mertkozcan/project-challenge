@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import NotificationBell from '@/components/Notifications/NotificationBell';
 import UserLevelDisplay from '@/components/User/UserLevelDisplay';
+import LanguageSwitcher from '@/components/LanguageSwitcher/LanguageSwitcher';
 import { IconSun, IconMoon } from '@tabler/icons-react';
 
 const Header: React.FC = () => {
@@ -22,6 +23,7 @@ const Header: React.FC = () => {
       }}
     >
       <Group justify="flex-end" gap="md">
+        <LanguageSwitcher />
         <ActionIcon
           onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
           variant="filled"

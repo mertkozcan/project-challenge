@@ -13,6 +13,7 @@ import {
 import { useForm } from '@mantine/form';
 import ApiService from '@/services/ApiService';
 import { ChallengesService } from '@/services/challenges/challenges.service';
+import { useTranslation } from 'react-i18next';
 
 interface Game {
   id: number;
@@ -22,6 +23,7 @@ interface Game {
 import { useAppSelector } from '@/store';
 
 const CreateChallenge: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const [games, setGames] = useState<Game[]>([]);
@@ -36,9 +38,9 @@ const CreateChallenge: React.FC = () => {
       type: 'permanent',
     },
     validate: {
-      game_name: (value) => (!value ? 'Game is required' : null),
-      challenge_name: (value) => (!value ? 'Challenge name is required' : null),
-      description: (value) => (!value ? 'Description is required' : null),
+      game_name: (value) => (!value ? t('challenges.gameRequired') : null),
+      challenge_name: (value) => (!value ? t('challenges.nameRequired') : null),
+      description: (value) => (!value ? t('challenges.descRequired') : null),
     },
   });
 
@@ -103,13 +105,13 @@ const CreateChallenge: React.FC = () => {
 
   return (
     <Container size="sm" py="xl">
-      <Title order={2} mb="xl">{id ? 'Edit Challenge' : 'Create Community Challenge'}</Title>
+      <Title order={2} mb="xl">{id ? t('challenges.editChallenge') : t('challenges.createCommunityTitle')}</Title>
 
       <Paper shadow="sm" p="xl" withBorder>
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Select
-            label="Game"
-            placeholder="Select a game"
+            label={t('challenges.game')}
+            placeholder={t('common.search')}
             data={games.map((g) => ({ value: g.name, label: g.name }))}
             required
             {...form.getInputProps('game_name')}
@@ -117,16 +119,16 @@ const CreateChallenge: React.FC = () => {
           />
 
           <TextInput
-            label="Challenge Name"
-            placeholder="e.g., Defeat Malenia without taking damage"
+            label={t('challenges.challengeName')}
+            placeholder={t('challenges.challengeNamePlaceholder')}
             required
             {...form.getInputProps('challenge_name')}
             mb="md"
           />
 
           <Textarea
-            label="Description"
-            placeholder="Describe the challenge..."
+            label={t('challenges.description')}
+            placeholder={t('challenges.descriptionPlaceholder')}
             required
             minRows={4}
             {...form.getInputProps('description')}
@@ -137,10 +139,10 @@ const CreateChallenge: React.FC = () => {
 
           <Group justify="flex-end">
             <Button variant="subtle" onClick={() => navigate('/challenges')}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" loading={loading}>
-              {id ? 'Update Challenge' : 'Create Challenge'}
+              {id ? t('challenges.editChallenge') : t('challenges.createChallenge')}
             </Button>
           </Group>
         </form>

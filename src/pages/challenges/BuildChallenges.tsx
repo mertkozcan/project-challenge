@@ -21,6 +21,7 @@ import { motion } from 'framer-motion';
 import { BuildsService } from '@/services/builds/builds.service';
 import FilterBar from '@/components/Challenges/FilterBar';
 import Pagination from '@/components/Common/Pagination';
+import { useTranslation } from 'react-i18next';
 
 const ITEMS_PER_PAGE = 12;
 
@@ -35,6 +36,7 @@ interface Build {
 }
 
 const BuildChallenges: React.FC = () => {
+  const { t } = useTranslation();
   const [allBuilds, setAllBuilds] = useState<Build[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -124,13 +126,13 @@ const BuildChallenges: React.FC = () => {
           <ThemeIcon size="xl" radius="md" variant="light" color="blue">
             <IconSword size={28} />
           </ThemeIcon>
-          <Title order={1}>Build Challenges</Title>
+          <Title order={1}>{t('builds.title')}</Title>
         </Group>
         <Button
           leftSection={<IconPlus size={16} />}
           onClick={() => {
             if (!localStorage.getItem('auth')) {
-              navigate('/sign-in', { state: { message: 'You need to be logged in to create a build.' } });
+              navigate('/sign-in', { state: { message: t('builds.loginRequiredToCreate') } });
             } else {
               navigate('/builds/create');
             }
@@ -138,7 +140,7 @@ const BuildChallenges: React.FC = () => {
           variant="gradient"
           gradient={{ from: 'blue', to: 'cyan', deg: 45 }}
         >
-          Create Build
+          {t('builds.createBuild')}
         </Button>
       </Group>
 
@@ -154,7 +156,7 @@ const BuildChallenges: React.FC = () => {
               <ThemeIcon size="lg" radius="md" variant="light" color="orange">
                 <IconFlame size={20} />
               </ThemeIcon>
-              <Title order={3}>Featured Builds</Title>
+              <Title order={3}>{t('builds.featuredBuilds')}</Title>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
               {featuredBuilds.map((build) => (
@@ -204,14 +206,14 @@ const BuildChallenges: React.FC = () => {
               <IconStar size={40} />
             </ThemeIcon>
             <Title order={3} c="dimmed">
-              No builds found
+              {t('builds.noBuildsFound')}
             </Title>
             <Text c="dimmed" ta="center">
-              No builds match your filters.
+              {t('builds.noOfficialBuilds')} // Generic fallback
             </Text>
             {(search || gameFilter) && (
               <Button variant="light" onClick={handleClearFilters}>
-                Clear Filters
+                {t('challenges.clearFilters')}
               </Button>
             )}
           </Stack>

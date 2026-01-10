@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import AuthorityCheck from '@/route/AuthorityCheck';
 import { useAppSelector } from '@/store';
 import NotificationDropdown from '@/components/Notifications/NotificationDropdown';
+import LanguageSwitcher from '@/components/LanguageSwitcher/LanguageSwitcher';
 import useAuth from '@/utils/hooks/useAuth';
 import { IconLogin, IconSun, IconMoon } from '@tabler/icons-react';
 import { ActionIcon, useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
@@ -62,6 +63,7 @@ export default function SimpleSideBar() {
   const { setColorScheme } = useMantineColorScheme();
   const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
   const user = useAppSelector((state) => state.auth.userInfo);
+  const { t } = useTranslation();
 
   return (
     <AppShell
@@ -85,6 +87,7 @@ export default function SimpleSideBar() {
             />
           </Group>
           <Group>
+            <LanguageSwitcher />
             <ActionIcon
               onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
               variant="default"
@@ -110,8 +113,8 @@ export default function SimpleSideBar() {
               </Group>
             ) : (
               <Group gap="xs">
-                <Button variant="default" size="xs" onClick={() => navigate('/sign-in')}>Sign In</Button>
-                <Button size="xs" onClick={() => navigate('/sign-up')}>Sign Up</Button>
+                <Button variant="default" size="xs" onClick={() => navigate('/sign-in')}>{t('nav.admin') === 'Admin Panel' ? 'Sign In' : 'Giriş Yap'}</Button>
+                <Button size="xs" onClick={() => navigate('/sign-up')}>{t('nav.admin') === 'Admin Panel' ? 'Sign Up' : 'Kayıt Ol'}</Button>
               </Group>
             )}
           </Group>
@@ -128,7 +131,7 @@ export default function SimpleSideBar() {
           ) : (
             <div className={classes.link} onClick={() => navigate('/sign-in')} style={{ cursor: 'pointer' }}>
               <IconLogin className={classes.linkIcon} stroke={1.5} />
-              <span>Sign In</span>
+              <span>{t('nav.admin') === 'Admin Panel' ? 'Sign In' : 'Giriş Yap'}</span>
             </div>
           )}
         </AppShell.Section>

@@ -9,6 +9,7 @@ import { notifications } from '@mantine/notifications';
 import ApiService from '@/services/ApiService';
 import TrustBadge from '@/components/Trust/TrustBadge';
 import { useAppSelector } from '@/store';
+import { useTranslation } from 'react-i18next';
 
 interface Proof {
   id: number;
@@ -25,6 +26,7 @@ interface Proof {
 }
 
 const ProofReview: React.FC = () => {
+  const { t } = useTranslation();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
   const [proofs, setProofs] = useState<Proof[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,8 +44,8 @@ const ProofReview: React.FC = () => {
     } catch (error) {
       console.error('Error fetching proofs:', error);
       notifications.show({
-        title: 'Error',
-        message: 'Failed to load pending proofs',
+        title: t('common.error'),
+        message: t('proof.loadPendingError'),
         color: 'red'
       });
     } finally {
@@ -65,8 +67,8 @@ const ProofReview: React.FC = () => {
       });
 
       notifications.show({
-        title: 'Review Submitted',
-        message: `Proof ${decision === 'APPROVE' ? 'approved' : 'rejected'} successfully`,
+        title: t('proof.reviewSubmitted'),
+        message: t('proof.reviewSuccess', { decision: decision === 'APPROVE' ? t('common.approved') : t('common.rejected') }),
         color: decision === 'APPROVE' ? 'green' : 'red'
       });
 
@@ -76,8 +78,8 @@ const ProofReview: React.FC = () => {
     } catch (error) {
       console.error('Error submitting review:', error);
       notifications.show({
-        title: 'Error',
-        message: 'Failed to submit review',
+        title: t('common.error'),
+        message: t('proof.submitReviewError'),
         color: 'red'
       });
     } finally {
@@ -90,7 +92,7 @@ const ProofReview: React.FC = () => {
       <Container size="lg" py="xl">
         <Stack align="center">
           <Loader size="lg" />
-          <Text>Loading proofs for review...</Text>
+          <Text>{t('proof.loadingForReview')}</Text>
         </Stack>
       </Container>
     );
@@ -98,11 +100,11 @@ const ProofReview: React.FC = () => {
 
   return (
     <Container size="lg" py="xl">
-      <Title order={2} mb="xl">Community Review</Title>
+      <Title order={2} mb="xl">{t('proof.communityReview')}</Title>
 
       {proofs.length === 0 ? (
-        <Alert icon={<IconCheck size={16} />} title="All caught up!" color="green" variant="light">
-          There are no pending proofs to review at the moment. Great job!
+        <Alert icon={<IconCheck size={16} />} title={t('proof.allCaughtUp')} color="green" variant="light">
+          {t('proof.noPendingProofs')}
         </Alert>
       ) : (
         <Grid>
@@ -127,23 +129,23 @@ const ProofReview: React.FC = () => {
                   <Text fw={700} size="lg">{proof.challenge_title}</Text>
                   
                   <Group gap="xs">
-                    <Text size="sm" c="dimmed">Uploader:</Text>
+                    <Text size="sm" c="dimmed">{t('proof.uploader')}:</Text>
                     <Text size="sm" fw={500}>{proof.uploader_name}</Text>
                   </Group>
 
                   <Divider my="xs" />
 
-                  <Text size="sm" fw={600}>Verification Checklist:</Text>
+                  <Text size="sm" fw={600}>{t('proof.verificationChecklist')}:</Text>
                   <Group gap="xs">
                     <IconEye size={16} color="gray" />
-                    <Text size="sm">Character Name: <strong>{proof.display_username}</strong></Text>
+                    <Text size="sm">{t('proof.characterName')}: <strong>{proof.display_username}</strong></Text>
                   </Group>
 
                   {proof.video_url && (
                     <Group gap="xs">
                       <IconVideo size={16} color="blue" />
                       <Text size="sm">
-                        Video Proof: <a href={proof.video_url} target="_blank" rel="noopener noreferrer" style={{ color: '#228be6' }}>Watch Video</a>
+                        {t('proof.videoProof')}: <a href={proof.video_url} target="_blank" rel="noopener noreferrer" style={{ color: '#228be6' }}>{t('common.watchVideo')}</a>
                       </Text>
                     </Group>
                   )}
@@ -152,20 +154,20 @@ const ProofReview: React.FC = () => {
                     <Alert 
                       variant="light" 
                       color={proof.ocr_result === 'VERIFIED' ? 'green' : 'orange'} 
-                      title="OCR Analysis"
+                      title={t('proof.ocrAnalysis')}
                       icon={proof.ocr_result === 'VERIFIED' ? <IconCheck size={14} /> : <IconAlertTriangle size={14} />}
                       py="xs"
                     >
                       <Text size="xs">
                         {proof.ocr_result === 'VERIFIED' 
-                          ? 'Username detected in screenshot' 
-                          : 'Username NOT detected automatically'}
+                          ? t('proof.usernameDetectedInScreenshot') 
+                          : t('proof.usernameNotDetectedInScreenshot')}
                       </Text>
                     </Alert>
                   )}
 
                   <Textarea
-                    placeholder="Optional comment..."
+                    placeholder={t('common.optionalComment')}
                     value={comment}
                     onChange={(e) => setComment(e.currentTarget.value)}
                     minRows={2}
@@ -180,7 +182,7 @@ const ProofReview: React.FC = () => {
                       loading={submitting === proof.id}
                       onClick={() => handleReview(proof.id, 'REJECT')}
                     >
-                      Reject
+                      {t('common.reject')}
                     </Button>
                     <Button 
                       color="green" 
@@ -188,7 +190,7 @@ const ProofReview: React.FC = () => {
                       loading={submitting === proof.id}
                       onClick={() => handleReview(proof.id, 'APPROVE')}
                     >
-                      Approve
+                      {t('common.approve')}
                     </Button>
                   </Group>
                 </Stack>

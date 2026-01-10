@@ -8,8 +8,10 @@ import { IconX } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
 import BuildEditor, { BuildSlots } from '@/components/Builds/BuildEditor';
 import { notifications } from '@mantine/notifications';
+import { useTranslation } from 'react-i18next';
 
 const CreateBuild: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -45,8 +47,8 @@ const CreateBuild: React.FC = () => {
     },
 
     validate: {
-      game_name: (value) => (value ? null : 'Game is required'),
-      build_name: (value) => (value ? null : 'Build name is required'),
+      game_name: (value) => (value ? null : t('builds.gameRequired')),
+      build_name: (value) => (value ? null : t('builds.nameRequired')),
     },
   });
 
@@ -87,7 +89,7 @@ const CreateBuild: React.FC = () => {
 
   const handleBuildSave = async (slots: BuildSlots) => {
     if (!form.values.build_name) {
-      setError('Please enter a build name');
+      setError(t('builds.nameRequired'));
       return;
     }
 
@@ -101,21 +103,21 @@ const CreateBuild: React.FC = () => {
           ...form.values,
           items_json: slots,
         });
-        notifications.show({ title: 'Success', message: 'Build updated successfully', color: 'green' });
+        notifications.show({ title: t('common.success'), message: t('builds.buildUpdated'), color: 'green' });
       } else {
         if (source === 'admin') {
             await AdminService.createOfficialBuild({
                 ...form.values,
                 items_json: slots,
             }, userId);
-            notifications.show({ title: 'Success', message: 'Official Build created successfully', color: 'green' });
+            notifications.show({ title: t('common.success'), message: t('admin.builds.management'), color: 'green' }); // or buildCreated
         } else {
             await BuildsService.createBuild({
                 ...form.values,
                 user_id: userId,
                 items_json: slots,
             });
-            notifications.show({ title: 'Success', message: 'Build created successfully', color: 'green' });
+            notifications.show({ title: t('common.success'), message: t('builds.buildCreated'), color: 'green' });
         }
       }
       
@@ -126,7 +128,7 @@ const CreateBuild: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || 'Failed to save build');
-      notifications.show({ title: 'Error', message: 'Failed to save build', color: 'red' });
+      notifications.show({ title: t('common.error'), message: t('common.error'), color: 'red' });
     } finally {
       setLoading(false);
     }
@@ -134,7 +136,7 @@ const CreateBuild: React.FC = () => {
 
   return (
     <Container size="xl" py="xl">
-      <Title order={2} mb="xl">{id ? 'Edit Build' : 'Create New Build'}</Title>
+      <Title order={2} mb="xl">{id ? t('builds.editBuild') : t('builds.createNewBuild')}</Title>
 
       {error && (
         <Notification icon={<IconX size="1.1rem" />} color="red" title="Error" mb="md" onClose={() => setError(null)}>
@@ -143,12 +145,12 @@ const CreateBuild: React.FC = () => {
       )}
 
       <Select
-        label="Game"
-        placeholder="Select a game"
+        label={t('builds.game')}
+        placeholder={t('common.search')}
         data={['Elden Ring']}
         value="Elden Ring"
         disabled
-        description="Currently only Elden Ring is supported for build creation."
+        description={t('builds.gameSelectionDesc')}
         required
         {...form.getInputProps('game_name')}
         mb="md"
@@ -156,14 +158,14 @@ const CreateBuild: React.FC = () => {
 
       <TextInput
         withAsterisk
-        label="Build Name"
+        label={t('builds.buildName')}
         placeholder="Bleed Build, Tank, etc."
         {...form.getInputProps('build_name')}
         mb="md"
       />
 
       <Textarea
-        label="Description"
+        label={t('builds.description')}
         placeholder="Describe your build strategy..."
         minRows={3}
         {...form.getInputProps('description')}
@@ -171,9 +173,9 @@ const CreateBuild: React.FC = () => {
       />
 
       <TextInput
-        label="Video URL (Optional)"
-        placeholder="YouTube or Twitch video URL"
-        description="Add a video showcasing your build in action"
+        label={t('builds.videoUrl')}
+        placeholder="https://..."
+        description={t('builds.videoUrlDesc')}
         {...form.getInputProps('video_url')}
         mb="xl"
       />

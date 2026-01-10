@@ -24,8 +24,10 @@ import { IconDeviceGamepad2, IconGridDots, IconWand, IconTrash, IconCheck } from
 import { BingoService } from '@/services/bingo/bingo.service';
 import { notifications } from '@mantine/notifications';
 import { useAppSelector } from '@/store';
+import { useTranslation } from 'react-i18next';
 
 const CreateBingo = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -45,9 +47,9 @@ const CreateBingo = () => {
       theme: 'Standard', // Standard, Elden Ring, Dark, etc.
     },
     validate: {
-      game_name: (value) => (value ? null : 'Game is required'),
-      title: (value) => (value ? null : 'Title is required'),
-      description: (value) => (value ? null : 'Description is required'),
+      game_name: (value) => (value ? null : t('challenges.gameRequired')),
+      title: (value) => (value ? null : t('bingo.titleRequired')),
+      description: (value) => (value ? null : t('challenges.descRequired')),
     },
   });
 
@@ -137,8 +139,8 @@ const CreateBingo = () => {
   const handleAutoFill = async () => {
     if (!form.values.game_name) {
       notifications.show({
-        title: 'Error',
-        message: 'Please select a game first',
+        title: t('common.error'),
+        message: t('bingo.selectGameFirst'),
         color: 'red',
       });
       return;
@@ -158,15 +160,15 @@ const CreateBingo = () => {
       setTasks(newTasks);
       
       notifications.show({
-        title: 'Success',
-        message: 'Board auto-filled with random tasks!',
+        title: t('common.success'),
+        message: t('bingo.autoFillSuccess'),
         color: 'green',
       });
     } catch (error) {
       console.error(error);
       notifications.show({
-        title: 'Error',
-        message: 'Failed to fetch random tasks',
+        title: t('common.error'),
+        message: t('bingo.autoFillError'),
         color: 'red',
       });
     } finally {
@@ -177,8 +179,8 @@ const CreateBingo = () => {
   const handleSubmit = async () => {
     if (tasks.some(t => !t.trim())) {
         notifications.show({
-            title: 'Error',
-            message: 'Please fill all cells before creating the board.',
+            title: t('common.error'),
+            message: t('bingo.fillAllCells'),
             color: 'red'
         });
         return;
@@ -198,8 +200,8 @@ const CreateBingo = () => {
             cells,
         });
         notifications.show({
-            title: 'Success',
-            message: 'Bingo board updated successfully!',
+            title: t('common.success'),
+            message: t('bingo.boardUpdated'),
             color: 'green',
           });
       } else {
@@ -210,8 +212,8 @@ const CreateBingo = () => {
             is_official: source === 'admin'
         });
         notifications.show({
-            title: 'Success',
-            message: 'Bingo board created successfully!',
+            title: t('common.success'),
+            message: t('bingo.boardCreated'),
             color: 'green',
           });
       }
@@ -224,8 +226,8 @@ const CreateBingo = () => {
     } catch (error) {
       console.error(error);
       notifications.show({
-        title: 'Error',
-        message: 'Failed to save bingo board',
+        title: t('common.error'),
+        message: t('bingo.saveError'),
         color: 'red',
       });
     } finally {
@@ -235,31 +237,31 @@ const CreateBingo = () => {
 
   return (
     <Container size="lg" py="xl">
-      <Title order={2} mb="xl">{id ? 'Edit Bingo Board' : 'Create New Bingo Board'}</Title>
+      <Title order={2} mb="xl">{id ? t('bingo.editBoard') : t('bingo.createNewBoard')}</Title>
 
       <Stepper active={active} onStepClick={setActive}>
-        <Stepper.Step label="Setup" description="Board details">
+        <Stepper.Step label={t('bingo.setup')} description={t('bingo.boardDetails')}>
           <Paper withBorder p="xl" radius="md" mt="xl">
             <Stack gap="md">
               <Select
-                label="Game"
-                placeholder="Select game"
+                label={t('challenges.game')}
+                placeholder={t('common.search')}
                 data={games.map(g => g.name)}
                 {...form.getInputProps('game_name')}
               />
               <TextInput
-                label="Title"
+                label={t('common.title')}
                 placeholder="e.g. No Hit Run Bingo"
                 {...form.getInputProps('title')}
               />
               <Textarea
-                label="Description"
-                placeholder="Describe the rules..."
+                label={t('challenges.description')}
+                placeholder={t('challenges.descriptionPlaceholder')}
                 {...form.getInputProps('description')}
               />
               <Group grow>
                 <Select
-                    label="Size"
+                    label={t('bingo.size')}
                     data={[
                         { value: '3', label: '3x3 (Quick)' },
                         { value: '4', label: '4x4 (Standard)' },
@@ -269,7 +271,7 @@ const CreateBingo = () => {
                     onChange={(val) => form.setFieldValue('size', parseInt(val || '5'))}
                 />
                 <Select
-                    label="Type"
+                    label={t('common.type')}
                     data={[
                         { value: 'Normal', label: 'Normal' },
                         { value: 'Lockout', label: 'Lockout' },
@@ -278,7 +280,7 @@ const CreateBingo = () => {
                     {...form.getInputProps('type')}
                 />
                  <Select
-                    label="Theme"
+                    label={t('common.theme')}
                     data={[
                         { value: 'Standard', label: 'Standard' },
                         { value: 'Elden Ring', label: 'Elden Ring' },
@@ -291,14 +293,14 @@ const CreateBingo = () => {
           </Paper>
         </Stepper.Step>
 
-        <Stepper.Step label="Grid" description="Fill tasks">
+        <Stepper.Step label={t('bingo.grid')} description={t('bingo.fillTasks')}>
           <Paper withBorder p="xl" radius="md" mt="xl" pos="relative">
             <LoadingOverlay visible={loading} />
             
             <Group justify="space-between" mb="md">
                 <Group>
                     <ThemeIcon variant="light" size="lg"><IconGridDots size={20}/></ThemeIcon>
-                    <Text fw={700}>Board Editor ({form.values.size}x{form.values.size})</Text>
+                    <Text fw={700}>{t('bingo.boardEditor')} ({form.values.size}x{form.values.size})</Text>
                 </Group>
                 <Group>
                     <Button 
@@ -307,14 +309,14 @@ const CreateBingo = () => {
                         color="red"
                         onClick={() => setTasks(Array(form.values.size * form.values.size).fill(''))}
                     >
-                        Clear
+                        {t('common.clear')}
                     </Button>
                     <Button 
                         variant="light" 
                         leftSection={<IconWand size={16} />} 
                         onClick={handleAutoFill}
                     >
-                        Auto-fill
+                        {t('bingo.autoFill')}
                     </Button>
                 </Group>
             </Group>
@@ -323,7 +325,7 @@ const CreateBingo = () => {
               {tasks.map((task, index) => (
                 <Textarea
                   key={index}
-                  placeholder={`Task ${index + 1}`}
+                  placeholder={`${t('bingo.task')} ${index + 1}`}
                   value={task}
                   onChange={(e) => handleTaskChange(index, e.currentTarget.value)}
                   minRows={2}
@@ -341,12 +343,12 @@ const CreateBingo = () => {
             <ThemeIcon size={60} radius="xl" color="green" mb="md">
                 <IconCheck size={32} />
             </ThemeIcon>
-            <Title order={3} mb="sm">Ready to {id ? 'Update' : 'Create'}!</Title>
+            <Title order={3} mb="sm">{id ? t('common.readyToUpdate') : t('common.readyToCreate')}</Title>
             <Text c="dimmed" mb="xl">
-                You are about to {id ? 'update' : 'create'} a {form.values.size}x{form.values.size} {form.values.type} bingo board for {form.values.game_name}.
+                {id ? t('bingo.updateBoardPrompt', { size: `${form.values.size}x${form.values.size}`, type: form.values.type, game: form.values.game_name }) : t('bingo.createBoardPrompt', { size: `${form.values.size}x${form.values.size}`, type: form.values.type, game: form.values.game_name })}
             </Text>
             <Button size="lg" onClick={handleSubmit} loading={loading}>
-                {id ? 'Update Board' : 'Create Board'}
+                {id ? t('bingo.updateBoard') : t('bingo.createBoard')}
             </Button>
           </Paper>
         </Stepper.Completed>
@@ -354,10 +356,10 @@ const CreateBingo = () => {
 
       <Group justify="center" mt="xl">
         {active > 0 && active < 2 && (
-            <Button variant="default" onClick={handlePrevStep}>Back</Button>
+            <Button variant="default" onClick={handlePrevStep}>{t('common.back')}</Button>
         )}
         {active < 2 && (
-            <Button onClick={handleNextStep}>Next step</Button>
+            <Button onClick={handleNextStep}>{t('common.nextStep')}</Button>
         )}
       </Group>
     </Container>

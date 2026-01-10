@@ -9,8 +9,10 @@ import { useAppSelector } from '@/store';
 import SocketService from '@/services/socket.service';
 
 import InviteFriendModal from '@/components/Bingo/InviteFriendModal';
+import { useTranslation } from 'react-i18next';
 
 const BingoWaitingRoom: React.FC = () => {
+  const { t } = useTranslation();
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -110,7 +112,7 @@ const BingoWaitingRoom: React.FC = () => {
       console.log('Start game event emitted');
     } catch (error) {
       console.error('Error starting game:', error);
-      alert('Failed to start game. Make sure all players are ready.');
+      alert(t('bingo.startGameFailed'));
     }
   };
 
@@ -143,24 +145,24 @@ const BingoWaitingRoom: React.FC = () => {
           <Text c="dimmed">{room?.game_name}</Text>
         </div>
         <Group>
-          <Badge size="lg" color="yellow">Waiting</Badge>
+          <Badge size="lg" color="yellow">{t('common.waiting')}</Badge>
           <Button 
             variant="light" 
             color="red" 
             leftSection={<IconDoorExit size={16} />}
             onClick={handleLeaveRoom}
           >
-            Leave Room
+            {t('bingo.leaveRoom')}
           </Button>
         </Group>
       </Group>
 
       {/* Room Info */}
-      <Alert icon={<IconAlertCircle size={16} />} title="Waiting for players" color="blue" mb="xl">
-        {participants.length}/{room?.max_players} players joined. 
-        {!allReady && ' Not all players are ready yet.'}
-        {allReady && participants.length < 2 && ' Waiting for more players...'}
-        {canStart && ' All players ready! Host can start the game.'}
+      <Alert icon={<IconAlertCircle size={16} />} title={t('bingo.waitingForPlayers')} color="blue" mb="xl">
+        {t('bingo.playersJoined', { count: participants.length, max: room?.max_players })}
+        {!allReady && ` ${t('bingo.notAllReady')}`}
+        {allReady && participants.length < 2 && ` ${t('bingo.waitingForMore')}`}
+        {canStart && ` ${t('bingo.allReadyStart')}`}
       </Alert>
 
       <Grid>
@@ -171,7 +173,7 @@ const BingoWaitingRoom: React.FC = () => {
               <Title order={3}>
                 <Group gap="xs">
                   <IconUsers size={24} />
-                  Players ({participants.length}/{room?.max_players})
+                  {t('bingo.players')} ({participants.length}/{room?.max_players})
                 </Group>
               </Title>
               {isHost && (
@@ -180,7 +182,7 @@ const BingoWaitingRoom: React.FC = () => {
                   variant="light"
                   onClick={() => setInviteModalOpen(true)}
                 >
-                  Invite Friends
+                  {t('bingo.inviteFriends')}
                 </Button>
               )}
             </Group>
@@ -194,11 +196,11 @@ const BingoWaitingRoom: React.FC = () => {
                       <div>
                         <Text fw={500}>
                           {participant.username}
-                          {participant.user_id === userId && ' (You)'}
+                          {participant.user_id === userId && ` (${t('common.you')})`}
                           {participant.user_id === room?.host_user_id && ' 👑'}
                         </Text>
                         <Text size="xs" c="dimmed">
-                          {participant.user_id === room?.host_user_id ? 'Host' : 'Player'}
+                          {participant.user_id === room?.host_user_id ? t('bingo.host') : t('bingo.player')}
                         </Text>
                       </div>
                     </Group>
@@ -206,7 +208,7 @@ const BingoWaitingRoom: React.FC = () => {
                       color={participant.is_ready ? 'green' : 'gray'}
                       leftSection={participant.is_ready ? <IconCheck size={14} /> : <IconX size={14} />}
                     >
-                      {participant.is_ready ? 'Ready' : 'Not Ready'}
+                      {participant.is_ready ? t('common.ready') : t('common.notReady')}
                     </Badge>
                   </Group>
                 </Paper>
@@ -219,7 +221,7 @@ const BingoWaitingRoom: React.FC = () => {
         <Grid.Col span={{ base: 12, md: 4 }}>
           <Stack gap="md">
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Title order={4} mb="md">Your Status</Title>
+              <Title order={4} mb="md">{t('bingo.yourStatus')}</Title>
               <Button
                 fullWidth
                 variant={myParticipant?.is_ready ? 'filled' : 'light'}
@@ -227,13 +229,13 @@ const BingoWaitingRoom: React.FC = () => {
                 leftSection={myParticipant?.is_ready ? <IconCheck size={16} /> : <IconX size={16} />}
                 onClick={handleToggleReady}
               >
-                {myParticipant?.is_ready ? 'Ready!' : 'Mark as Ready'}
+                {myParticipant?.is_ready ? t('common.ready') : t('bingo.markAsReady')}
               </Button>
             </Card>
 
             {isHost && (
               <Card shadow="sm" padding="lg" radius="md" withBorder>
-                <Title order={4} mb="md">Host Controls</Title>
+                <Title order={4} mb="md">{t('bingo.hostControls')}</Title>
                 <Button
                   fullWidth
                   color="green"
@@ -241,22 +243,22 @@ const BingoWaitingRoom: React.FC = () => {
                   disabled={!canStart}
                   onClick={handleStartGame}
                 >
-                  Start Game
+                  {t('bingo.startGame')}
                 </Button>
                 {!canStart && (
                   <Text size="xs" c="dimmed" mt="xs" ta="center">
-                    {!allReady ? 'All players must be ready' : 'Need at least 2 players'}
+                    {!allReady ? t('bingo.allMustBeReady') : t('bingo.needTwoPlayers')}
                   </Text>
                 )}
               </Card>
             )}
 
             <Card shadow="sm" padding="lg" radius="md" withBorder>
-              <Title order={4} mb="md">Game Rules</Title>
+              <Title order={4} mb="md">{t('bingo.gameRules')}</Title>
               <Stack gap="xs">
-                <Text size="sm">• Complete tasks to fill cells</Text>
-                <Text size="sm">• First to complete a row or column wins</Text>
-                <Text size="sm">• All players must be ready to start</Text>
+                <Text size="sm">• {t('bingo.rulesCompleteTasks')}</Text>
+                <Text size="sm">• {t('bingo.rulesFirstWins')}</Text>
+                <Text size="sm">• {t('bingo.rulesAllMustBeReady')}</Text>
               </Stack>
             </Card>
           </Stack>

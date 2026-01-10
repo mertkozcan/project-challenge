@@ -26,6 +26,7 @@ import BuildComments from '@/components/Builds/BuildComments';
 import BuildRatingService from '@/services/buildRating.service';
 import ItemTooltip from '@/components/Builds/ItemTooltip';
 import EldenRingBuildView from '@/components/Builds/EldenRingBuildView';
+import { useTranslation } from 'react-i18next';
 
 interface BuildData extends Build {
   banner_url?: string;
@@ -36,6 +37,7 @@ interface BuildData extends Build {
 }
 
 const BuildDetail: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [build, setBuild] = useState<BuildData | null>(null);
@@ -78,7 +80,7 @@ const BuildDetail: React.FC = () => {
   };
 
   if (loading) return <LoadingOverlay visible={true} />;
-  if (!build) return <Text>Build not found</Text>;
+  if (!build) return <Text>{t('profile.userNotFound')}</Text>; // or builds.buildNotFound
 
   const theme = getGameTheme(build.game_name);
 
@@ -102,7 +104,7 @@ const BuildDetail: React.FC = () => {
           onClick={() => navigate('/builds')}
           mb="md"
         >
-          Back to Builds
+          {t('builds.backToBuilds')}
         </Button>
       </Container>
 
@@ -134,7 +136,7 @@ const BuildDetail: React.FC = () => {
                 }}
               >
                 <Title order={3} mb="md" c={theme.primary}>
-                  About This Build
+                  {t('builds.aboutThisBuild')}
                 </Title>
                 <Text size="lg" style={{ lineHeight: 1.8 }}>
                   {build.description}
@@ -153,7 +155,7 @@ const BuildDetail: React.FC = () => {
                   }}
                 >
                   <Title order={3} mb="md" c={theme.primary}>
-                    Video Showcase
+                    {t('builds.videoShowcase')}
                   </Title>
                   <Box style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '8px' }}>
                     <iframe
@@ -195,7 +197,7 @@ const BuildDetail: React.FC = () => {
                     }}
                   >
                     <Title order={3} mb="xl" c={theme.primary}>
-                      Equipment & Items
+                      {t('builds.equipmentAndItems')}
                     </Title>
                     <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                       {Object.entries(items).map(([key, value]: [string, any]) => {
@@ -333,12 +335,12 @@ const BuildDetail: React.FC = () => {
                 }}
               >
                 <Title order={4} mb="xl" c={theme.primary}>
-                  Build Statistics
+                  {t('builds.buildStatistics')}
                 </Title>
                 <Stack gap="md">
                   <Box>
                     <Text size="sm" c="dimmed" mb="xs">
-                      Creator
+                      {t('builds.creator')}
                     </Text>
                     <Text size="lg" fw={600}>
                       {build.username}
@@ -346,7 +348,7 @@ const BuildDetail: React.FC = () => {
                   </Box>
                   <Box>
                     <Text size="sm" c="dimmed" mb="xs">
-                      Game
+                      {t('builds.game')}
                     </Text>
                     <Text size="lg" fw={600}>
                       {build.game_name}
@@ -354,19 +356,19 @@ const BuildDetail: React.FC = () => {
                   </Box>
                   <Box>
                     <Text size="sm" c="dimmed" mb="xs">
-                      Type
+                      {t('builds.type')}
                     </Text>
                     <Badge
                       size="lg"
                       color={build.is_official ? 'yellow' : 'blue'}
                       variant="filled"
                     >
-                      {build.is_official ? 'Official' : 'Community'}
+                      {build.is_official ? t('builds.official') : t('builds.community')}
                     </Badge>
                   </Box>
                   <Box>
                     <Text size="sm" c="dimmed" mb="xs">
-                      Created
+                      {t('builds.created')}
                     </Text>
                     <Text size="md">
                       {new Date(build.created_at).toLocaleDateString()}
@@ -387,7 +389,7 @@ const BuildDetail: React.FC = () => {
                   }}
                 >
                   <Title order={4} mb="xl" c={theme.primary}>
-                    Character Attributes
+                    {t('builds.characterAttributes')}
                   </Title>
                   
                   {items.startingClass && (
@@ -406,39 +408,39 @@ const BuildDetail: React.FC = () => {
 
                   <SimpleGrid cols={2} spacing="xs">
                     <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
-                      <Text size="xs" c="dimmed">Level</Text>
+                      <Text size="xs" c="dimmed">{t('builds.stats.level')}</Text>
                       <Text fw={700}>{items.stats.level}</Text>
                     </Box>
                     <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
-                      <Text size="xs" c="dimmed">Vigor</Text>
+                      <Text size="xs" c="dimmed">{t('builds.stats.vigor')}</Text>
                       <Text fw={700}>{items.stats.vigor}</Text>
                     </Box>
                     <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
-                      <Text size="xs" c="dimmed">Mind</Text>
+                      <Text size="xs" c="dimmed">{t('builds.stats.mind')}</Text>
                       <Text fw={700}>{items.stats.mind}</Text>
                     </Box>
                     <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
-                      <Text size="xs" c="dimmed">Endurance</Text>
+                      <Text size="xs" c="dimmed">{t('builds.stats.endurance')}</Text>
                       <Text fw={700}>{items.stats.endurance}</Text>
                     </Box>
                     <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
-                      <Text size="xs" c="dimmed">Strength</Text>
+                      <Text size="xs" c="dimmed">{t('builds.stats.strength')}</Text>
                       <Text fw={700}>{items.stats.strength}</Text>
                     </Box>
                     <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
-                      <Text size="xs" c="dimmed">Dexterity</Text>
+                      <Text size="xs" c="dimmed">{t('builds.stats.dexterity')}</Text>
                       <Text fw={700}>{items.stats.dexterity}</Text>
                     </Box>
                     <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
-                      <Text size="xs" c="dimmed">Intelligence</Text>
+                      <Text size="xs" c="dimmed">{t('builds.stats.intelligence')}</Text>
                       <Text fw={700}>{items.stats.intelligence}</Text>
                     </Box>
                     <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
-                      <Text size="xs" c="dimmed">Faith</Text>
+                      <Text size="xs" c="dimmed">{t('builds.stats.faith')}</Text>
                       <Text fw={700}>{items.stats.faith}</Text>
                     </Box>
                     <Box p="xs" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
-                      <Text size="xs" c="dimmed">Arcane</Text>
+                      <Text size="xs" c="dimmed">{t('builds.stats.arcane')}</Text>
                       <Text fw={700}>{items.stats.arcane}</Text>
                     </Box>
                   </SimpleGrid>

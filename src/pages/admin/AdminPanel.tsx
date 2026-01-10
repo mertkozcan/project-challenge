@@ -34,8 +34,10 @@ import { Challenge } from '@/@types/challenge';
 import { Build } from '@/@types/build';
 import { IconPlus, IconTrash, IconDeviceGamepad2, IconFileCheck, IconCheck, IconX, IconTarget, IconSword, IconGridDots, IconEdit } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
+import { useTranslation } from 'react-i18next';
 
 const AdminPanel: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string | null>('games');
   const [games, setGames] = useState<Game[]>([]);
   const [challenges, setChallenges] = useState<Challenge[]>([]);
@@ -99,7 +101,7 @@ const AdminPanel: React.FC = () => {
         type: 'Standard'
     },
     validate: {
-        task: (value) => (value.length < 3 ? 'Task must be at least 3 characters' : null),
+        task: (value) => (value.length < 3 ? t('admin.taskMinLength') : null),
     }
   });
 
@@ -184,7 +186,7 @@ const AdminPanel: React.FC = () => {
 
   const handleDeleteGame = async (id: number) => {
     if (!userId) return;
-    if (!confirm('Are you sure?')) return;
+    if (!confirm(t('common.areYouSure'))) return;
     try {
       await AdminService.deleteGame(id, userId);
       fetchGames();
@@ -203,7 +205,7 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleRejectProof = async (proofId: number) => {
-    if (!confirm('Are you sure you want to reject this proof?')) return;
+    if (!confirm(t('admin.rejectProofConfirm'))) return;
     try {
       await ProofService.rejectProof(proofId);
       fetchProofs();
@@ -217,10 +219,10 @@ const AdminPanel: React.FC = () => {
     try {
       if (editingChallenge) {
         await ChallengesService.updateChallenge(editingChallenge.id.toString(), values as any);
-        notifications.show({ title: 'Success', message: 'Challenge updated successfully', color: 'green' });
+        notifications.show({ title: t('common.success'), message: t('admin.challengeUpdated'), color: 'green' });
       } else {
         await AdminService.createOfficialChallenge(values, userId);
-        notifications.show({ title: 'Success', message: 'Challenge created successfully', color: 'green' });
+        notifications.show({ title: t('common.success'), message: t('admin.challengeCreated'), color: 'green' });
       }
       setChallengeModalOpened(false);
       setEditingChallenge(null);
@@ -228,12 +230,12 @@ const AdminPanel: React.FC = () => {
       fetchChallenges();
     } catch (error) {
       console.error('Failed to save challenge', error);
-      notifications.show({ title: 'Error', message: 'Failed to save challenge', color: 'red' });
+      notifications.show({ title: t('common.error'), message: t('admin.saveChallengeError'), color: 'red' });
     }
   };
 
   const handleDeleteChallenge = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this challenge?')) {
+    if (window.confirm(t('admin.deleteChallengeConfirm'))) {
       try {
         await ChallengesService.deleteChallenge(id);
         fetchChallenges();
@@ -264,7 +266,7 @@ const AdminPanel: React.FC = () => {
 
 
   const handleDeleteBuild = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this build? This action cannot be undone.')) return;
+    if (!confirm(t('admin.deleteBuildConfirm'))) return;
     try {
       await BuildsService.deleteBuild(id);
       fetchBuilds();
@@ -276,23 +278,23 @@ const AdminPanel: React.FC = () => {
   const handleAddTask = async (values: typeof taskForm.values) => {
     try {
         await BingoService.createTask(values);
-        notifications.show({ title: 'Success', message: 'Task added successfully', color: 'green' });
+        notifications.show({ title: t('common.success'), message: t('admin.taskAdded'), color: 'green' });
         closeNewTask();
         taskForm.reset();
         fetchBingoTasks();
     } catch (error) {
-        notifications.show({ title: 'Error', message: 'Failed to add task', color: 'red' });
+        notifications.show({ title: t('common.error'), message: t('admin.addTaskError'), color: 'red' });
     }
   };
 
   const handleDeleteTask = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    if (!window.confirm(t('admin.deleteTaskConfirm'))) return;
     try {
         await BingoService.deleteTask(id);
-        notifications.show({ title: 'Success', message: 'Task deleted successfully', color: 'green' });
+        notifications.show({ title: t('common.success'), message: t('admin.taskDeleted'), color: 'green' });
         fetchBingoTasks();
     } catch (error) {
-        notifications.show({ title: 'Error', message: 'Failed to delete task', color: 'red' });
+        notifications.show({ title: t('common.error'), message: t('admin.deleteTaskError'), color: 'red' });
     }
   };
 
@@ -300,30 +302,30 @@ const AdminPanel: React.FC = () => {
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
         <div>
-          <Title order={2}>Admin Control Panel</Title>
-          <Text c="dimmed">Manage system resources and content</Text>
+          <Title order={2}>{t('admin.panelTitle')}</Title>
+          <Text c="dimmed">{t('admin.panelSubtitle')}</Text>
         </div>
-        <Badge size="lg" variant="dot" color="green">System Online</Badge>
+        <Badge size="lg" variant="dot" color="green">{t('admin.systemOnline')}</Badge>
       </Group>
 
       <Tabs value={activeTab} onChange={setActiveTab} variant="pills" radius="md">
         <Tabs.List mb="lg">
-          <Tabs.Tab value="games" leftSection={<IconDeviceGamepad2 size={18} />}>Games</Tabs.Tab>
-          <Tabs.Tab value="challenges" leftSection={<IconTarget size={18} />}>Challenges</Tabs.Tab>
-          <Tabs.Tab value="builds" leftSection={<IconSword size={18} />}>Builds</Tabs.Tab>
+          <Tabs.Tab value="games" leftSection={<IconDeviceGamepad2 size={18} />}>{t('admin.games')}</Tabs.Tab>
+          <Tabs.Tab value="challenges" leftSection={<IconTarget size={18} />}>{t('challenges.title')}</Tabs.Tab>
+          <Tabs.Tab value="builds" leftSection={<IconSword size={18} />}>{t('builds.title')}</Tabs.Tab>
           <Tabs.Tab value="proofs" leftSection={<IconFileCheck size={18} />} rightSection={
             proofs.length > 0 && <Badge size="xs" circle color="red">{proofs.length}</Badge>
-          }>Proofs</Tabs.Tab>
-          <Tabs.Tab value="bingo-challenges" leftSection={<IconTarget size={18} />}>Bingo Challenges</Tabs.Tab>
-          <Tabs.Tab value="bingo-tasks" leftSection={<IconGridDots size={18} />}>Bingo Tasks</Tabs.Tab>
+          }>{t('admin.proofs')}</Tabs.Tab>
+          <Tabs.Tab value="bingo-challenges" leftSection={<IconTarget size={18} />}>{t('admin.bingoChallenges')}</Tabs.Tab>
+          <Tabs.Tab value="bingo-tasks" leftSection={<IconGridDots size={18} />}>{t('admin.bingoTasks')}</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="games">
           <Paper p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="xl">
-              <Title order={4}>Games Management</Title>
+              <Title order={4}>{t('admin.gamesManagement')}</Title>
               <Button leftSection={<IconPlus size={16} />} onClick={() => setModalOpened(true)}>
-                Add Game
+                {t('admin.addGame')}
               </Button>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
@@ -351,7 +353,7 @@ const AdminPanel: React.FC = () => {
           <Paper p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="xl">
               <Group>
-                <Title order={4}>Challenges Management</Title>
+                <Title order={4}>{t('admin.challengesManagement')}</Title>
                 <SegmentedControl
                   value={challengeFilter}
                   onChange={setChallengeFilter}
@@ -363,18 +365,18 @@ const AdminPanel: React.FC = () => {
                 />
               </Group>
               <Button leftSection={<IconPlus size={16} />} onClick={() => openChallengeModal()}>
-                Add Challenge
+                {t('admin.addChallenge')}
               </Button>
             </Group>
             <Table striped highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>Name</Table.Th>
-                  <Table.Th>Game</Table.Th>
-                  <Table.Th>Type</Table.Th>
-                  <Table.Th>Status</Table.Th>
-                  <Table.Th>Reward</Table.Th>
-                  <Table.Th>Actions</Table.Th>
+                  <Table.Th>{t('common.name')}</Table.Th>
+                  <Table.Th>{t('challenges.game')}</Table.Th>
+                  <Table.Th>{t('common.type')}</Table.Th>
+                  <Table.Th>{t('common.status')}</Table.Th>
+                  <Table.Th>{t('common.reward')}</Table.Th>
+                  <Table.Th>{t('common.actions')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -424,38 +426,38 @@ const AdminPanel: React.FC = () => {
           <Paper p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="xl">
               <Group>
-                <Title order={4}>Builds Management</Title>
+                <Title order={4}>{t('admin.buildsManagement')}</Title>
                 <SegmentedControl
                   value={buildFilter}
                   onChange={setBuildFilter}
                   data={[
-                    { label: 'All', value: 'all' },
-                    { label: 'Official', value: 'official' },
-                    { label: 'Community', value: 'community' },
+                    { label: t('common.all'), value: 'all' },
+                    { label: t('challenges.official'), value: 'official' },
+                    { label: t('challenges.community'), value: 'community' },
                   ]}
                 />
               </Group>
               <Button leftSection={<IconPlus size={16} />} onClick={() => navigate('/builds/create?source=admin')}>
-                Create Official Build
+                {t('admin.createOfficialBuild')}
               </Button>
             </Group>
             
             <Table striped highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th>Name</Table.Th>
-                  <Table.Th>Creator</Table.Th>
-                  <Table.Th>Game</Table.Th>
-                  <Table.Th>Type</Table.Th>
-                  <Table.Th>Date</Table.Th>
-                  <Table.Th>Actions</Table.Th>
+                  <Table.Th>{t('common.name')}</Table.Th>
+                  <Table.Th>{t('common.creator')}</Table.Th>
+                  <Table.Th>{t('challenges.game')}</Table.Th>
+                  <Table.Th>{t('common.type')}</Table.Th>
+                  <Table.Th>{t('common.date')}</Table.Th>
+                  <Table.Th>{t('common.actions')}</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
                 {builds.map((build) => (
                   <Table.Tr key={build.id}>
                     <Table.Td fw={500}>{build.build_name}</Table.Td>
-                    <Table.Td>{build.username || 'Unknown'}</Table.Td>
+                    <Table.Td>{build.username || t('common.unknown')}</Table.Td>
                     <Table.Td>{build.game_name}</Table.Td>
                     <Table.Td>
                       <Badge 
@@ -491,7 +493,7 @@ const AdminPanel: React.FC = () => {
                 {builds.length === 0 && (
                   <Table.Tr>
                     <Table.Td colSpan={6} align="center">
-                      <Text c="dimmed">No builds found matching filter.</Text>
+                      <Text c="dimmed">{t('admin.noBuildsFound')}</Text>
                     </Table.Td>
                   </Table.Tr>
                 )}
@@ -503,8 +505,8 @@ const AdminPanel: React.FC = () => {
         <Tabs.Panel value="proofs">
           <Paper p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="xl">
-              <Title order={4}>Pending Proofs</Title>
-              <Badge size="lg" color="orange">{proofs.length} Pending</Badge>
+              <Title order={4}>{t('admin.pendingProofs')}</Title>
+              <Badge size="lg" color="orange">{proofs.length} {t('common.pending')}</Badge>
             </Group>
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
               {proofs.map((proof) => (
@@ -512,7 +514,7 @@ const AdminPanel: React.FC = () => {
                   <Group justify="space-between" mb="md">
                     <Group gap="xs">
                       <Text fw={700}>{proof.username}</Text>
-                      <Text size="sm" c="dimmed">submitted for</Text>
+                      <Text size="sm" c="dimmed">{t('admin.submittedFor')}</Text>
                       <Text fw={600} c="blue">{proof.challenge_name}</Text>
                     </Group>
                     <Badge>{proof.game_name}</Badge>
@@ -521,18 +523,18 @@ const AdminPanel: React.FC = () => {
                   <Paper p="xs" bg="dark.8" mb="md" radius="sm">
                     <Stack gap="xs">
                       <Group justify="space-between">
-                        <Text size="xs" c="dimmed">Media Type: {proof.media_type}</Text>
+                        <Text size="xs" c="dimmed">{t('admin.mediaType')}: {proof.media_type}</Text>
                         {proof.media_url && (
                           <a href={proof.media_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: '#4dabf7' }}>
-                            View Image
+                            {t('common.viewImage')}
                           </a>
                         )}
                       </Group>
                       {proof.media_url && (
                         <Group justify="space-between">
-                          <Text size="xs" c="dimmed">Video Evidence:</Text>
+                          <Text size="xs" c="dimmed">{t('admin.videoEvidence')}:</Text>
                           <a href={proof.media_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: '#4dabf7' }}>
-                            Watch Video
+                            {t('common.watchVideo')}
                           </a>
                         </Group>
                       )}
@@ -545,7 +547,7 @@ const AdminPanel: React.FC = () => {
                       leftSection={<IconCheck size={16} />}
                       onClick={() => handleApproveProof(proof.id)}
                     >
-                      Approve
+                      {t('common.approve')}
                     </Button>
                     <Button
                       color="red"
@@ -553,14 +555,14 @@ const AdminPanel: React.FC = () => {
                       leftSection={<IconX size={16} />}
                       onClick={() => handleRejectProof(proof.id)}
                     >
-                      Reject
+                      {t('common.reject')}
                     </Button>
                   </Group>
                 </Card>
               ))}
               {proofs.length === 0 && (
                 <Text c="dimmed" ta="center" py="xl" style={{ gridColumn: '1 / -1' }}>
-                  No pending proofs to review. Good job!
+                  {t('admin.noPendingProofs')}
                 </Text>
               )}
             </SimpleGrid>
@@ -571,7 +573,7 @@ const AdminPanel: React.FC = () => {
           <Paper p="xl" radius="md" withBorder>
             <Group justify="space-between" mb="xl">
               <Group>
-                <Title order={4}>Bingo Challenges Management</Title>
+                <Title order={4}>{t('admin.bingoChallengesManagement')}</Title>
                 <SegmentedControl
                   value={bingoFilter}
                   onChange={setBingoFilter}
@@ -583,7 +585,7 @@ const AdminPanel: React.FC = () => {
                 />
               </Group>
               <Button leftSection={<IconPlus size={16} />} onClick={() => navigate('/bingo/create?source=admin')}>
-                Create Bingo Challenge
+                {t('admin.createBingoChallenge')}
               </Button>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
@@ -599,7 +601,7 @@ const AdminPanel: React.FC = () => {
                   <Group justify="space-between" mb="xs">
                     <Text fw={700} size="lg">{board.title}</Text>
                     <Badge color={board.created_by === 'admin' ? 'yellow' : 'blue'}>
-                        {board.created_by === 'admin' ? 'Official' : 'Community'}
+                        {board.created_by === 'admin' ? t('challenges.official') : t('challenges.community')}
                     </Badge>
                   </Group>
                   <Text size="sm" c="dimmed" mb="md">
@@ -610,16 +612,16 @@ const AdminPanel: React.FC = () => {
                   </Text>
                   <Group grow>
                     <Button variant="light" onClick={() => navigate(`/bingo/${board.id}`)}>
-                      View Board
+                      {t('admin.viewBoard')}
                     </Button>
                     <Button variant="outline" onClick={() => navigate(`/bingo/edit/${board.id}?source=admin`)}>
-                      Edit
+                      {t('common.edit')}
                     </Button>
                   </Group>
                 </Card>
               ))}
               {bingoBoards.length === 0 && (
-                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>No bingo challenges found.</Text>
+                <Text c="dimmed" ta="center" style={{ gridColumn: '1 / -1' }}>{t('admin.noBingoChallengesFound')}</Text>
               )}
             </SimpleGrid>
           </Paper>
@@ -635,17 +637,17 @@ const AdminPanel: React.FC = () => {
                         allowDeselect={false}
                         searchable
                     />
-                    <Button leftSection={<IconPlus size={16} />} onClick={openNewTask}>Add Task</Button>
+                    <Button leftSection={<IconPlus size={16} />} onClick={openNewTask}>{t('admin.addTask')}</Button>
                 </Group>
 
             <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
                     <Table striped highlightOnHover>
                         <Table.Thead>
                             <Table.Tr>
-                                <Table.Th>Task Description</Table.Th>
-                                <Table.Th w={120}>Difficulty</Table.Th>
-                                <Table.Th w={120}>Type</Table.Th>
-                                <Table.Th w={80}>Action</Table.Th>
+                                <Table.Th>{t('admin.taskDescription')}</Table.Th>
+                                <Table.Th w={120}>{t('admin.difficulty')}</Table.Th>
+                                <Table.Th w={120}>{t('common.type')}</Table.Th>
+                                <Table.Th w={80}>{t('common.action')}</Table.Th>
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
@@ -663,7 +665,7 @@ const AdminPanel: React.FC = () => {
                             ))}
                             {bingoTasks.length === 0 && (
                                 <Table.Tr>
-                                    <Table.Td colSpan={4} ta="center" py="xl" c="dimmed">No tasks found for this game.</Table.Td>
+                                    <Table.Td colSpan={4} ta="center" py="xl" c="dimmed">{t('admin.noTasksFoundForGame')}</Table.Td>
                                 </Table.Tr>
                             )}
                         </Table.Tbody>
@@ -673,11 +675,11 @@ const AdminPanel: React.FC = () => {
         </Tabs.Panel>
       </Tabs>
 
-      <Modal opened={modalOpened} onClose={() => setModalOpened(false)} title="Add New Game" centered>
+      <Modal opened={modalOpened} onClose={() => setModalOpened(false)} title={t('admin.addNewGame')} centered>
         <form onSubmit={form.onSubmit(handleCreateGame)}>
           <Stack gap="md">
             <TextInput
-              label="Game Name"
+              label={t('admin.gameName')}
               placeholder="e.g., Elden Ring"
               required
               {...form.getInputProps('name')}
@@ -699,19 +701,19 @@ const AdminPanel: React.FC = () => {
         </form>
       </Modal>
 
-      <Modal opened={challengeModalOpened} onClose={() => setChallengeModalOpened(false)} title={editingChallenge ? "Edit Challenge" : "Add Official Challenge"} centered>
+      <Modal opened={challengeModalOpened} onClose={() => setChallengeModalOpened(false)} title={editingChallenge ? t('challenges.editChallenge') : t('admin.addOfficialChallenge')} centered>
         <form onSubmit={challengeForm.onSubmit(handleCreateChallenge)}>
           <Stack gap="md">
             <Select
-              label="Game Name"
-              placeholder="Select Game"
+              label={t('admin.gameName')}
+              placeholder={t('admin.selectGame')}
               data={games.map(g => g.name)}
               required
               searchable
               {...challengeForm.getInputProps('game_name')}
             />
             <TextInput
-              label="Challenge Name"
+              label={t('admin.challengeName')}
               placeholder="e.g., Boss Rush"
               required
               {...challengeForm.getInputProps('challenge_name')}
@@ -741,7 +743,7 @@ const AdminPanel: React.FC = () => {
               {...challengeForm.getInputProps('end_date')}
             />
             <Button type="submit" fullWidth mt="md">
-              {editingChallenge ? "Update Challenge" : "Create Challenge"}
+              {editingChallenge ? t('challenges.updateChallenge') : t('admin.createChallenge')}
             </Button>
           </Stack>
         </form>
@@ -749,7 +751,7 @@ const AdminPanel: React.FC = () => {
 
 
 
-      <Modal opened={newTaskOpened} onClose={closeNewTask} title="Add Bingo Task" centered>
+      <Modal opened={newTaskOpened} onClose={closeNewTask} title={t('admin.addBingoTask')} centered>
         <form onSubmit={taskForm.onSubmit(handleAddTask)}>
             <Stack>
                 <Select 
@@ -760,7 +762,7 @@ const AdminPanel: React.FC = () => {
                     {...taskForm.getInputProps('game_name')} 
                 />
                 <Textarea 
-                    label="Task Description" 
+                    label={t('admin.taskDescription')} 
                     placeholder="e.g. Defeat Margit only using daggers" 
                     required 
                     minRows={3}
@@ -768,7 +770,7 @@ const AdminPanel: React.FC = () => {
                 />
                 <Group grow>
                     <Select 
-                        label="Difficulty" 
+                        label={t('admin.difficulty')} 
                         data={['Easy', 'Normal', 'Hard', 'Expert']} 
                         required 
                         {...taskForm.getInputProps('difficulty')} 
@@ -781,7 +783,7 @@ const AdminPanel: React.FC = () => {
                     />
                 </Group>
                 <Button type="submit" fullWidth mt="md">
-                    Add Task
+                    {t('admin.addTask')}
                 </Button>
             </Stack>
         </form>

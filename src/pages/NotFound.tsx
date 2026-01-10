@@ -1,8 +1,11 @@
 import { Container, Title, Text, Button, Group } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 
+import { useTranslation } from 'react-i18next';
+
 export default function NotFound() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <Container style={{ textAlign: 'center', paddingTop: '100px' }}>
@@ -10,17 +13,17 @@ export default function NotFound() {
         404
       </Title>
       <Title order={2} style={{ marginTop: '20px' }}>
-        Page Not Found
+        {t('notFound.title')}
       </Title>
       <Text size="lg" style={{ marginTop: '10px', marginBottom: '30px' }}>
-        The page you are looking for does not exist.
+        {t('notFound.message')}
       </Text>
       <Group justify="center">
         <Button onClick={() => navigate('/')}>
-          Go to Home
+          {t('notFound.goHome')}
         </Button>
         <Button variant="outline" onClick={() => navigate(-1)}>
-          Go Back
+          {t('notFound.goBack')}
         </Button>
       </Group>
     </Container>

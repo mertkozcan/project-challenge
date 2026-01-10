@@ -15,6 +15,8 @@ interface FilterBarProps {
   games?: { value: string; label: string }[];
 }
 
+import { useTranslation } from 'react-i18next';
+
 const FilterBar: React.FC<FilterBarProps> = ({
   search,
   onSearchChange,
@@ -27,16 +29,18 @@ const FilterBar: React.FC<FilterBarProps> = ({
   onClearFilters,
   games = [],
 }) => {
+  const { t } = useTranslation();
+
   const typeOptions = [
-    { value: 'daily', label: 'Daily' },
-    { value: 'weekly', label: 'Weekly' },
-    { value: 'permanent', label: 'Permanent' },
+    { value: 'daily', label: t('challenges.daily') },
+    { value: 'weekly', label: t('challenges.weekly') },
+    { value: 'permanent', label: t('challenges.permanent') },
   ];
 
   const sortOptions = [
-    { value: 'latest', label: 'Latest' },
-    { value: 'popular', label: 'Most Popular' },
-    { value: 'reward', label: 'Highest Reward' },
+    { value: 'latest', label: t('challenges.latest') },
+    { value: 'popular', label: t('challenges.popular') },
+    { value: 'reward', label: t('challenges.reward') },
   ];
 
   const hasActiveFilters = search || gameFilter || typeFilter || sortBy !== 'latest';
@@ -45,7 +49,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
     <Paper p="md" radius="md" withBorder mb="xl">
       <Group gap="md" grow>
         <TextInput
-          placeholder="Search challenges..."
+          placeholder={t('challenges.searchPlaceholder')}
           leftSection={<IconSearch size={16} />}
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
@@ -54,7 +58,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         
         {games.length > 0 && (
           <Select
-            placeholder="All Games"
+            placeholder={t('common.search')}
             leftSection={<IconFilter size={16} />}
             data={games}
             value={gameFilter}
@@ -65,7 +69,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         )}
         
         <Select
-          placeholder="All Types"
+          placeholder={t('challenges.community')}
           data={typeOptions}
           value={typeFilter}
           onChange={onTypeFilterChange}
@@ -73,7 +77,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         />
         
         <Select
-          placeholder="Sort by"
+          placeholder={t('challenges.sortBy')}
           data={sortOptions}
           value={sortBy}
           onChange={(value) => onSortByChange(value || 'latest')}
@@ -86,7 +90,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             leftSection={<IconX size={16} />}
             onClick={onClearFilters}
           >
-            Clear
+            {t('common.search')}
           </Button>
         )}
       </Group>

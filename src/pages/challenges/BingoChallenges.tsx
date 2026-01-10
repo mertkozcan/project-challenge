@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Container, Title, Grid, Card, Text, Badge, Button, LoadingOverlay, Group, Tabs } from '@mantine/core';
 import { BingoService, BingoBoard } from '@/services/bingo/bingo.service';
 import { IconGridDots, IconUsers, IconHistory } from '@tabler/icons-react';
+import { useTranslation } from 'react-i18next';
 
 const BingoChallenges: React.FC = () => {
+  const { t } = useTranslation();
   const [boards, setBoards] = useState<BingoBoard[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -28,29 +30,29 @@ const BingoChallenges: React.FC = () => {
   return (
     <Container size="lg" py="xl">
       <Group justify="space-between" mb="xl">
-        <Title order={2}>Bingo Challenges</Title>
+        <Title order={2}>{t('nav.bingoChallenges')}</Title>
         <Group>
           <Button 
             variant="light" 
             leftSection={<IconUsers size={20} />}
             onClick={() => navigate('/bingo/rooms')}
           >
-            Multiplayer Rooms
+            {t('bingo.lobby.title')} // or bingo.multiplayerRooms
           </Button>
           <Button 
             variant="outline" 
             leftSection={<IconHistory size={20} />}
             onClick={() => navigate('/bingo/history')}
           >
-            Game History
+            {t('bingo.gameHistory')}
           </Button>
         </Group>
       </Group>
 
       <Tabs defaultValue="official">
         <Tabs.List mb="lg">
-          <Tabs.Tab value="official">Official Challenges</Tabs.Tab>
-          <Tabs.Tab value="community">Community Challenges</Tabs.Tab>
+          <Tabs.Tab value="official">{t('bingo.officialChallenges')}</Tabs.Tab>
+          <Tabs.Tab value="community">{t('bingo.communityChallenges')}</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="official">
@@ -76,20 +78,20 @@ const BingoChallenges: React.FC = () => {
                     fullWidth
                     onClick={() => navigate(`/bingo/${board.id}`)}
                   >
-                    Play Bingo
+                    {t('bingo.playBingo')}
                   </Button>
                 </Card>
               </Grid.Col>
             ))}
           </Grid>
           {boards.filter(b => b.created_by === 'admin' || !b.created_by).length === 0 && (
-            <Text c="dimmed" ta="center">No official bingo boards available yet.</Text>
+            <Text c="dimmed" ta="center">{t('bingo.noOfficialBoards')}</Text>
           )}
         </Tabs.Panel>
 
         <Tabs.Panel value="community">
             <Group justify="flex-end" mb="md">
-                <Button onClick={() => navigate('/bingo/create')}>Create Bingo Challenge</Button>
+                <Button onClick={() => navigate('/bingo/create')}>{t('bingo.createBingoChallenge')}</Button>
             </Group>
           <Grid>
             {boards.filter(b => b.created_by && b.created_by !== 'admin').map((board) => (
@@ -113,14 +115,14 @@ const BingoChallenges: React.FC = () => {
                     fullWidth
                     onClick={() => navigate(`/bingo/${board.id}`)}
                   >
-                    Play Bingo
+                    {t('bingo.playBingo')}
                   </Button>
                 </Card>
               </Grid.Col>
             ))}
           </Grid>
           {boards.filter(b => b.created_by && b.created_by !== 'admin').length === 0 && (
-            <Text c="dimmed" ta="center">No community bingo boards available yet.</Text>
+            <Text c="dimmed" ta="center">{t('bingo.noCommunityBoards')}</Text>
           )}
         </Tabs.Panel>
       </Tabs>

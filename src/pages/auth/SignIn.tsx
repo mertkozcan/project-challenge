@@ -18,11 +18,14 @@ import useAuth from '@/utils/hooks/useAuth';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 
+import { useTranslation } from 'react-i18next';
+
 const SignIn: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { signIn } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const form = useForm({
     initialValues: {
@@ -31,8 +34,8 @@ const SignIn: React.FC = () => {
       rememberMe: false,
     },
     validate: {
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-      password: (value) => (value.length >= 6 ? null : 'Password must be at least 6 characters'),
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : t('auth.invalidEmail')),
+      password: (value) => (value.length >= 6 ? null : t('auth.passwordMinLength')),
     },
   });
 
@@ -48,11 +51,11 @@ const SignIn: React.FC = () => {
       });
       
       if (result?.status === 'failed') {
-        setError(result.message || 'Login failed');
+        setError(result.message || t('auth.loginFailed'));
       }
       // If success, useAuth hook will handle navigation
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || t('auth.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -61,7 +64,7 @@ const SignIn: React.FC = () => {
   return (
     <Container size={420} my={40}>
       <Title ta="center" mb="xl">
-        Welcome Back!
+        {t('auth.welcomeBack')}
       </Title>
 
       <Paper withBorder shadow="md" p={30} radius="md">
@@ -74,43 +77,43 @@ const SignIn: React.FC = () => {
             )}
             
             {(location.state as any)?.message && !error && (
-              <Alert icon={<IconAlertCircle size={16} />} color="blue" title="Authentication Required">
+              <Alert icon={<IconAlertCircle size={16} />} color="blue" title={t('auth.authRequired')}>
                 {(location.state as any).message}
               </Alert>
             )}
 
             <TextInput
-              label="Email"
-              placeholder="your@email.com"
+              label={t('auth.email')}
+              placeholder={t('auth.emailPlaceholder')}
               required
               {...form.getInputProps('email')}
             />
 
             <PasswordInput
-              label="Password"
-              placeholder="Your password"
+              label={t('auth.password')}
+              placeholder={t('auth.passwordPlaceholder')}
               required
               {...form.getInputProps('password')}
             />
 
             <Group justify="space-between" mt="md">
               <Checkbox
-                label="Remember me"
+                label={t('auth.rememberMe')}
                 {...form.getInputProps('rememberMe', { type: 'checkbox' })}
               />
               <Anchor component={Link} to="/forgot-password" size="sm">
-                Forgot password?
+                {t('auth.forgotPassword')}
               </Anchor>
             </Group>
 
             <Button type="submit" fullWidth loading={loading} mt="xl">
-              Sign In
+              {t('auth.signIn')}
             </Button>
 
             <Text ta="center" size="sm">
-              Don't have an account?{' '}
+              {t('auth.dontHaveAccount')}{' '}
               <Anchor component={Link} to="/sign-up" fw={700}>
-                Sign Up
+                {t('auth.signUp')}
               </Anchor>
             </Text>
           </Stack>

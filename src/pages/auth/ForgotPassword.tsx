@@ -17,7 +17,10 @@ import useAuth from '@/utils/hooks/useAuth';
 import { IconAlertCircle, IconCheck, IconArrowLeft } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 
+import { useTranslation } from 'react-i18next';
+
 const ForgotPassword: React.FC = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -28,7 +31,7 @@ const ForgotPassword: React.FC = () => {
       email: '',
     },
     validate: {
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : t('auth.invalidEmail')),
     },
   });
 
@@ -41,12 +44,12 @@ const ForgotPassword: React.FC = () => {
       const result = await resetPassword(values.email);
       
       if (result?.status === 'failed') {
-        setError(result.message || 'Failed to send reset email');
+        setError(result.message || t('auth.loginFailed')); // Use dynamic error or generic fail
       } else {
         setSuccess(true);
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      setError(err.message || t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -55,10 +58,10 @@ const ForgotPassword: React.FC = () => {
   return (
     <Container size={420} my={40}>
       <Title ta="center" mb="xl">
-        Forgot Password?
+        {t('auth.forgotPasswordTitle')}
       </Title>
       <Text c="dimmed" size="sm" ta="center" mt={-20} mb={30}>
-        Enter your email to get a reset link
+        {t('auth.forgotPasswordDesc')}
       </Text>
 
       <Paper withBorder shadow="md" p={30} radius="md">
@@ -72,21 +75,21 @@ const ForgotPassword: React.FC = () => {
               )}
 
               <TextInput
-                label="Email"
-                placeholder="your@email.com"
+                label={t('auth.email')}
+                placeholder={t('auth.emailPlaceholder')}
                 required
                 {...form.getInputProps('email')}
               />
 
               <Button type="submit" fullWidth loading={loading}>
-                Send Reset Link
+                {t('auth.sendResetLink')}
               </Button>
 
               <Center>
                 <Anchor component={Link} to="/sign-in" size="sm" c="dimmed">
                   <Center inline>
                     <IconArrowLeft size={12} stroke={1.5} />
-                    <Box ml={5}>Back to Sign In</Box>
+                    <Box ml={5}>{t('auth.backToSignIn')}</Box>
                   </Center>
                 </Anchor>
               </Center>
@@ -94,11 +97,11 @@ const ForgotPassword: React.FC = () => {
           </form>
         ) : (
           <Stack>
-            <Alert icon={<IconCheck size={16} />} color="green" title="Email Sent">
-              Check your inbox for a password reset link.
+            <Alert icon={<IconCheck size={16} />} color="green" title={t('auth.emailSentTitle')}>
+              {t('auth.emailSentDesc')}
             </Alert>
             <Button component={Link} to="/sign-in" fullWidth variant="outline">
-              Back to Sign In
+              {t('auth.backToSignIn')}
             </Button>
           </Stack>
         )}

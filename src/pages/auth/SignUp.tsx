@@ -16,11 +16,14 @@ import { useForm } from '@mantine/form';
 import { AuthService } from '@/services/auth/auth.service';
 import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
 
+import { useTranslation } from 'react-i18next';
+
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { t } = useTranslation();
 
   const form = useForm({
     initialValues: {
@@ -30,11 +33,11 @@ const SignUp: React.FC = () => {
       confirmPassword: '',
     },
     validate: {
-      username: (value) => (value.length >= 3 ? null : 'Username must be at least 3 characters'),
-      email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-      password: (value) => (value.length >= 6 ? null : 'Password must be at least 6 characters'),
+      username: (value) => (value.length >= 3 ? null : t('auth.usernameMinLength')),
+      email: (value) => (/^\S+@\S+$/.test(value) ? null : t('auth.invalidEmail')),
+      password: (value) => (value.length >= 6 ? null : t('auth.passwordMinLength')),
       confirmPassword: (value, values) =>
-        value === values.password ? null : 'Passwords do not match',
+        value === values.password ? null : t('auth.passwordsDoNotMatch'),
     },
   });
 
@@ -50,7 +53,7 @@ const SignUp: React.FC = () => {
         navigate('/sign-in');
       }, 2000);
     } catch (err: any) {
-      setError(err.message || 'Signup failed');
+      setError(err.message || t('auth.signupFailed'));
     } finally {
       setLoading(false);
     }
@@ -59,7 +62,7 @@ const SignUp: React.FC = () => {
   return (
     <Container size={420} my={40}>
       <Title ta="center" mb="xl">
-        Create Account
+        {t('auth.createAccount')}
       </Title>
 
       <Paper withBorder shadow="md" p={30} radius="md">
@@ -73,46 +76,46 @@ const SignUp: React.FC = () => {
 
             {success && (
               <Alert icon={<IconCheck size={16} />} color="green">
-                Account created! Redirecting to login...
+                {t('auth.accountCreated')}
               </Alert>
             )}
 
             <TextInput
-              label="Username"
-              placeholder="johndoe"
+              label={t('auth.username')}
+              placeholder={t('auth.usernamePlaceholder')}
               required
               {...form.getInputProps('username')}
             />
 
             <TextInput
-              label="Email"
-              placeholder="your@email.com"
+              label={t('auth.email')}
+              placeholder={t('auth.emailPlaceholder')}
               required
               {...form.getInputProps('email')}
             />
 
             <PasswordInput
-              label="Password"
-              placeholder="Your password"
+              label={t('auth.password')}
+              placeholder={t('auth.passwordPlaceholder')}
               required
               {...form.getInputProps('password')}
             />
 
             <PasswordInput
-              label="Confirm Password"
-              placeholder="Confirm your password"
+              label={t('auth.confirmPassword')}
+              placeholder={t('auth.confirmPasswordPlaceholder')}
               required
               {...form.getInputProps('confirmPassword')}
             />
 
             <Button type="submit" fullWidth loading={loading} disabled={success}>
-              Sign Up
+              {t('auth.signUp')}
             </Button>
 
             <Text ta="center" size="sm">
-              Already have an account?{' '}
+              {t('auth.alreadyHaveAccount')}{' '}
               <Anchor component={Link} to="/sign-in" fw={700}>
-                Sign In
+                {t('auth.signIn')}
               </Anchor>
             </Text>
           </Stack>

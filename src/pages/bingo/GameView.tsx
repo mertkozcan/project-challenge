@@ -11,8 +11,10 @@ import { useGameSounds } from '@/hooks/useGameSounds';
 import BingoHero from '@/components/Bingo/BingoHero';
 import BingoCell from '@/components/Bingo/BingoCell';
 import ChatBox from '@/components/Chat/ChatBox';
+import { useTranslation } from 'react-i18next';
 
 const BingoGameView: React.FC = () => {
+  const { t } = useTranslation();
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -116,7 +118,7 @@ const BingoGameView: React.FC = () => {
 
   const handleGameEnded = (data: { winnerId: string; winType: string; winIndex: number; statistics: any }) => {
     const isMe = data.winnerId === userId;
-    const winnerName = isMe ? 'You' : room?.participants?.find((p: any) => p.user_id === data.winnerId)?.username || 'Someone';
+    const winnerName = isMe ? t('common.you') : room?.participants?.find((p: any) => p.user_id === data.winnerId)?.username || t('common.someone');
     
     setWinner(winnerName);
     setStatistics(data.statistics);
@@ -154,7 +156,7 @@ const BingoGameView: React.FC = () => {
           ...cell,
           is_completed_by_me: true,
           completed_by_user_id: userId,
-          completed_by_username: 'You',
+          completed_by_username: t('common.you'),
           completed_by_avatar: undefined
         };
       }
@@ -251,9 +253,9 @@ const BingoGameView: React.FC = () => {
     <Container size="xl" py="xl" style={{ fontFamily: themeStyles.fontFamily }}>
       <Group justify="space-between" mb="xl">
         <BingoHero 
-          title={room?.board_title || 'Bingo Game'}
-          gameName={room?.game_name || 'Multiplayer'}
-          description={`Host: ${room?.host_username || 'Unknown'} • Players: ${room?.player_count || room?.participants?.length || 0}/${room?.max_players || 0}`}
+          title={room?.board_title || t('bingo.bingoGame')}
+          gameName={room?.game_name || t('bingo.multiplayer')}
+          description={`${t('bingo.host')}: ${room?.host_username || t('common.unknown')} • ${t('bingo.players')}: ${room?.player_count || room?.participants?.length || 0}/${room?.max_players || 0}`}
           size={gridSize}
         />
         <Group>
@@ -268,7 +270,7 @@ const BingoGameView: React.FC = () => {
             leftSection={<IconDoorExit size={16} />}
             onClick={() => navigate('/multiplayer/rooms')}
           >
-            Leave Game
+            {t('bingo.leaveGame')}
           </Button>
         </Group>
       </Group>
@@ -320,22 +322,22 @@ const BingoGameView: React.FC = () => {
              <Stack>
                 <Paper p="md" radius="md" withBorder style={{ background: themeStyles.bg ? `${themeStyles.bg}80` : undefined }}>
                    <Stack gap="xs">
-                      <Title order={4} style={{ color: themeStyles.textColor }}>Game Info</Title>
+                      <Title order={4} style={{ color: themeStyles.textColor }}>{t('bingo.gameInfo')}</Title>
                       <Group justify="space-between">
-                         <Text style={{ color: themeStyles.textColor }}>Mode:</Text>
+                         <Text style={{ color: themeStyles.textColor }}>{t('common.mode')}:</Text>
                          <Badge variant="filled" color="blue">{room?.game_mode}</Badge>
                       </Group>
                       <Group justify="space-between">
-                         <Text style={{ color: themeStyles.textColor }}>Theme:</Text>
+                         <Text style={{ color: themeStyles.textColor }}>{t('common.theme')}:</Text>
                          <Badge variant="outline" color="pink">{room?.theme}</Badge>
                       </Group>
                       
                       <Text size="sm" c="dimmed" mt="sm" style={{ color: themeStyles.textColor ? `${themeStyles.textColor}99` : undefined }}>
                         {room?.game_mode === 'BLACKOUT' 
-                          ? 'Cover ALL cells to win!' 
+                          ? t('bingo.blackoutDesc')
                           : room?.game_mode === 'LOCKOUT'
-                          ? 'Race to claim cells! Once taken, they are locked.'
-                          : 'First to complete a row, column, or diagonal wins!'}
+                          ? t('bingo.lockoutDesc')
+                          : t('bingo.normalDesc')}
                       </Text>
                    </Stack>
                 </Paper>
@@ -345,7 +347,7 @@ const BingoGameView: React.FC = () => {
                 </Paper>
 
                 <Paper p="md" radius="md" withBorder style={{ background: themeStyles.bg ? `${themeStyles.bg}80` : undefined }}>
-                   <Title order={3} mb="md" style={{ color: themeStyles.textColor }}>Players</Title>
+                   <Title order={3} mb="md" style={{ color: themeStyles.textColor }}>{t('bingo.players')}</Title>
                    <Stack gap="sm">
                      {room?.participants?.map((participant: any) => (
                        <motion.div
@@ -388,13 +390,13 @@ const BingoGameView: React.FC = () => {
           </motion.div>
           
           <Title order={2} ta="center">
-            {winner} Won the Game!
+            {t('bingo.playerWon', { winner })}
           </Title>
           
           {statistics && (
             <Card withBorder w="100%" mt="md">
               <Stack gap="xs">
-                <Text fw={700}>Game Stats:</Text>
+                <Text fw={700}>{t('bingo.gameStats')}:</Text>
                 <Group justify="space-between">
                   <Text>Total Players:</Text>
                   <Text fw={600}>{statistics.participants?.length}</Text>

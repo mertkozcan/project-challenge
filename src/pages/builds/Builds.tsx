@@ -24,10 +24,12 @@ import { Build } from '@/@types/build';
 import FilterBar from '@/components/Challenges/FilterBar';
 import Pagination from '@/components/Common/Pagination';
 import { useAppSelector } from '@/store';
+import { useTranslation } from 'react-i18next';
 
 const ITEMS_PER_PAGE = 12;
 
 const Builds: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string | null>('official');
   const [allBuilds, setAllBuilds] = useState<Build[]>([]);
   const [loading, setLoading] = useState(true);
@@ -126,7 +128,7 @@ const Builds: React.FC = () => {
               <ThemeIcon size="lg" radius="md" variant="light" color="orange">
                 <IconFlame size={20} />
               </ThemeIcon>
-              <Title order={3}>Featured Builds</Title>
+              <Title order={3}>{t('builds.featuredBuilds')}</Title>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
               {featuredBuilds.map((build) => (
@@ -176,16 +178,16 @@ const Builds: React.FC = () => {
               <IconStar size={40} />
             </ThemeIcon>
             <Title order={3} c="dimmed">
-              No builds found
+              {t('builds.noBuildsFound')}
             </Title>
             <Text c="dimmed" ta="center">
               {activeTab === 'community'
-                ? "No community builds yet. Be the first to create one!"
-                : "No official builds match your filters."}
+                ? t('builds.noCommunityBuilds')
+                : t('builds.noOfficialBuilds')}
             </Text>
             {(search || gameFilter) && (
               <Button variant="light" onClick={handleClearFilters}>
-                Clear Filters
+                {t('challenges.clearFilters')}
               </Button>
             )}
           </Stack>
@@ -201,14 +203,14 @@ const Builds: React.FC = () => {
           <ThemeIcon size="xl" radius="md" variant="light" color="blue">
             <IconSword size={28} />
           </ThemeIcon>
-          <Title order={1}>Builds</Title>
+          <Title order={1}>{t('builds.title')}</Title>
         </Group>
         {activeTab === 'community' && (
           <Button
             leftSection={<IconPlus size={16} />}
             onClick={() => {
               if (!signedIn) {
-                navigate('/sign-in', { state: { message: 'You need to be logged in to create a build.' } });
+                navigate('/sign-in', { state: { message: t('builds.loginRequiredToCreate') } });
               } else {
                 navigate('/builds/create');
               }
@@ -216,7 +218,7 @@ const Builds: React.FC = () => {
             variant="gradient"
             gradient={{ from: 'blue', to: 'cyan', deg: 45 }}
           >
-            Create Build
+            {t('builds.createBuild')}
           </Button>
         )}
       </Group>
@@ -224,10 +226,10 @@ const Builds: React.FC = () => {
       <Tabs value={activeTab} onChange={setActiveTab}>
         <Tabs.List>
           <Tabs.Tab value="official" leftSection={<IconTrophy size={16} />}>
-            Official
+            {t('builds.official')}
           </Tabs.Tab>
           <Tabs.Tab value="community" leftSection={<IconUsers size={16} />}>
-            Community
+            {t('builds.community')}
           </Tabs.Tab>
         </Tabs.List>
 
@@ -245,6 +247,7 @@ const Builds: React.FC = () => {
 
 // Build Card Component
 const BuildCard: React.FC<{ build: Build; onClick: () => void }> = ({ build, onClick }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -4 }}
@@ -285,7 +288,7 @@ const BuildCard: React.FC<{ build: Build; onClick: () => void }> = ({ build, onC
 
           {build.username && (
             <Text size="xs" c="dimmed" mt="auto">
-              By {build.username}
+              {t('dashboard.by')} {build.username}
             </Text>
           )}
         </Stack>

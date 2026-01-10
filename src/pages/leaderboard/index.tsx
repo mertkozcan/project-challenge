@@ -9,8 +9,11 @@ import { BingoLeaderboardService } from '@/services/bingo/bingoLeaderboard.servi
 import { IconTrophy, IconMedal, IconStar, IconCrown } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
+import { useTranslation } from 'react-i18next';
+
 const PodiumItem = ({ entry, rank, type }: { entry: GlobalLeaderboardEntry; rank: number; type: 'completions' | 'points' }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const isFirst = rank === 1;
   const isSecond = rank === 2;
   const isThird = rank === 3;
@@ -68,10 +71,12 @@ const PodiumItem = ({ entry, rank, type }: { entry: GlobalLeaderboardEntry; rank
         gradient={{ from: color, to: color, deg: 45 }}
         style={{ marginTop: '0.5rem' }}
       >
-        {type === 'completions' ? `${entry.completed_count} Challenges` : `${entry.points} Points`}
+        {type === 'completions' 
+          ? t('leaderboard.challengesSuffix', { count: entry.completed_count }) 
+          : t('leaderboard.pointsSuffix', { count: entry.points })}
       </Badge>
       
-      <Text size="sm" c="dimmed" mt="xs">Rank #{rank}</Text>
+      <Text size="sm" c="dimmed" mt="xs">{t('leaderboard.rankSuffix', { rank })}</Text>
     </Card>
   );
 };
@@ -81,6 +86,7 @@ const Leaderboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string | null>('completions');
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchRankings = async () => {
@@ -125,9 +131,9 @@ const Leaderboard: React.FC = () => {
     <Container size="lg" py="xl">
       <Stack align="center" mb={50}>
         <Title order={1} style={{ fontSize: '3rem', fontWeight: 900, letterSpacing: '-1px' }}>
-          Hall of Fame
+          {t('leaderboard.title')}
         </Title>
-        <Text c="dimmed" size="lg">The most legendary players in the realm</Text>
+        <Text c="dimmed" size="lg">{t('leaderboard.subtitle')}</Text>
       </Stack>
 
       <Tabs 
@@ -142,22 +148,22 @@ const Leaderboard: React.FC = () => {
       >
         <Tabs.List>
           <Tabs.Tab value="completions" leftSection={<IconTrophy size={18} />}>
-            Most Completed
+            {t('leaderboard.mostCompleted')}
           </Tabs.Tab>
           <Tabs.Tab value="points" leftSection={<IconStar size={18} />}>
-            Top Points
+            {t('leaderboard.topPoints')}
           </Tabs.Tab>
           <Tabs.Tab value="bingo-wins" leftSection={<IconTrophy size={18} />}>
-            Bingo Wins
+            {t('leaderboard.bingoWins')}
           </Tabs.Tab>
           <Tabs.Tab value="bingo-fastest" leftSection={<IconStar size={18} />}>
-            Speed Demons
+            {t('leaderboard.speedDemons')}
           </Tabs.Tab>
           <Tabs.Tab value="bingo-games" leftSection={<IconTrophy size={18} />}>
-            Bingo Masters
+            {t('leaderboard.bingoMasters')}
           </Tabs.Tab>
           <Tabs.Tab value="bingo-streaks" leftSection={<IconStar size={18} />}>
-            Win Streaks
+            {t('leaderboard.winStreaks')}
           </Tabs.Tab>
         </Tabs.List>
       </Tabs>
@@ -191,10 +197,10 @@ const Leaderboard: React.FC = () => {
                   <Table verticalSpacing="md" highlightOnHover miw={500}>
                     <Table.Thead bg="dark.8">
                       <Table.Tr>
-                        <Table.Th w={80} ta="center">Rank</Table.Th>
-                        <Table.Th>Player</Table.Th>
+                        <Table.Th w={80} ta="center">{t('leaderboard.rank')}</Table.Th>
+                        <Table.Th>{t('leaderboard.player')}</Table.Th>
                         <Table.Th ta="right">
-                          {activeTab === 'completions' ? 'Challenges' : 'Points'}
+                          {activeTab === 'completions' ? t('leaderboard.challenges') : t('leaderboard.points')}
                         </Table.Th>
                       </Table.Tr>
                     </Table.Thead>
@@ -231,7 +237,7 @@ const Leaderboard: React.FC = () => {
             
             {rankings.length === 0 && (
                 <Center p="xl">
-                    <Text c="dimmed">No rankings available yet.</Text>
+                    <Text c="dimmed">{t('leaderboard.noRankings')}</Text>
                 </Center>
             )}
           </>

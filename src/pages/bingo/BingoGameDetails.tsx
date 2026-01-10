@@ -4,8 +4,10 @@ import { IconTrophy, IconUsers, IconClock, IconCalendar, IconArrowLeft, IconChec
 import { useNavigate, useParams } from 'react-router-dom';
 import { BingoHistoryService } from '@/services/bingo/bingoHistory.service';
 import { useAppSelector } from '@/store';
+import { useTranslation } from 'react-i18next';
 
 const BingoGameDetails: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { roomId } = useParams<{ roomId: string }>();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
@@ -37,8 +39,8 @@ const BingoGameDetails: React.FC = () => {
     return `${mins}m ${secs}s`;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+  const formatDate = (dateString: string, i18nField?: string) => {
+    return new Date(dateString).toLocaleDateString(i18nField || 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -54,8 +56,8 @@ const BingoGameDetails: React.FC = () => {
   if (!gameDetails) {
     return (
       <Container size="xl" py="xl">
-        <Text>Game not found</Text>
-        <Button onClick={() => navigate('/bingo/history')}>Back to History</Button>
+        <Text>{t('history.gameNotFound')}</Text>
+        <Button onClick={() => navigate('/bingo/history')}>{t('bingo.backToHistory')}</Button>
       </Container>
     );
   }
@@ -63,8 +65,8 @@ const BingoGameDetails: React.FC = () => {
   if (!gameDetails.cells || gameDetails.cells.length === 0) {
     return (
       <Container size="xl" py="xl">
-        <Text>No game data available</Text>
-        <Button onClick={() => navigate('/bingo/history')}>Back to History</Button>
+        <Text>{t('history.noData')}</Text>
+        <Button onClick={() => navigate('/bingo/history')}>{t('bingo.backToHistory')}</Button>
       </Container>
     );
   }
@@ -89,7 +91,7 @@ const BingoGameDetails: React.FC = () => {
           variant="light"
           onClick={() => navigate('/bingo/history')}
         >
-          Back to History
+          {t('bingo.backToHistory')}
         </Button>
       </Group>
 
@@ -101,7 +103,7 @@ const BingoGameDetails: React.FC = () => {
             <Card shadow="sm" padding="lg" radius="md" withBorder>
               <Stack gap="md">
                 <Group justify="space-between">
-                  <Text fw={700}>Winner</Text>
+                  <Text fw={700}>{t('history.winner')}</Text>
                   <IconTrophy size={24} color="#FFD700" />
                 </Group>
                 <Group gap="sm">
@@ -109,7 +111,9 @@ const BingoGameDetails: React.FC = () => {
                   <div>
                     <Text fw={600} size="lg">{gameDetails.winner_username}</Text>
                     <Text size="sm" c="dimmed">
-                      {gameDetails.win_type === 'row' ? `Row ${gameDetails.win_index + 1}` : `Column ${gameDetails.win_index + 1}`}
+                      {gameDetails.win_type === 'row' 
+                        ? t('history.row', { index: gameDetails.win_index + 1 }) 
+                        : t('history.column', { index: gameDetails.win_index + 1 })}
                     </Text>
                   </div>
                 </Group>
@@ -119,12 +123,12 @@ const BingoGameDetails: React.FC = () => {
             {/* Game Stats */}
             <Card shadow="sm" padding="lg" radius="md" withBorder>
               <Stack gap="md">
-                <Text fw={700}>Game Statistics</Text>
+                <Text fw={700}>{t('history.statistics')}</Text>
                 
                 <Group justify="space-between">
                   <Group gap="xs">
                     <IconUsers size={16} />
-                    <Text size="sm">Players</Text>
+                    <Text size="sm">{t('bingo.players')}</Text>
                   </Group>
                   <Text size="sm" fw={600}>{gameDetails.participants?.length || 0}</Text>
                 </Group>
@@ -132,7 +136,7 @@ const BingoGameDetails: React.FC = () => {
                 <Group justify="space-between">
                   <Group gap="xs">
                     <IconClock size={16} />
-                    <Text size="sm">Duration</Text>
+                    <Text size="sm">{t('common.duration')}</Text>
                   </Group>
                   <Text size="sm" fw={600}>
                     {formatDuration((new Date(gameDetails.completed_at).getTime() - new Date(gameDetails.started_at).getTime()) / 1000)}
@@ -142,7 +146,7 @@ const BingoGameDetails: React.FC = () => {
                 <Group justify="space-between">
                   <Group gap="xs">
                     <IconCalendar size={16} />
-                    <Text size="sm">Completed</Text>
+                    <Text size="sm">{t('dashboard.completed')}</Text>
                   </Group>
                   <Text size="sm" fw={600}>{formatDate(gameDetails.completed_at)}</Text>
                 </Group>
@@ -152,7 +156,7 @@ const BingoGameDetails: React.FC = () => {
             {/* Participants */}
             <Card shadow="sm" padding="lg" radius="md" withBorder>
               <Stack gap="md">
-                <Text fw={700}>Participants</Text>
+                <Text fw={700}>{t('bingo.players')}</Text>
                 {gameDetails.participants?.map((participant: any) => (
                   <Paper key={participant.user_id} p="sm" withBorder>
                     <Group justify="space-between">
@@ -174,7 +178,7 @@ const BingoGameDetails: React.FC = () => {
         {/* Bingo Board */}
         <Grid.Col span={{ base: 12, md: 8 }}>
           <Card shadow="md" padding="lg" radius="md" withBorder>
-            <Title order={3} mb="md">Final Board State</Title>
+            <Title order={3} mb="md">{t('history.finalBoardState')}</Title>
             <Stack gap="xs">
               {rows.map((row, rowIndex) => (
                 <Group key={rowIndex} gap="xs" grow>

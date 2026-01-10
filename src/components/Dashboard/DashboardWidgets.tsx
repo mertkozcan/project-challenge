@@ -4,6 +4,8 @@ import { IconTrophy, IconFlame, IconClock, IconArrowRight, IconTarget, IconUsers
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
+import { useTranslation } from 'react-i18next';
+
 // --- Widget Wrapper ---
 const WidgetWrapper = ({ children, onClick, className, style, delay = 0 }: any) => {
   const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
@@ -56,8 +58,9 @@ const WidgetWrapper = ({ children, onClick, className, style, delay = 0 }: any) 
 // --- 1. Challenge Spotlight Widget (2x2) ---
 export const ChallengeSpotlightWidget = ({ challenge, loading }: any) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
-  if (loading || !challenge) return <WidgetWrapper><Text>Loading...</Text></WidgetWrapper>;
+  if (loading || !challenge) return <WidgetWrapper><Text>{t('common.loading')}</Text></WidgetWrapper>;
 
   return (
     <WidgetWrapper onClick={() => navigate(`/challenges/${challenge.id}`)} style={{ gridColumn: 'span 2', gridRow: 'span 2' }}>
@@ -76,7 +79,7 @@ export const ChallengeSpotlightWidget = ({ challenge, loading }: any) => {
       <Stack justify="space-between" h="100%" style={{ position: 'relative', zIndex: 1 }}>
         <Group justify="space-between">
           <Badge size="lg" color="red" variant="filled" leftSection={<IconFlame size={14} />}>
-            Challenge of the Day
+            {t('dashboard.challengeOfTheDay')}
           </Badge>
           <ThemeIcon variant="light" color="white" radius="xl" size="lg">
             <IconArrowRight size={20} />
@@ -94,7 +97,7 @@ export const ChallengeSpotlightWidget = ({ challenge, loading }: any) => {
           
           <Group>
             <Button size="md" variant="gradient" gradient={{ from: 'orange', to: 'red' }}>
-              Accept Challenge
+              {t('dashboard.acceptChallenge')}
             </Button>
             <Badge size="lg" variant="outline" color="yellow" leftSection={<IconTrophy size={14} />}>
               {challenge.reward_xp} XP
@@ -109,6 +112,7 @@ export const ChallengeSpotlightWidget = ({ challenge, loading }: any) => {
 // --- 2. User Progress Widget (1x1) ---
 export const UserProgressWidget = ({ stats, user }: any) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const level = user?.level || 1;
   const xp = user?.total_xp || 0;
   const nextLevelXp = level * 1000; // Example formula
@@ -117,7 +121,7 @@ export const UserProgressWidget = ({ stats, user }: any) => {
   return (
     <WidgetWrapper onClick={() => navigate(`/profile/${user?.username}`)} delay={0.1}>
       <Group justify="space-between" mb={4}>
-        <Text fw={700} c="dimmed" size="xs" tt="uppercase">My Rank</Text>
+        <Text fw={700} c="dimmed" size="xs" tt="uppercase">{t('dashboard.myRank')}</Text>
         <ThemeIcon variant="light" color="blue" radius="md" size="sm">
           <IconTrophy size={14} />
         </ThemeIcon>
@@ -136,7 +140,7 @@ export const UserProgressWidget = ({ stats, user }: any) => {
           }
         />
         <div>
-            <Text size="sm" fw={700}>Level {level}</Text>
+            <Text size="sm" fw={700}>{t('dashboard.level', { level })}</Text>
             <Text size="xs" c="dimmed">{xp} / {nextLevelXp} XP</Text>
         </div>
       </Group>
@@ -147,14 +151,15 @@ export const UserProgressWidget = ({ stats, user }: any) => {
 // --- 3. Quick Action: Create (1x1) ---
 export const QuickCreateWidget = ({ totalChallenges }: { totalChallenges?: number }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <WidgetWrapper onClick={() => navigate('/challenges/create')} delay={0.15}>
       <Group justify="space-between" h="100%" align="center">
         <div>
-          <Text fw={700} size="lg">Create</Text>
-          <Text size="xs" c="dimmed">New Challenge</Text>
+          <Text fw={700} size="lg">{t('dashboard.create')}</Text>
+          <Text size="xs" c="dimmed">{t('dashboard.newChallenge')}</Text>
           {totalChallenges !== undefined && (
-             <Badge size="xs" variant="light" color="blue" mt={4}>{totalChallenges}+ Active</Badge>
+             <Badge size="xs" variant="light" color="blue" mt={4}>{t('dashboard.activeCount', { count: totalChallenges })}</Badge>
           )}
         </div>
         <ThemeIcon size={40} radius="md" variant="gradient" gradient={{ from: 'indigo', to: 'cyan' }}>
@@ -168,6 +173,7 @@ export const QuickCreateWidget = ({ totalChallenges }: { totalChallenges?: numbe
 // --- 4. Quick Action: Bingo (1x1) ---
 export const QuickBingoWidget = ({ activeRooms }: { activeRooms?: number }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <WidgetWrapper onClick={() => navigate('/bingo/rooms')} delay={0.2}>
       <Stack justify="space-between" h="100%">
@@ -175,10 +181,10 @@ export const QuickBingoWidget = ({ activeRooms }: { activeRooms?: number }) => {
           <IconDeviceGamepad2 size={24} />
         </ThemeIcon>
         <div>
-          <Text fw={700} size="lg">Bingo</Text>
-          <Text size="xs" c="dimmed">Join Room</Text>
+          <Text fw={700} size="lg">{t('dashboard.bingo')}</Text>
+          <Text size="xs" c="dimmed">{t('dashboard.joinRoom')}</Text>
           {activeRooms !== undefined && (
-            <Badge size="xs" variant="dot" color="green" mt={4}>{activeRooms} Live Rooms</Badge>
+            <Badge size="xs" variant="dot" color="green" mt={4}>{t('dashboard.liveRoomsCount', { count: activeRooms })}</Badge>
           )}
         </div>
       </Stack>
@@ -188,6 +194,7 @@ export const QuickBingoWidget = ({ activeRooms }: { activeRooms?: number }) => {
 
 // --- 5. Live Pulse Widget (1x2) ---
 export const LivePulseWidget = ({ activities }: any) => {
+  const { t } = useTranslation();
   const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
   const isDark = computedColorScheme === 'dark';
 
@@ -198,9 +205,9 @@ export const LivePulseWidget = ({ activities }: any) => {
             <ThemeIcon color="green" variant="light" size="sm" radius="xl">
                 <IconRocket size={12} />
             </ThemeIcon>
-            <Text fw={800} size="xs" tt="uppercase" style={{ letterSpacing: '1px' }}>Live Pulse</Text>
+            <Text fw={800} size="xs" tt="uppercase" style={{ letterSpacing: '1px' }}>{t('dashboard.livePulse')}</Text>
         </Group>
-        <Badge size="xs" variant="dot" color="green" className="animate-pulse">Live</Badge>
+        <Badge size="xs" variant="dot" color="green" className="animate-pulse">{t('dashboard.live')}</Badge>
       </Group>
       
       <Stack gap="sm" style={{ overflow: 'hidden' }}>
@@ -222,7 +229,7 @@ export const LivePulseWidget = ({ activities }: any) => {
                     <div style={{ flex: 1, overflow: 'hidden' }}>
                     <Text size="xs" fw={700} truncate>{activity.title}</Text>
                     <Group gap={4}>
-                        <Text size="xs" c="dimmed">by</Text>
+                        <Text size="xs" c="dimmed">{t('dashboard.by')}</Text>
                         <Text size="xs" c="blue" fw={600} truncate>{activity.user}</Text>
                     </Group>
                     </div>
@@ -231,7 +238,7 @@ export const LivePulseWidget = ({ activities }: any) => {
             </Paper>
           </motion.div>
         ))}
-        {activities.length === 0 && <Text size="sm" c="dimmed">No recent activity.</Text>}
+        {activities.length === 0 && <Text size="sm" c="dimmed">{t('dashboard.noRecentActivity')}</Text>}
       </Stack>
     </WidgetWrapper>
   );
@@ -240,6 +247,7 @@ export const LivePulseWidget = ({ activities }: any) => {
 // --- 6. Featured Build Widget (1x1) ---
 export const FeaturedBuildWidget = ({ build }: any) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     if (!build) return null;
 
     return (
@@ -249,7 +257,7 @@ export const FeaturedBuildWidget = ({ build }: any) => {
                     <ThemeIcon size="lg" radius="md" variant="light" color="red">
                         <IconSword size={20} />
                     </ThemeIcon>
-                    <Badge size="xs" color="yellow">Featured</Badge>
+                    <Badge size="xs" color="yellow">{t('dashboard.featured')}</Badge>
                 </Group>
                 <div>
                     <Text fw={700} size="md" lineClamp={1}>{build.build_name}</Text>
@@ -262,6 +270,7 @@ export const FeaturedBuildWidget = ({ build }: any) => {
 
 // --- 7. Stats Widget (2x1) ---
 export const StatsOverviewWidget = ({ stats }: any) => {
+  const { t } = useTranslation();
   return (
     <WidgetWrapper style={{ gridColumn: 'span 2' }} delay={0.3}>
       <Group h="100%" justify="space-around">
@@ -270,21 +279,21 @@ export const StatsOverviewWidget = ({ stats }: any) => {
             <IconTarget size={20} />
           </ThemeIcon>
           <Text fw={700} size="xl">{stats.completedChallenges}</Text>
-          <Text size="xs" c="dimmed">Completed</Text>
+          <Text size="xs" c="dimmed">{t('dashboard.completed')}</Text>
         </Stack>
         <Stack align="center" gap={4}>
            <ThemeIcon variant="light" color="orange" size="lg" radius="xl">
             <IconClock size={20} />
           </ThemeIcon>
           <Text fw={700} size="xl">{stats.activeChallenges}</Text>
-          <Text size="xs" c="dimmed">Active</Text>
+          <Text size="xs" c="dimmed">{t('dashboard.active')}</Text>
         </Stack>
         <Stack align="center" gap={4}>
            <ThemeIcon variant="light" color="yellow" size="lg" radius="xl">
             <IconStar size={20} />
           </ThemeIcon>
           <Text fw={700} size="xl">{stats.points}</Text>
-          <Text size="xs" c="dimmed">Points</Text>
+          <Text size="xs" c="dimmed">{t('dashboard.points')}</Text>
         </Stack>
       </Group>
     </WidgetWrapper>
@@ -294,6 +303,7 @@ export const StatsOverviewWidget = ({ stats }: any) => {
 // --- 8. Trending Builds Widget (2x1) ---
 export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const displayBuilds = builds.slice(0, 2);
     const computedColorScheme = useComputedColorScheme('dark', { getInitialValueInEffect: true });
     const isDark = computedColorScheme === 'dark';
@@ -305,9 +315,9 @@ export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
                     <ThemeIcon color="orange" variant="light" size="md">
                         <IconFlame size={16} />
                     </ThemeIcon>
-                    <Text fw={700} size="sm" tt="uppercase">Trending Builds</Text>
+                    <Text fw={700} size="sm" tt="uppercase">{t('dashboard.trendingBuilds')}</Text>
                 </Group>
-                <Button variant="subtle" size="xs" onClick={() => navigate('/builds')}>View All</Button>
+                <Button variant="subtle" size="xs" onClick={() => navigate('/builds')}>{t('dashboard.viewAll')}</Button>
             </Group>
             <SimpleGrid cols={2} spacing="xs">
                 {displayBuilds.length > 0 ? (
@@ -326,7 +336,7 @@ export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
                                  <Avatar src={build.game_icon} size="xs" />
                                  <Text size="xs" fw={700} lineClamp={1}>{build.build_name}</Text>
                             </Group>
-                            <Text size="xs" c="dimmed" lineClamp={1}>by {build.username}</Text>
+                            <Text size="xs" c="dimmed" lineClamp={1}>{t('dashboard.by')} {build.username}</Text>
                         </Paper>
                     ))
                 ) : (
@@ -346,7 +356,7 @@ export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
                                     height: '60px'
                                 }}
                             >
-                                <Text size="xs" c="dimmed" ta="center">Be the first to share a build!</Text>
+                                <Text size="xs" c="dimmed" ta="center">{t('dashboard.beFirstToShareBuild')}</Text>
                             </Paper>
                         ))}
                     </>
@@ -359,6 +369,7 @@ export const TrendingBuildsWidget = ({ builds }: { builds: any[] }) => {
 // --- 9. Solo Bingo Widget (1x1) ---
 export const SoloBingoWidget = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     return (
         <WidgetWrapper onClick={() => navigate('/bingo-challenges')} delay={0.4}>
              <Stack justify="space-between" h="100%">
@@ -366,8 +377,8 @@ export const SoloBingoWidget = () => {
                     <IconDeviceGamepad2 size={24} />
                 </ThemeIcon>
                 <div>
-                    <Text fw={700} size="lg">Solo Bingo</Text>
-                    <Text size="xs" c="dimmed">Quick Play</Text>
+                    <Text fw={700} size="lg">{t('dashboard.soloBingo')}</Text>
+                    <Text size="xs" c="dimmed">{t('dashboard.quickPlay')}</Text>
                 </div>
             </Stack>
         </WidgetWrapper>
@@ -377,6 +388,7 @@ export const SoloBingoWidget = () => {
 // --- 10. Leaderboard Podium Widget (1x1) ---
 export const LeaderboardPodiumWidget = ({ topPlayers }: { topPlayers: any[] }) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const top1 = topPlayers[0];
 
     return (
@@ -386,7 +398,7 @@ export const LeaderboardPodiumWidget = ({ topPlayers }: { topPlayers: any[] }) =
                      <ThemeIcon size="md" radius="xl" color="yellow" variant="filled">
                         <IconTrophy size={14} />
                      </ThemeIcon>
-                     <Text size="xs" fw={700} c="yellow">#1 Leader</Text>
+                     <Text size="xs" fw={700} c="yellow">{t('dashboard.leader')}</Text>
                 </Group>
                 
                 {top1 ? (
@@ -396,7 +408,7 @@ export const LeaderboardPodiumWidget = ({ topPlayers }: { topPlayers: any[] }) =
                         <Text size="xs" c="dimmed">{top1.points} pts</Text>
                     </Stack>
                 ) : (
-                    <Text size="xs" c="dimmed">No data</Text>
+                    <Text size="xs" c="dimmed">{t('dashboard.noData')}</Text>
                 )}
             </Stack>
         </WidgetWrapper>

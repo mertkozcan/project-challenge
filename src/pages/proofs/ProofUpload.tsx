@@ -9,8 +9,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import ApiService from '@/services/ApiService';
 import { OCRService } from '@/services/ocr.service';
 import { useAppSelector } from '@/store';
+import { useTranslation } from 'react-i18next';
 
 const ProofUpload: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
@@ -57,15 +59,15 @@ const ProofUpload: React.FC = () => {
       
       if (isVerified) {
         notifications.show({
-          title: 'Username Verified!',
-          message: `Found "${expectedUsername}" in the screenshot.`,
+          title: t('proof.usernameVerified'),
+          message: t('proof.usernameFound', { username: expectedUsername }),
           color: 'green',
           icon: <IconCheck size={16} />
         });
       } else {
         notifications.show({
-          title: 'Username Not Detected',
-          message: `Could not find "${expectedUsername}" automatically. Manual review will be required.`,
+          title: t('proof.usernameNotDetected'),
+          message: t('proof.manualReviewRequired', { username: expectedUsername }),
           color: 'orange',
           icon: <IconAlertTriangle size={16} />
         });
@@ -74,8 +76,8 @@ const ProofUpload: React.FC = () => {
       console.error('OCR Error:', error);
       setOcrStatus('FAILED');
       notifications.show({
-        title: 'OCR Failed',
-        message: 'Could not process image. Manual review required.',
+        title: t('proof.ocrFailed'),
+        message: t('proof.ocrProcessError'),
         color: 'red'
       });
     }
@@ -106,8 +108,8 @@ const ProofUpload: React.FC = () => {
       });
 
       notifications.show({
-        title: 'Proof Submitted',
-        message: 'Your proof has been uploaded successfully!',
+        title: t('proof.submitted'),
+        message: t('proof.submittedMsg'),
         color: 'green',
       });
 
@@ -115,8 +117,8 @@ const ProofUpload: React.FC = () => {
     } catch (error) {
       console.error('Upload error:', error);
       notifications.show({
-        title: 'Upload Failed',
-        message: 'Failed to upload proof. Please try again.',
+        title: t('proof.uploadFailed'),
+        message: t('proof.uploadError'),
         color: 'red',
       });
     } finally {
@@ -127,32 +129,32 @@ const ProofUpload: React.FC = () => {
   if (!session) {
     return (
       <Container size="sm" py="xl">
-        <Alert color="red" title="Invalid Session">
-          No active session found. Please start a challenge from the dashboard.
+        <Alert color="red" title={t('proof.invalidSession')}>
+          {t('proof.noActiveSession')}
         </Alert>
-        <Button mt="md" onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
+        <Button mt="md" onClick={() => navigate('/dashboard')}>{t('nav.dashboard')}</Button>
       </Container>
     );
   }
 
   return (
     <Container size="sm" py="xl">
-      <Title order={2} mb="lg">Submit Proof</Title>
+      <Title order={2} mb="lg">{t('proof.submitProof')}</Title>
       
       <Card withBorder shadow="sm" radius="md" p="lg">
         <Stack gap="md">
           <Box>
-            <Text fw={700} size="lg">{session.game_name} Challenge</Text>
+            <Text fw={700} size="lg">{session.game_name} {t('challenges.title')}</Text>
             <Text c="dimmed" size="sm">
-              Please upload a screenshot showing your character name: 
+              {t('proof.uploadPrompt')} 
               <Text span fw={700} c="blue"> {session.display_username}</Text>
             </Text>
           </Box>
 
           <FileInput
-            label="1. Upload Screenshot (Required)"
-            description="Upload a screenshot showing your character name and stats."
-            placeholder="Click to select file"
+            label={t('proof.uploadScreenshot')}
+            description={t('proof.uploadScreenshotDesc')}
+            placeholder={t('proof.clickToSelect')}
             accept="image/png,image/jpeg"
             leftSection={<IconPhoto size={16} />}
             onChange={handleFileChange}
@@ -161,8 +163,8 @@ const ProofUpload: React.FC = () => {
           />
 
           <TextInput
-            label="2. Video Link (Required)"
-            description="YouTube, Twitch, or Streamable link showing the challenge completion."
+            label={t('proof.videoLink')}
+            description={t('proof.videoLinkDesc')}
             placeholder="https://youtube.com/watch?v=..."
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.currentTarget.value)}
@@ -182,19 +184,19 @@ const ProofUpload: React.FC = () => {
               {ocrStatus === 'PROCESSING' && (
                 <Group gap="sm">
                   <Loader size="sm" />
-                  <Text size="sm" c="dimmed">Verifying username...</Text>
+                  <Text size="sm" c="dimmed">{t('proof.verifyingUsername')}</Text>
                 </Group>
               )}
 
               {ocrStatus === 'VERIFIED' && (
-                <Alert color="green" icon={<IconCheck size={16} />} title="Verified">
-                  Username detected! This proof will be auto-verified for trusted users.
+                <Alert color="green" icon={<IconCheck size={16} />} title={t('common.verified')}>
+                  {t('proof.usernameDetected')}
                 </Alert>
               )}
 
               {ocrStatus === 'FAILED' && (
-                <Alert color="orange" icon={<IconAlertTriangle size={16} />} title="Not Detected">
-                  Username not automatically detected. This proof will require manual peer review.
+                <Alert color="orange" icon={<IconAlertTriangle size={16} />} title={t('common.notDetected')}>
+                  {t('proof.usernameNotDetectedManual')}
                 </Alert>
               )}
             </Stack>
@@ -208,7 +210,7 @@ const ProofUpload: React.FC = () => {
             disabled={!file || !videoUrl || ocrStatus === 'PROCESSING'}
             leftSection={<IconUpload size={16} />}
           >
-            Submit Proof
+            {t('proof.submitProof')}
           </Button>
         </Stack>
       </Card>

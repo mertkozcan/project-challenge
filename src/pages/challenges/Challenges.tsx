@@ -25,12 +25,15 @@ import useAuth from '@/utils/hooks/useAuth';
 
 const ITEMS_PER_PAGE = 12;
 
+import { useTranslation } from 'react-i18next';
+
 const Challenges: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string | null>('official');
   const [allChallenges, setAllChallenges] = useState<Challenge[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { authenticated } = useAuth();
+  const { t } = useTranslation();
 
   // Filter states
   const [search, setSearch] = useState('');
@@ -150,7 +153,7 @@ const Challenges: React.FC = () => {
               <ThemeIcon size="lg" radius="md" variant="light" color="orange">
                 <IconFlame size={20} />
               </ThemeIcon>
-              <Title order={3}>Popular This Week</Title>
+              <Title order={3}>{t('challenges.popularThisWeek')}</Title>
             </Group>
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
               {featuredChallenges.map((challenge) => (
@@ -219,16 +222,16 @@ const Challenges: React.FC = () => {
               <IconStar size={40} />
             </ThemeIcon>
             <Title order={3} c="dimmed">
-              No challenges found
+              {t('challenges.noChallengesFound')}
             </Title>
             <Text c="dimmed" ta="center">
               {activeTab === 'community'
-                ? "No community challenges yet. Be the first to create one!"
-                : "No official challenges match your filters."}
+                ? t('challenges.noCommunityChallenges')
+                : t('challenges.noOfficialChallenges')}
             </Text>
             {(search || gameFilter || typeFilter) && (
               <Button variant="light" onClick={handleClearFilters}>
-                Clear Filters
+                {t('challenges.clearFilters')}
               </Button>
             )}
           </Stack>
@@ -244,14 +247,14 @@ const Challenges: React.FC = () => {
           <ThemeIcon size="xl" radius="md" variant="light" color="blue">
             <IconTrophy size={28} />
           </ThemeIcon>
-          <Title order={1}>Challenges</Title>
+          <Title order={1}>{t('challenges.title')}</Title>
         </Group>
         {activeTab === 'community' && (
           <Button
             leftSection={<IconPlus size={16} />}
             onClick={() => {
               if (!authenticated) {
-                navigate('/sign-in', { state: { message: 'You need to be logged in to create a challenge.' } });
+                navigate('/sign-in', { state: { message: t('challenges.createChallengeAuthMsg') } });
               } else {
                 navigate('/challenges/create');
               }
@@ -259,7 +262,7 @@ const Challenges: React.FC = () => {
             variant="gradient"
             gradient={{ from: 'blue', to: 'cyan', deg: 45 }}
           >
-            Create Challenge
+            {t('challenges.createChallenge')}
           </Button>
         )}
       </Group>
@@ -267,10 +270,10 @@ const Challenges: React.FC = () => {
       <Tabs value={activeTab} onChange={setActiveTab}>
         <Tabs.List>
           <Tabs.Tab value="official" leftSection={<IconTrophy size={16} />}>
-            Official
+            {t('challenges.official')}
           </Tabs.Tab>
           <Tabs.Tab value="community" leftSection={<IconUsers size={16} />}>
-            Community
+            {t('challenges.community')}
           </Tabs.Tab>
         </Tabs.List>
 

@@ -23,6 +23,7 @@ import { BingoService, type BingoCell as BingoCellType, type BingoBoard as Bingo
 import { BingoRoomService } from '@/services/bingo/bingoRoom.service';
 import { IconCheck, IconClock, IconArrowLeft, IconTrophy, IconUsers } from '@tabler/icons-react';
 import { useAppSelector } from '@/store';
+import { useTranslation } from 'react-i18next';
 import BingoHero from '@/components/Bingo/BingoHero';
 import { getGameTheme } from '@/utils/gameThemes';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,6 +47,7 @@ interface Activity {
 }
 
 const BingoBoard: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
@@ -332,7 +334,7 @@ const BingoBoard: React.FC = () => {
   
   const handleRestart = async () => {
     if (!userId || !id) return;
-    if (!confirm('Are you sure you want to restart? All progress will be lost.')) return;
+    if (!confirm(t('bingo.restartConfirm'))) return;
     
     try {
       // Reset all cells for this user and board
@@ -368,8 +370,8 @@ const BingoBoard: React.FC = () => {
       if (result.new_achievements && result.new_achievements.length > 0) {
         result.new_achievements.forEach((achievement: any) => {
           notifications.show({
-            title: 'Achievement Unlocked!',
-            message: `You unlocked: ${achievement.name} - ${achievement.description}`,
+            title: t('bingo.achievementUnlocked'),
+            message: `${t('bingo.unlocked')}: ${achievement.name} - ${achievement.description}`,
             color: 'yellow',
             icon: <IconTrophy size={20} />,
             autoClose: 5000,
@@ -389,8 +391,8 @@ const BingoBoard: React.FC = () => {
     });
     
     const message = completionPercentage === 100 
-      ? `Congratulations! You completed the entire bingo in ${formatTime(elapsedTime)}!`
-      : `Great job! You completed ${activities.filter(a => a.type !== 'cell').length} line(s) in ${formatTime(elapsedTime)}!`;
+      ? t('bingo.congratsComplete', { time: formatTime(elapsedTime) })
+      : t('bingo.greatJobLines', { count: activities.filter(a => a.type !== 'cell').length, time: formatTime(elapsedTime) });
     
     setTimeout(() => {
       alert(message);
@@ -412,10 +414,10 @@ const BingoBoard: React.FC = () => {
     return (
       <Container size="sm" py="xl">
         <Text size="xl" ta="center" c="dimmed">
-          Bingo Board not found. Please check the URL or try again.
+          {t('bingo.boardNotFound')}
         </Text>
         <Button onClick={() => navigate('/bingo')} mt="md" fullWidth>
-          Back to Bingo Challenges
+          {t('bingo.backToChallenges')}
         </Button>
       </Container>
     );
@@ -443,7 +445,7 @@ const BingoBoard: React.FC = () => {
             leftSection={<IconArrowLeft />}
             onClick={() => navigate('/bingo-challenges')}
           >
-            Back to Bingo Challenges
+            {t('bingo.backToChallenges')}
           </Button>
           
           <Group>
@@ -462,7 +464,7 @@ const BingoBoard: React.FC = () => {
     onClick={() => navigate('/sign-in', { state: { message: 'You need to be logged in to play bingo.' } })}
     leftSection={<IconClock size={18} />}
   >
-    Login to Play
+    {t('common.loginToPlay')}
   </Button>
 ) : !timerActive && !hasFinished && completionPercentage < 100 && (
   <Button 
@@ -470,7 +472,7 @@ const BingoBoard: React.FC = () => {
     onClick={() => setTimerActive(true)}
     leftSection={<IconClock size={18} />}
   >
-    Start Timer
+    {t('bingo.startTimer')}
   </Button>
 )}
 
@@ -489,7 +491,7 @@ const BingoBoard: React.FC = () => {
                   leftSection={<IconTrophy size={18} />}
                   className="animate-pulse"
                 >
-                  Finish Bingo!
+                  {t('bingo.finishBingo')}
                 </Button>
               </motion.div>
             )}
@@ -507,7 +509,7 @@ const BingoBoard: React.FC = () => {
     }
   }}
 >
-  Create Room
+  {t('bingo.createRoom')}
 </Button>
           </Group>
         </Group>
@@ -559,9 +561,9 @@ const BingoBoard: React.FC = () => {
             <Stack>
               {/* Progress Card */}
               <Card shadow="sm" padding="md" radius="md" withBorder>
-                <Title order={4} mb="md">Progress</Title>
+                <Title order={4} mb="md">{t('common.progress')}</Title>
                 <Group justify="space-between" mb="xs">
-                  <Text size="sm">Completed</Text>
+                  <Text size="sm">{t('common.completed')}</Text>
                   <Text fw={700}>{completedCells}/{totalCells}</Text>
                 </Group>
                 <Box 
@@ -589,13 +591,13 @@ const BingoBoard: React.FC = () => {
                   size="xs"
                   onClick={handleRestart}
                 >
-                  Restart Board
+                  {t('bingo.restartBoard')}
                 </Button>
               </Card>
 
               {/* Activity Feed */}
               <Card shadow="sm" padding="md" radius="md" withBorder style={{ maxHeight: '500px', display: 'flex', flexDirection: 'column' }}>
-                <Title order={4} mb="md">Activity Log</Title>
+                <Title order={4} mb="md">{t('bingo.activityLog')}</Title>
                 <Stack 
                   gap="sm" 
                   style={{ 
@@ -606,7 +608,7 @@ const BingoBoard: React.FC = () => {
                 >
                   {activities.length === 0 ? (
                     <Text size="sm" c="dimmed" ta="center" py="xl">
-                      Start playing to see activity!
+                      {t('bingo.startPlayingToSeeActivity')}
                     </Text>
                   ) : (
                     activities.map((activity, index) => (
@@ -615,9 +617,9 @@ const BingoBoard: React.FC = () => {
                           <Box style={{ flex: 1 }}>
                             <Text size="xs" c="dimmed">{activity.time} ({activity.elapsed})</Text>
                             <Text size="sm" fw={500}>
-                              {activity.type === 'cell' && `Completed: ${activity.cellTask}`}
-                              {activity.type === 'row' && `Completed Row ${activity.index! + 1} 🎯`}
-                              {activity.type === 'column' && `Completed Column ${activity.index! + 1} 🎯`}
+                              {activity.type === 'cell' && `${t('common.completed')}: ${activity.cellTask}`}
+                              {activity.type === 'row' && `${t('bingo.completedRow')} ${activity.index! + 1} 🎯`}
+                              {activity.type === 'column' && `${t('bingo.completedColumn')} ${activity.index! + 1} 🎯`}
                             </Text>
                           </Box>
                           {activity.type !== 'cell' && (
@@ -638,32 +640,32 @@ const BingoBoard: React.FC = () => {
       <Modal 
         opened={createRoomModalOpen} 
         onClose={() => setCreateRoomModalOpen(false)} 
-        title="Create Multiplayer Room"
+        title={t('bingo.createMultiplayerRoom')}
         centered
       >
         <Stack>
           <NumberInput
-            label="Max Players"
+            label={t('bingo.maxPlayers')}
             value={maxPlayers}
             onChange={(val) => setMaxPlayers(Number(val))}
             min={2}
             max={10}
           />
           <Switch
-            label="Private Room"
+            label={t('bingo.privateRoom')}
             checked={isPrivate}
             onChange={(event) => setIsPrivate(event.currentTarget.checked)}
           />
           {isPrivate && (
             <PasswordInput
-              label="Room Password"
+              label={t('bingo.roomPassword')}
               value={password}
               onChange={(event) => setPassword(event.currentTarget.value)}
-              placeholder="Enter room password"
+              placeholder={t('bingo.roomPasswordPlaceholder')}
             />
           )}
           <Button fullWidth onClick={handleCreateRoom} mt="md">
-            Create Room
+            {t('bingo.createRoom')}
           </Button>
         </Stack>
       </Modal>

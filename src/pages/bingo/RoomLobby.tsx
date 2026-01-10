@@ -9,8 +9,10 @@ import { useAppSelector } from '@/store';
 import { useTour } from '@/components/Tutorial/TourProvider';
 import TourButton from '@/components/Tutorial/TourButton';
 import RoomFilters from '@/components/Bingo/RoomFilters';
+import { useTranslation } from 'react-i18next';
 
 const BingoRoomLobby: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
   
@@ -132,7 +134,7 @@ const BingoRoomLobby: React.FC = () => {
       navigate(`/bingo/room/${roomId}`);
     } catch (error: any) {
       console.error('Error joining room:', error);
-      alert(error.response?.data?.error || 'Failed to join room.');
+      alert(error.response?.data?.error || t('common.joinRoomFailed'));
     }
   };
 
@@ -164,7 +166,7 @@ const BingoRoomLobby: React.FC = () => {
           <Group justify="space-between">
             <Text fw={700} size="lg">{room.board_title}</Text>
             <Badge color={room.status === 'WAITING' ? 'green' : 'blue'}>
-              {room.status === 'WAITING' ? 'Waiting' : 'In Progress'}
+              {room.status === 'WAITING' ? t('common.waiting') : t('common.inProgress')}
             </Badge>
           </Group>
 
@@ -193,7 +195,7 @@ const BingoRoomLobby: React.FC = () => {
             variant={isUserInRoom ? "filled" : room.is_private ? "outline" : "filled"}
             color={isUserInRoom ? "green" : undefined}
           >
-            {isUserInRoom ? 'Enter Room' : room.is_private ? 'Join Friends Only Room' : 'Join Room'}
+            {isUserInRoom ? t('bingo.enterRoom') : room.is_private ? t('bingo.joinFriendsOnly') : t('bingo.joinRoom')}
           </Button>
         </Stack>
       </Card>
@@ -207,8 +209,8 @@ const BingoRoomLobby: React.FC = () => {
       {/* Header */}
       <Group justify="space-between" mb={{ base: 'md', md: 'xl' }}>
         <div>
-          <Title order={1} size="h2">Multiplayer Bingo</Title>
-          <Text c="dimmed" size="sm">Join a room or create your own!</Text>
+          <Title order={1} size="h2">{t('bingo.multiplayerBingo')}</Title>
+          <Text c="dimmed" size="sm">{t('bingo.lobby.subtitle')}</Text>
         </div>
         <Button 
           leftSection={<IconPlus size={20} />}
@@ -231,7 +233,7 @@ const BingoRoomLobby: React.FC = () => {
           <Title order={2} mb="md">
             <Group gap="xs">
               <IconUsers size={24} />
-              Pending Invitations
+              {t('bingo.pendingInvitations')}
             </Group>
           </Title>
           <Grid mb="xl">
@@ -240,17 +242,17 @@ const BingoRoomLobby: React.FC = () => {
                 <Card shadow="sm" padding="lg" radius="md" withBorder style={{ borderColor: '#fab005', borderWidth: 2 }}>
                   <Stack gap="md">
                     <Group justify="space-between">
-                      <Text fw={700} size="lg">Invitation to Play!</Text>
-                      <Badge color="yellow">Pending</Badge>
+                      <Text fw={700} size="lg">{t('bingo.invitationToPlay')}</Text>
+                      <Badge color="yellow">{t('common.pending')}</Badge>
                     </Group>
 
                     <Group gap="xs">
                       <Avatar size="sm" src={invitation.from_avatar} />
-                      <Text size="sm">From: {invitation.from_username}</Text>
+                      <Text size="sm">{t('common.from')}: {invitation.from_username}</Text>
                     </Group>
 
                     <Text size="sm" c="dimmed">
-                      Invited you to play <b>{invitation.board_title}</b> ({invitation.game_name})
+                      {t('bingo.invitedYouToPlay', { title: invitation.board_title, game: invitation.game_name })}
                     </Text>
 
                     <Group grow>
@@ -259,14 +261,14 @@ const BingoRoomLobby: React.FC = () => {
                         color="red" 
                         onClick={() => handleInvitationResponse(invitation.id, 'DECLINED')}
                       >
-                        Decline
+                        {t('common.decline')}
                       </Button>
                       <Button 
                         variant="filled" 
                         color="green" 
                         onClick={() => handleInvitationResponse(invitation.id, 'ACCEPTED')}
                       >
-                        Accept
+                        {t('common.accept')}
                       </Button>
                     </Group>
                   </Stack>
@@ -283,7 +285,7 @@ const BingoRoomLobby: React.FC = () => {
           <Title order={2} mb="md">
             <Group gap="xs">
               <IconClock size={24} />
-              My Active Rooms
+              {t('bingo.myActiveRooms')}
             </Group>
           </Title>
           <Grid mb="xl">
@@ -300,7 +302,7 @@ const BingoRoomLobby: React.FC = () => {
       <Title order={2} mb="md">
         <Group gap="xs">
           <IconUsers size={24} />
-          Available Rooms
+          {t('bingo.availableRooms')}
         </Group>
       </Title>
 
@@ -319,14 +321,14 @@ const BingoRoomLobby: React.FC = () => {
       {filteredRooms.length === 0 ? (
         <Card shadow="sm" padding="xl" radius="md" withBorder>
           <Stack align="center" gap="md">
-            <Text size="lg" c="dimmed">No rooms found matching your filters</Text>
+            <Text size="lg" c="dimmed">{t('bingo.noRoomsFound')}</Text>
             <Button variant="light" onClick={() => {
               setSearchQuery('');
               setGameFilter(null);
               setStatusFilter(null);
               setHideFullRooms(false);
             }}>
-              Clear Filters
+              {t('challenges.clearFilters')}
             </Button>
           </Stack>
         </Card>
@@ -344,13 +346,13 @@ const BingoRoomLobby: React.FC = () => {
       <Modal
         opened={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        title="Create Bingo Room"
+        title={t('bingo.createBingoRoom')}
         size="md"
       >
         <Stack gap="md">
           <Select
-            label="Select Bingo Board"
-            placeholder="Choose a board"
+            label={t('bingo.selectBingoBoard')}
+            placeholder={t('bingo.chooseBoard')}
             data={boards.map(b => ({ value: String(b.id), label: `${b.title} (${b.game_name})` }))}
             value={selectedBoardId}
             onChange={(value) => setSelectedBoardId(value || '')}
@@ -358,7 +360,7 @@ const BingoRoomLobby: React.FC = () => {
           />
 
           <NumberInput
-            label="Max Players"
+            label={t('bingo.maxPlayers')}
             placeholder="4"
             min={2}
             max={8}
@@ -367,7 +369,7 @@ const BingoRoomLobby: React.FC = () => {
           />
 
           <Select
-            label="Game Mode"
+            label={t('common.gameMode')}
             data={[
               { value: 'STANDARD', label: 'Standard (Row/Col/Diag)' },
               { value: 'BLACKOUT', label: 'Blackout (Full Board)' },
@@ -378,7 +380,7 @@ const BingoRoomLobby: React.FC = () => {
           />
 
           <Select
-            label="Theme"
+            label={t('common.theme')}
             data={[
               { value: 'DEFAULT', label: 'Default (Dark)' },
               { value: 'ELDEN_RING', label: 'Elden Ring' },
@@ -391,8 +393,8 @@ const BingoRoomLobby: React.FC = () => {
           />
 
           <Switch
-            label="Friends Only (Private)"
-            description="Only your friends can join this room"
+            label={t('bingo.friendsOnly')}
+            description={t('bingo.friendsOnlyDesc')}
             checked={isPrivate}
             onChange={(event) => setIsPrivate(event.currentTarget.checked)}
           />
@@ -402,7 +404,7 @@ const BingoRoomLobby: React.FC = () => {
             onClick={handleCreateRoom}
             disabled={!selectedBoardId}
           >
-            Create Room
+            {t('bingo.createRoom')}
           </Button>
         </Stack>
       </Modal>

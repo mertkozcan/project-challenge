@@ -17,7 +17,10 @@ import { supabase } from '@/lib/supabase';
 import { IconAlertCircle, IconCheck, IconArrowLeft } from '@tabler/icons-react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { useTranslation } from 'react-i18next';
+
 const ResetPassword: React.FC = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -39,9 +42,9 @@ const ResetPassword: React.FC = () => {
       confirmPassword: '',
     },
     validate: {
-      password: (value) => (value.length >= 6 ? null : 'Password must be at least 6 characters'),
+      password: (value) => (value.length >= 6 ? null : t('auth.passwordMinLength')),
       confirmPassword: (value, values) =>
-        value !== values.password ? 'Passwords did not match' : null,
+        value !== values.password ? t('auth.passwordsDoNotMatch') : null,
     },
   });
 
@@ -64,7 +67,7 @@ const ResetPassword: React.FC = () => {
         }, 3000);
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      setError(err.message || t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -73,10 +76,10 @@ const ResetPassword: React.FC = () => {
   return (
     <Container size={420} my={40}>
       <Title ta="center" mb="xl">
-        Reset Password
+        {t('auth.resetPasswordTitle')}
       </Title>
       <Text c="dimmed" size="sm" ta="center" mt={-20} mb={30}>
-        Enter your new password below
+        {t('auth.resetPasswordDesc')}
       </Text>
 
       <Paper withBorder shadow="md" p={30} radius="md">
@@ -90,28 +93,28 @@ const ResetPassword: React.FC = () => {
               )}
 
               <PasswordInput
-                label="New Password"
-                placeholder="New password"
+                label={t('auth.newPassword')}
+                placeholder={t('auth.newPasswordPlaceholder')}
                 required
                 {...form.getInputProps('password')}
               />
 
               <PasswordInput
-                label="Confirm Password"
-                placeholder="Confirm new password"
+                label={t('auth.confirmNewPassword')}
+                placeholder={t('auth.confirmNewPasswordPlaceholder')}
                 required
                 {...form.getInputProps('confirmPassword')}
               />
 
               <Button type="submit" fullWidth loading={loading}>
-                Update Password
+                {t('auth.updatePassword')}
               </Button>
             </Stack>
           </form>
         ) : (
           <Stack>
-            <Alert icon={<IconCheck size={16} />} color="green" title="Password Updated">
-              Your password has been reset successfully. Redirecting to login...
+            <Alert icon={<IconCheck size={16} />} color="green" title={t('auth.passwordUpdatedTitle')}>
+              {t('auth.passwordUpdatedDesc')}
             </Alert>
           </Stack>
         )}

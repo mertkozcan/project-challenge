@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Title, Text, Button, Group, Box, Stack } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/store';
@@ -28,6 +29,7 @@ const Dashboard: React.FC = () => {
   const { authenticated } = useAuth();
   const userId = useAppSelector((state) => state.auth.userInfo.userId);
   const user = useAppSelector((state) => state.auth.userInfo);
+  const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [challengeOfTheDay, setChallengeOfTheDay] = useState<any>(null);
@@ -119,7 +121,7 @@ const Dashboard: React.FC = () => {
             ...latestBuilds.slice(0, 3).map((b: any) => ({
                 type: 'build',
                 title: b.build_name,
-                user: b.username || 'Unknown',
+                user: b.username || t('common.unknown'),
                 time: new Date(b.created_at).toLocaleDateString(),
                 timestamp: new Date(b.created_at).getTime()
             }))
@@ -135,7 +137,7 @@ const Dashboard: React.FC = () => {
     };
 
     fetchData();
-  }, [userId, authenticated]);
+  }, [userId, authenticated, t]);
 
   return (
     <Box style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden' }}>
@@ -145,17 +147,17 @@ const Dashboard: React.FC = () => {
         <Group justify="space-between" mb={30} align="flex-end">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
             <Text size="lg" fw={500} c="blue.3" mb={4}>
-              {authenticated ? `Welcome back, ${user?.username || 'Hunter'}` : 'Welcome to Bingo Challengers'}
+              {authenticated ? t('common.welcomeBack', { name: user?.username || t('common.hunter') }) : t('common.welcomeGuest')}
             </Text>
             <Title order={1} style={{ fontSize: '3.5rem', letterSpacing: '-2px', lineHeight: 1 }}>
-              {authenticated ? 'Ready for your next run?' : 'Master the Challenge.'}
+              {authenticated ? t('common.readyForNextRun') : t('common.masterTheChallenge')}
             </Title>
           </motion.div>
           
           {!authenticated && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <Button size="lg" variant="gradient" gradient={{ from: 'blue', to: 'cyan' }} onClick={() => navigate('/sign-up')}>
-                Join the Elite
+                {t('common.joinTheElite')}
               </Button>
             </motion.div>
           )}
